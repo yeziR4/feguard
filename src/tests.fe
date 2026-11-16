@@ -1,0 +1,255 @@
+use std::evm::wei
+use ingot::{SpendPolicy, Budget, SpendRequest, preview, authorize}
+use ingot::{GuardDemo, GuardDemoMsg}
+
+fn policy() -> SpendPolicy {
+    SpendPolicy {
+        delegate: Address::new(0xA11CE),
+        recipient: Address::new(0xB0B),
+        per_transfer: wei(100),
+        valid_before: Timestamp::from_seconds(1000),
+        revoked: false,
+    }
+}
+
+fn request(_ amount: u256) -> SpendRequest {
+    SpendRequest {
+        caller: Address::new(0xA11CE),
+        recipient: Address::new(0xB0B),
+        amount: wei(amount),
+        now: Timestamp::from_seconds(999),
+    }
+}
+
+#[test]
+fn preview_does_not_consume_budget() {
+    let rule = policy()
+    let budget = Budget { remaining: wei(150) }
+    with (SpendPolicy = rule, budget) {
+        assert!(preview(request(100)).code() == 0)
+        assert!(preview(request(100)).code() == 0)
+        assert!(budget.remaining == wei(150))
+    }
+}
+
+#[test]
+fn exact_transfer_and_budget_limits_are_allowed() {
+    let rule = policy()
+    var budget = Budget { remaining: wei(100) }
+    with (SpendPolicy = rule, mut budget) {
+        assert!(authorize(request(100)).code() == 0)
+        assert!(budget.remaining == Wei::zero())
+    }
+}
+
+#[test]
+fn repeated_spending_cannot_exceed_budget() {
+    let rule = policy()
+    var budget = Budget { remaining: wei(150) }
+    with (SpendPolicy = rule, mut budget) {
+        assert!(authorize(request(100)).code() == 0)
+        assert!(authorize(request(51)).code() == 7)
+        assert!(budget.remaining == wei(50))
+        assert!(authorize(request(50)).code() == 0)
+        assert!(authorize(request(1)).code() == 7)
+        assert!(budget.remaining == Wei::zero())
+    }
+}
+
+#[test]
+fn transfer_limit_rejects_without_consumption() {
+    let rule = policy()
+    var budget = Budget { remaining: wei(1000) }
+    with (SpendPolicy = rule, mut budget) {
+        assert!(authorize(request(101)).code() == 6)
+        assert!(budget.remaining == wei(1000))
+    }
+}
+
+#[test]
+fn wrong_delegate_cannot_consume_budget() {
+    let rule = policy()
+    var budget = Budget { remaining: wei(150) }
+    var spend = request(10)
+    spend.caller = Address::new(0xBAD)
+    with (SpendPolicy = rule, mut budget) {
+        assert!(authorize(spend).code() == 2)
+        assert!(budget.remaining == wei(150))
+    }
+}
+
+#[test]
+fn wrong_recipient_cannot_consume_budget() {
+    let rule = policy()
+    var budget = Budget { remaining: wei(150) }
+    var spend = request(10)
+    spend.recipient = Address::new(0xBAD)
+    with (SpendPolicy = rule, mut budget) {
+        assert!(authorize(spend).code() == 4)
+        assert!(budget.remaining == wei(150))
+    }
+}
+
+#[test]
+fn expiry_is_exclusive() {
+    let rule = policy()
+    var budget = Budget { remaining: wei(150) }
+    var spend = request(10)
+    spend.now = Timestamp::from_seconds(1000)
+    with (SpendPolicy = rule, mut budget) {
+        assert!(authorize(spend).code() == 3)
+        assert!(budget.remaining == wei(150))
+    }
+}
+
+#[test]
+fn revoked_session_rejects_without_consumption() {
+    var rule = policy()
+    rule.revoked = true
+    var budget = Budget { remaining: wei(150) }
+    with (SpendPolicy = rule, mut budget) {
+        assert!(authorize(request(10)).code() == 1)
+        assert!(budget.remaining == wei(150))
+    }
+}
+
+#[test]
+fn zero_amount_rejects() {
+    let rule = policy()
+    var budget = Budget { remaining: wei(150) }
+    with (SpendPolicy = rule, mut budget) {
+        assert!(authorize(request(0)).code() == 5)
+        assert!(budget.remaining == wei(150))
+    }
+}
+
+#[test]
+fn zero_budget_rejects_positive_amount() {
+    let rule = policy()
+    var budget = Budget { remaining: Wei::zero() }
+    with (SpendPolicy = rule, mut budget) {
+        assert!(authorize(request(1)).code() == 7)
+        assert!(budget.remaining == Wei::zero())
+    }
+}
+
+#[test]
+fn contract_budget_persists_across_calls() uses (evm: mut Evm) {
+    let to = Address::new(0xB0B)
+    let guard = evm
+        .create2<GuardDemo>(
+            value: Wei::zero(),
+            args: (
+                evm.address(),
+                to,
+                wei(100),
+                wei(150),
+                Timestamp::from_seconds(1_000_000_000_000),
+            ),
+            salt: 0,
+        )
+    let previewed: u256 = evm
+        .call(
+            addr: guard,
+            gas: 2000000,
+            value: Wei::zero(),
+            message: GuardDemoMsg::PreviewSpend { to, amount: wei(100) },
+        )
+    assert!(previewed == 0)
+    let before: Wei = evm
+        .call(
+            addr: guard,
+            gas: 2000000,
+            value: Wei::zero(),
+            message: GuardDemoMsg::Remaining {},
+        )
+    assert!(before == wei(150))
+    let accepted: u256 = evm
+        .call(
+            addr: guard,
+            gas: 2000000,
+            value: Wei::zero(),
+            message: GuardDemoMsg::ChargeSpend { to, amount: wei(100), evidence_hash: 0 },
+        )
+    assert!(accepted == 0)
+    let rejected: u256 = evm
+        .call(
+            addr: guard,
+            gas: 2000000,
+            value: Wei::zero(),
+            message: GuardDemoMsg::ChargeSpend { to, amount: wei(60), evidence_hash: 0 },
+        )
+    assert!(rejected == 7)
+    let after: Wei = evm
+        .call(
+            addr: guard,
+            gas: 2000000,
+            value: Wei::zero(),
+            message: GuardDemoMsg::Remaining {},
+        )
+    assert!(after == wei(50))
+}
+
+#[test]
+fn contract_uses_actual_caller() uses (evm: mut Evm) {
+    let to = Address::new(0xB0B)
+    let guard = evm
+        .create2<GuardDemo>(
+            value: Wei::zero(),
+            args: (
+                Address::new(0xBAD),
+                to,
+                wei(100),
+                wei(150),
+                Timestamp::from_seconds(1_000_000_000_000),
+            ),
+            salt: 0,
+        )
+    let rejected: u256 = evm
+        .call(
+            addr: guard,
+            gas: 2000000,
+            value: Wei::zero(),
+            message: GuardDemoMsg::ChargeSpend { to, amount: wei(10), evidence_hash: 0 },
+        )
+    assert!(rejected == 2)
+    let after: Wei = evm
+        .call(
+            addr: guard,
+            gas: 2000000,
+            value: Wei::zero(),
+            message: GuardDemoMsg::Remaining {},
+        )
+    assert!(after == wei(150))
+}
+
+#[test]
+fn contract_owner_can_revoke() uses (evm: mut Evm) {
+    let to = Address::new(0xB0B)
+    let guard = evm
+        .create2<GuardDemo>(
+            value: Wei::zero(),
+            args: (
+                evm.address(),
+                to,
+                wei(100),
+                wei(150),
+                Timestamp::from_seconds(1_000_000_000_000),
+            ),
+            salt: 0,
+        )
+    evm.call(
+        addr: guard,
+        gas: 2000000,
+        value: Wei::zero(),
+        message: GuardDemoMsg::Revoke {},
+    )
+    let rejected: u256 = evm
+        .call(
+            addr: guard,
+            gas: 2000000,
+            value: Wei::zero(),
+            message: GuardDemoMsg::ChargeSpend { to, amount: wei(10), evidence_hash: 0 },
+        )
+    assert!(rejected == 1)
+}

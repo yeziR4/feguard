@@ -1,0 +1,31 @@
+name: Fe checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned official Fe compiler
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 \
+            https://github.com/argotorg/fe/releases/download/v26.6.0/fe_linux_amd64 \
+            --output "$RUNNER_TEMP/fe"
+          printf '%s  %s\n' \
+            '697081cb9265bd1be7a5d33e6bb0c8559ee5ff542abab9a046540fc151b4edaa' \
+            "$RUNNER_TEMP/fe" | sha256sum --check -
+          chmod +x "$RUNNER_TEMP/fe"
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+      - run: fe --version
+      - run: fe fmt --check
+      - run: fe check
+      - run: fe test
+      - run: fe build

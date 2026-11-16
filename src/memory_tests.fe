@@ -1,0 +1,242 @@
+use std::evm::wei
+use ingot::{AgentMemory, MemoryEntry, SpendRequest, GuardDemo, GuardDemoMsg}
+use ingot::{new_memory, remember, recall, memory_count}
+use ingot::{SpendPolicy, Budget, authorize}
+
+fn episode(_ amount: u256) -> SpendRequest {
+    SpendRequest {
+        caller: Address::new(0xA11CE),
+        recipient: Address::new(0xB0B),
+        amount: wei(amount),
+        now: Timestamp::from_seconds(999),
+    }
+}
+
+#[test]
+fn empty_memory_has_no_episodes() {
+    let memory = new_memory()
+    with (memory) {
+        assert!(memory_count() == 0)
+        assert!(recall(0).is_none())
+        assert!(recall(1).is_none())
+    }
+}
+
+#[test]
+fn recall_preserves_action_and_evidence() {
+    var memory = new_memory()
+    with (mut memory) {
+        assert!(
+            remember(episode(50), decision_code: 0, evidence_hash: 0xCAFE) == 1,
+        )
+        let entry = recall(1).unwrap()
+        assert!(entry.sequence == 1)
+        assert!(entry.caller == Address::new(0xA11CE))
+        assert!(entry.recipient == Address::new(0xB0B))
+        assert!(entry.amount == wei(50))
+        assert!(entry.observed_at == Timestamp::from_seconds(999))
+        assert!(entry.decision_code == 0)
+        assert!(entry.evidence_hash == 0xCAFE)
+        assert!(memory_count() == 1)
+        assert!(recall(2).is_none())
+    }
+}
+
+#[test]
+fn ring_eviction_is_detectable_and_capacity_is_bounded() {
+    var memory = new_memory()
+    with (mut memory) {
+        for i in 0 .. 20 {
+            let n = i as u256
+            let _ = remember(episode(n + 1), decision_code: 7, evidence_hash: n)
+        }
+        assert!(memory_count() == 8)
+        assert!(memory.written == 20)
+        assert!(recall(0).is_none())
+        assert!(recall(1).is_none())
+        assert!(recall(12).is_none())
+        assert!(recall(21).is_none())
+        for sequence in 13 .. 21 {
+            let n = sequence as u256
+            let entry = recall(n).unwrap()
+            assert!(entry.sequence == n)
+            assert!(entry.amount == wei(n))
+            assert!(entry.decision_code == 7)
+        }
+    }
+}
+
+#[test]
+fn contract_remembers_both_allowed_and_rejected_delegate_requests()
+uses (evm: mut Evm)
+{
+    let to = Address::new(0xB0B)
+    let guard = evm
+        .create2<GuardDemo>(
+            value: Wei::zero(),
+            args: (
+                evm.address(),
+                to,
+                wei(100),
+                wei(150),
+                Timestamp::from_seconds(1_000_000_000_000),
+            ),
+            salt: 0,
+        )
+    let accepted: u256 = evm
+        .call(
+            addr: guard,
+            gas: 2000000,
+            value: Wei::zero(),
+            message: GuardDemoMsg::ChargeSpend { to, amount: wei(100), evidence_hash: 0xCAFE },
+        )
+    assert!(accepted == 0)
+    let rejected: u256 = evm
+        .call(
+            addr: guard,
+            gas: 2000000,
+            value: Wei::zero(),
+            message: GuardDemoMsg::ChargeSpend { to, amount: wei(60), evidence_hash: 0xBEEF },
+        )
+    assert!(rejected == 7)
+    let entry: MemoryEntry = evm
+        .call(
+            addr: guard,
+            gas: 1000000,
+            value: Wei::zero(),
+            message: GuardDemoMsg::Recall { sequence: 2 },
+        )
+    assert!(entry.sequence == 2)
+    assert!(entry.amount == wei(60))
+    assert!(entry.decision_code == 7)
+    assert!(entry.evidence_hash == 0xBEEF)
+    let remaining: Wei = evm
+        .call(
+            addr: guard,
+            gas: 1000000,
+            value: Wei::zero(),
+            message: GuardDemoMsg::Remaining {},
+        )
+    assert!(remaining == wei(50))
+}
+
+#[test]
+fn contract_does_not_let_an_outsider_pollute_memory() uses (evm: mut Evm) {
+    let to = Address::new(0xB0B)
+    let guard = evm
+        .create2<GuardDemo>(
+            value: Wei::zero(),
+            args: (
+                Address::new(0xBAD),
+                to,
+                wei(100),
+                wei(150),
+                Timestamp::from_seconds(1_000_000_000_000),
+            ),
+            salt: 0,
+        )
+    let rejected: u256 = evm
+        .call(
+            addr: guard,
+            gas: 2000000,
+            value: Wei::zero(),
+            message: GuardDemoMsg::ChargeSpend { to, amount: wei(10), evidence_hash: 0xCAFE },
+        )
+    assert!(rejected == 2)
+    let count: u256 = evm
+        .call(
+            addr: guard,
+            gas: 1000000,
+            value: Wei::zero(),
+            message: GuardDemoMsg::MemoryCount {},
+        )
+    assert!(count == 0)
+    let missing: MemoryEntry = evm
+        .call(
+            addr: guard,
+            gas: 1000000,
+            value: Wei::zero(),
+            message: GuardDemoMsg::Recall { sequence: 1 },
+        )
+    assert!(missing.sequence == 0)
+}
+
+#[test]
+fn recalled_permission_cannot_override_current_policy() {
+    let rule = SpendPolicy {
+        delegate: Address::new(0xA11CE),
+        recipient: Address::new(0xB0B),
+        per_transfer: wei(10),
+        valid_before: Timestamp::from_seconds(1000),
+        revoked: false,
+    }
+    var budget = Budget { remaining: wei(5) }
+    var memory = new_memory()
+    with (mut memory) {
+        let _ = remember(episode(50), decision_code: 0, evidence_hash: 0xCAFE)
+        assert!(recall(1).unwrap().decision_code == 0)
+    }
+    with (SpendPolicy = rule, mut budget) {
+        assert!(authorize(episode(50)).code() == 6)
+        assert!(budget.remaining == wei(5))
+    }
+}
+
+#[test]
+fn contract_eviction_does_not_restore_spending_budget() uses (evm: mut Evm) {
+    let to = Address::new(0xB0B)
+    let guard = evm
+        .create2<GuardDemo>(
+            value: Wei::zero(),
+            args: (
+                evm.address(),
+                to,
+                wei(100),
+                wei(150),
+                Timestamp::from_seconds(1_000_000_000_000),
+            ),
+            salt: 0,
+        )
+    for i in 0 .. 10 {
+        let code: u256 = evm
+            .call(
+                addr: guard,
+                gas: 2000000,
+                value: Wei::zero(),
+                message: GuardDemoMsg::ChargeSpend { to, amount: wei(1), evidence_hash: i as u256 },
+            )
+        assert!(code == 0)
+    }
+    let evicted: MemoryEntry = evm
+        .call(
+            addr: guard,
+            gas: 1000000,
+            value: Wei::zero(),
+            message: GuardDemoMsg::Recall { sequence: 1 },
+        )
+    assert!(evicted.sequence == 0)
+    let latest: u256 = evm
+        .call(
+            addr: guard,
+            gas: 1000000,
+            value: Wei::zero(),
+            message: GuardDemoMsg::LatestSequence {},
+        )
+    assert!(latest == 10)
+    let count: u256 = evm
+        .call(
+            addr: guard,
+            gas: 1000000,
+            value: Wei::zero(),
+            message: GuardDemoMsg::MemoryCount {},
+        )
+    assert!(count == 8)
+    let remaining: Wei = evm
+        .call(
+            addr: guard,
+            gas: 1000000,
+            value: Wei::zero(),
+            message: GuardDemoMsg::Remaining {},
+        )
+    assert!(remaining == wei(140))
+}

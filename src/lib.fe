@@ -1,0 +1,270 @@
+// FeGuard: deterministic authorization for a narrowly scoped spending session.
+// A caller must enforce this authorization in the same atomic operation as the
+// actual transfer. This library does not send funds or verify signatures.
+
+pub struct SpendPolicy {
+    pub delegate: Address,
+    pub recipient: Address,
+    pub per_transfer: Wei,
+    pub valid_before: Timestamp,
+    pub revoked: bool,
+}
+
+pub struct Budget { pub remaining: Wei }
+
+pub struct SpendRequest {
+    pub caller: Address,
+    pub recipient: Address,
+    pub amount: Wei,
+    pub now: Timestamp,
+}
+
+pub enum Decision {
+    Allowed,
+    Revoked,
+    WrongDelegate,
+    Expired,
+    WrongRecipient,
+    ZeroAmount,
+    TransferLimit,
+    BudgetLimit,
+}
+
+impl Decision {
+    // Stable, small codes are convenient for ABI adapters and CLI output.
+    pub fn code(self) -> u256 {
+        match self {
+            Decision::Allowed => 0,
+            Decision::Revoked => 1,
+            Decision::WrongDelegate => 2,
+            Decision::Expired => 3,
+            Decision::WrongRecipient => 4,
+            Decision::ZeroAmount => 5,
+            Decision::TransferLimit => 6,
+            Decision::BudgetLimit => 7,
+        }
+    }
+}
+
+// Only read access is declared: a preview cannot consume the budget.
+pub fn preview(_ request: SpendRequest) -> Decision
+uses (policy: SpendPolicy, budget: Budget)
+{
+    if policy.revoked {
+        return Decision::Revoked
+    }
+    if request.caller != policy.delegate {
+        return Decision::WrongDelegate
+    }
+    // Expiry is exclusive: requests at the deadline are already expired.
+    if request.now >= policy.valid_before {
+        return Decision::Expired
+    }
+    if request.recipient != policy.recipient {
+        return Decision::WrongRecipient
+    }
+    if request.amount == Wei::zero() {
+        return Decision::ZeroAmount
+    }
+    if request.amount > policy.per_transfer {
+        return Decision::TransferLimit
+    }
+    if request.amount > budget.remaining {
+        return Decision::BudgetLimit
+    }
+    Decision::Allowed
+}
+
+// The signature explicitly exposes the one piece of state this operation can
+// change. A rejection returns before any write. Comparison precedes subtraction
+// so an oversized request cannot underflow the remaining budget.
+pub fn authorize(_ request: SpendRequest) -> Decision
+uses (policy: SpendPolicy, budget: mut Budget)
+{
+    let decision = preview(request)
+    if decision.code() == 0 {
+        budget.remaining = budget.remaining - request.amount
+    }
+    decision
+}
+
+// Eight recent, structured episodes. Evidence is an opaque content hash;
+// explanations or private documents belong in an application-owned store.
+pub const MEMORY_CAPACITY: u256 = 8
+
+#[abi]
+pub struct MemoryEntry {
+    pub sequence: u256,
+    pub caller: Address,
+    pub recipient: Address,
+    pub amount: Wei,
+    pub observed_at: Timestamp,
+    pub decision_code: u256,
+    pub evidence_hash: u256,
+}
+
+impl Copy for MemoryEntry {}
+impl Snapshot for MemoryEntry {}
+
+pub struct AgentMemory { pub written: u256, pub slots: [MemoryEntry; 8] }
+
+pub fn empty_entry() -> MemoryEntry {
+    MemoryEntry {
+        sequence: 0,
+        caller: Address::new(0),
+        recipient: Address::new(0),
+        amount: Wei::zero(),
+        observed_at: Timestamp::from_seconds(0),
+        decision_code: 0,
+        evidence_hash: 0,
+    }
+}
+
+pub fn new_memory() -> AgentMemory {
+    AgentMemory { written: 0, slots: [empty_entry(); 8] }
+}
+
+pub fn remember(_ request: SpendRequest, decision_code: u256, evidence_hash: u256) -> u256
+uses (memory: mut AgentMemory)
+{
+    let sequence = memory.written + 1
+    let slot: usize = ((sequence - 1) % MEMORY_CAPACITY).downcast().unwrap()
+    memory.slots[slot] = MemoryEntry {
+        sequence,
+        caller: request.caller,
+        recipient: request.recipient,
+        amount: request.amount,
+        observed_at: request.now,
+        decision_code,
+        evidence_hash,
+    }
+    memory.written = sequence
+    sequence
+}
+
+// The sequence tag prevents an overwritten slot from masquerading as an older
+// episode. None means absent or evicted, not a successful zero-value action.
+pub fn recall(_ sequence: u256) -> Option<MemoryEntry> uses (memory: AgentMemory) {
+    if sequence == 0 || sequence > memory.written {
+        return None
+    }
+    let slot: usize = ((sequence - 1) % MEMORY_CAPACITY).downcast().unwrap()
+    if memory.slots[slot].sequence != sequence {
+        return None
+    }
+    Some(memory.slots[slot])
+}
+
+pub fn memory_count() -> u256 uses (memory: AgentMemory) {
+    if memory.written < MEMORY_CAPACITY {
+        memory.written
+    } else {
+        MEMORY_CAPACITY
+    }
+}
+
+// This adapter demonstrates persistent enforcement and trusted EVM context.
+// It records budget authorizations only; it is not a wallet and holds no ETH.
+pub msg GuardDemoMsg {
+    #[selector = sol("previewSpend(address,uint256)")]
+    PreviewSpend { to: Address, amount: Wei } -> u256,
+    #[selector = sol("chargeSpend(address,uint256,uint256)")]
+    ChargeSpend { to: Address, amount: Wei, evidence_hash: u256 } -> u256,
+    #[selector = sol("remaining()")]
+    Remaining -> Wei,
+    #[selector = sol("revoke()")]
+    Revoke,
+    #[selector = sol("recall(uint256)")]
+    Recall { sequence: u256 } -> MemoryEntry,
+    #[selector = sol("latestSequence()")]
+    LatestSequence -> u256,
+    #[selector = sol("memoryCount()")]
+    MemoryCount -> u256,
+}
+
+pub contract GuardDemo uses (ctx: Ctx) {
+    owner: Address,
+    mut rule: SpendPolicy,
+    mut budget: Budget,
+    mut memory: AgentMemory,
+
+    init(
+        delegate: Address,
+        recipient: Address,
+        per_transfer: Wei,
+        total_budget: Wei,
+        valid_before: Timestamp,
+    )
+    uses (ctx, mut owner, mut rule, mut budget, mut memory)
+    {
+        owner = ctx.caller()
+        rule = SpendPolicy { delegate, recipient, per_transfer, valid_before, revoked: false }
+        budget = Budget { remaining: total_budget }
+        memory = new_memory()
+    }
+
+    recv GuardDemoMsg {
+        PreviewSpend { to, amount } -> u256 uses (ctx, rule, budget) {
+            let request = SpendRequest {
+                caller: ctx.caller(),
+                recipient: to,
+                amount,
+                now: ctx.timestamp(),
+            }
+            with (SpendPolicy = rule, budget) {
+                preview(request).code()
+            }
+        }
+
+        ChargeSpend { to, amount, evidence_hash } -> u256
+        uses (ctx, rule, mut budget, mut memory)
+        {
+            let request = SpendRequest {
+                caller: ctx.caller(),
+                recipient: to,
+                amount,
+                now: ctx.timestamp(),
+            }
+            let code = with (SpendPolicy = rule, mut budget) {
+                authorize(request).code()
+            }
+            // Unrelated callers cannot fill the ring and evict the agent's
+            // history. Delegate rejections are remembered for later inspection.
+            if request.caller == rule.delegate {
+                let _ = with (mut memory) {
+                    remember(request, decision_code: code, evidence_hash)
+                }
+            }
+            code
+        }
+
+        Remaining -> Wei uses (budget) {
+            budget.remaining
+        }
+
+        Recall { sequence } -> MemoryEntry uses (memory) {
+            // At the ABI boundary, sequence == 0 is the explicit absent marker.
+            with (memory) {
+                match recall(sequence) {
+                    Some(entry) => entry,
+                    None => empty_entry(),
+                }
+            }
+        }
+
+        LatestSequence -> u256 uses (memory) {
+            memory.written
+        }
+
+        MemoryCount -> u256 uses (memory) {
+            with (memory) {
+                memory_count()
+            }
+        }
+
+        Revoke uses (ctx, owner, mut rule) {
+            assert!(ctx.caller() == owner, "Only the owner may revoke")
+            rule.revoked = true
+        }
+    }
+}
