@@ -1,0 +1,62 @@
+// Public-cohort triage is deliberately separate from explicit-policy mismatch.
+// A nonzero pending owner is a review lead, never proof of a vulnerability.
+pub fn triage(_ kind: u64, _ state: u64, _ value: u256) -> u64 {
+    // 0 no signal under this rule; 1 handoff review; 2 initialization review;
+    // 3 zero-delay review; 4 renounced/uninitialized owner context;
+    // 5 runtime evidence missing; 6 unknown; 7 unsupported rule;
+    // 8 source-reviewed exposed initialization, impact not established.
+    if kind < 1 || kind > 6 {
+        return 7
+    }
+    if state != 0 { return 6 }
+    match kind {
+        1 => if value != 0 { 1 } else { 0 },
+        2 => if value == 0 { 2 } else { 0 },
+        3 => if value == 0 { 3 } else { 0 },
+        4 => if value == 0 { 4 } else { 0 },
+        5 => if value == 0 { 5 } else { 0 },
+        // Bits: runtime corroborated, source semantics reviewed,
+        // initialized field zero, arbitrary-caller simulation accepted.
+        _ => if (value & 3) != 3 {
+            7
+        } else if (value & 4) == 0 {
+            0
+        } else if (value & 8) == 0 { 2 } else { 8 },
+    }
+}
+
+#[unsafe(export)]
+#[cfg(target = "wasm")]
+pub fn fg_triage(_ kind: u64, _ state: u64, _ a: u64, _ b: u64, _ c: u64, _ d: u64) -> u64 {
+    let value = (a as u256) | ((b as u256) << 64) | ((c as u256) << 128) | ((d as u256) << 192)
+    triage(kind, state, value)
+}
+
+#[test]
+fn cohort_missing_reads_do_not_become_zero_state_findings() {
+    for kind in 1 .. 6 {
+        assert!(triage(kind.downcast().unwrap(), 1, 0) == 6)
+    }
+}
+
+#[test]
+fn cohort_review_leads_are_distinct_from_absent_signals() {
+    assert!(triage(1, 0, 0) == 0)
+    assert!(triage(1, 0, (1 as u256) << 200) == 1)
+    assert!(triage(2, 0, 0) == 2)
+    assert!(triage(2, 0, 1) == 0)
+    assert!(triage(3, 0, 0) == 3)
+    assert!(triage(4, 0, 0) == 4)
+    assert!(triage(5, 0, 0) == 5)
+    assert!(triage(99, 0, 0) == 7)
+}
+
+#[test]
+fn cohort_initialization_requires_source_runtime_state_and_simulation_evidence() {
+    assert!(triage(6, 0, 15) == 8)
+    assert!(triage(6, 1, 15) == 6)
+    assert!(triage(6, 0, 14) == 7)
+    assert!(triage(6, 0, 13) == 7)
+    assert!(triage(6, 0, 11) == 0)
+    assert!(triage(6, 0, 7) == 2)
+}

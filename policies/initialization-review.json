@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "chainId": 56,
+  "scope": "Source-reviewed initialization follow-up for five public cohort addresses; no transaction submission or impact assertion.",
+  "targets": [
+    {
+      "address": "0xd38B1B9CE1BbC7caaA5435c1791b6E6d90fd81c9",
+      "name": "Referral",
+      "runtimeSha256": "1bd00df3efd68a17c03ed3f98af236e715af19a44b33a6b3be53e65089f272a5",
+      "source": {
+        "url": "https://sourcify.dev/server/v2/contract/56/0xd38B1B9CE1BbC7caaA5435c1791b6E6d90fd81c9?fields=sources,storageLayout",
+        "path": "default_workspace/Dapp/BBR/referral/Referral.sol",
+        "sha256": "391748f8e1aa16bf60d139882f7023dea2a0ec593033ed1c19f522d6b9a8aed2",
+        "initializerLine": 102
+      },
+      "storage": {
+        "slot": "0x0",
+        "offset": 0,
+        "bytes": 1,
+        "label": "_initialized"
+      },
+      "simulation": {
+        "caller": "0x1111111111111111111111111111111111111111",
+        "data": "0x485cc95500000000000000000000000011111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000",
+        "gas": "0x989680"
+      },
+      "semanticReview": {
+        "reviewer": "Codex-assisted source review",
+        "conclusion": "Public initializer has no caller-specific gate and assigns ownership from its address argument.",
+        "deploymentRole": "Unverified: may be a logic implementation. Proxy/user-asset impact is not established."
+      }
+    },
+    {
+      "address": "0x3C9acB71C8da760742D8FD9cbC945918A1Aac79F",
+      "name": "QuickMiney",
+      "runtimeSha256": "40d1e4a28d327c5ae8d1e5f4ced15ebb7464f637ef3afd0a761f60e3b517e084",
+      "source": {
+        "url": "https://sourcify.dev/server/v2/contract/56/0x3C9acB71C8da760742D8FD9cbC945918A1Aac79F?fields=sources,storageLayout",
+        "path": "contracts/QuickMoneyLogic.sol",
+        "sha256": "14407249b489aa153e9254386f283fe117ea8e5f27db3a28aa9805250d093a80",
+        "initializerLine": 361
+      },
+      "storage": {
+        "slot": "0x0",
+        "offset": 0,
+        "bytes": 1,
+        "label": "_initialized"
+      },
+      "simulation": {
+        "caller": "0x1111111111111111111111111111111111111111",
+        "data": "0x2c07adbd00000000000000000000000011111111111111111111111111111111111111110000000000000000000000001111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000055d398326f99059ff775485246999027b3197955",
+        "gas": "0x989680"
+      },
+      "semanticReview": {
+        "reviewer": "Codex-assisted source review",
+        "conclusion": "Public initializer has no caller-specific gate and assigns caller/argument-based authority. The name is initilize, not initialize.",
+        "deploymentRole": "Unverified: may be a logic implementation. Proxy/user-asset impact is not established."
+      }
+    },
+    {
+      "address": "0x1369622bae6eAA5690aEB2Fd5d5057Ad0E0E570A",
+      "name": "QuickMiney",
+      "runtimeSha256": "f590da0c12a352533f4f82f01074244a077614a51c7ed3451234b0f97f109460",
+      "source": {
+        "url": "https://sourcify.dev/server/v2/contract/56/0x1369622bae6eAA5690aEB2Fd5d5057Ad0E0E570A?fields=sources,storageLayout",
+        "path": "contracts/QuickMoneyLogic.sol",
+        "sha256": "a66a089e87c61a5b0e6cfa336071009fd94774f9714b21fb7cf746b3558d0b21",
+        "initializerLine": 361
+      },
+      "storage": {
+        "slot": "0x0",
+        "offset": 0,
+        "bytes": 1,
+        "label": "_initialized"
+      },
+      "simulation": {
+        "caller": "0x1111111111111111111111111111111111111111",
+        "data": "0x2c07adbd00000000000000000000000011111111111111111111111111111111111111110000000000000000000000001111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000055d398326f99059ff775485246999027b3197955",
+        "gas": "0x989680"
+      },
+      "semanticReview": {
+        "reviewer": "Codex-assisted source review",
+        "conclusion": "Public initializer has no caller-specific gate and assigns caller/argument-based authority. The name is initilize, not initialize.",
+        "deploymentRole": "Unverified: may be a logic implementation. Proxy/user-asset impact is not established."
+      }
+    },
+    {
+      "address": "0xDF6495294eB535C5679e4636a0cb350d16976663",
+      "name": "Referral",
+      "runtimeSha256": "914dd6b83aa3a8defbf56e37b2b9bf39d1f27ed432a99cdc6e9fb641970611ec",
+      "source": {
+        "url": "https://sourcify.dev/server/v2/contract/56/0xDF6495294eB535C5679e4636a0cb350d16976663?fields=sources,storageLayout",
+        "path": "default_workspace/Dapp/BBR/referral/Referral.sol",
+        "sha256": "c9782df3d0e4bb2c0fb0183e0821d337ed5425ac66d7ef5851b813d2cb30341c",
+        "initializerLine": 101
+      },
+      "storage": {
+        "slot": "0x0",
+        "offset": 0,
+        "bytes": 1,
+        "label": "_initialized"
+      },
+      "simulation": {
+        "caller": "0x1111111111111111111111111111111111111111",
+        "data": "0x485cc95500000000000000000000000011111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000",
+        "gas": "0x989680"
+      },
+      "semanticReview": {
+        "reviewer": "Codex-assisted source review",
+        "conclusion": "Public initializer has no caller-specific gate and assigns ownership from its address argument.",
+        "deploymentRole": "Unverified: may be a logic implementation. Proxy/user-asset impact is not established."
+      }
+    },
+    {
+      "address": "0x3588af1ABa6A55a1cB52cc1BFb2DC4930a5cF480",
+      "name": "Referral",
+      "runtimeSha256": "caf9185c91b3be33f32a8e1e444b7a6b270002e100c4fcaa32590608b7553c71",
+      "source": {
+        "url": "https://sourcify.dev/server/v2/contract/56/0x3588af1ABa6A55a1cB52cc1BFb2DC4930a5cF480?fields=sources,storageLayout",
+        "path": "default_workspace/Dapp/BBR/referral/Referral.sol",
+        "sha256": "7252592cd30fdb724ec1aa3ca066ff910deeae9ad6f58ff3744ca5ac20b97cda",
+        "initializerLine": 101
+      },
+      "storage": {
+        "slot": "0x0",
+        "offset": 0,
+        "bytes": 1,
+        "label": "_initialized"
+      },
+      "simulation": {
+        "caller": "0x1111111111111111111111111111111111111111",
+        "data": "0x485cc95500000000000000000000000011111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000",
+        "gas": "0x989680"
+      },
+      "semanticReview": {
+        "reviewer": "Codex-assisted source review",
+        "conclusion": "Public initializer has no caller-specific gate and assigns ownership from its address argument.",
+        "deploymentRole": "Unverified: may be a logic implementation. Proxy/user-asset impact is not established."
+      }
+    }
+  ]
+}

@@ -1,4 +1,32 @@
-# A 90-second FeGuard walkthrough
+# FeGuard research workbench: 90-second walkthrough
+
+Serve the repository (`python -m http.server 8766 --bind 127.0.0.1`) and open `/inspection/cohort.html`.
+
+## 0–20 seconds: show measured coverage
+
+“We screened 300 public contract addresses on BNB Chain. All 300 had corroborated runtime evidence, 153 had supported getter coverage, and five source-reviewed initialization leads were reproduced. We are claiming zero full audits and zero proven financial-impact findings.”
+
+Point out that 300 addresses are not 300 independent projects. The interface replays 196 generic triage inputs and five source-specific follow-ups in Fe before showing results.
+
+## 20–45 seconds: inspect one real lead
+
+Filter **Validated initialization leads**, search **QuickMiney**, and select a row. Show the reviewed source path, zero initialized field, arbitrary-caller read-only simulation and pinned follow-up block. The source function is spelled `initilize`.
+
+“The exposed initialization behavior is reproduced. We still need to establish whether this address is a live deployment or a logic implementation and whether any user assets are affected. The next step is deployment-context review, not an unsupported claim of stolen funds.”
+
+## 45–65 seconds: explain the evidence gates
+
+Show `src/cohort.fe`: its source-specific rule requires runtime corroboration, reviewed source semantics, uninitialized storage and successful simulation together. Unknown evidence does not become zero. Source or runtime disagreement prevents the simulation worker from proceeding. Zero owner alone is context.
+
+The offline cohort tests reconstruct the 300-contract batch from compressed public RPC evidence and test missing data, disagreement, deduplication and source gates. Public source hashes/URLs and simulation requests/responses are preserved.
+
+## 65–90 seconds: show the repeatable process
+
+Show `node scripts/cohort.mjs --limit 100` and `node scripts/review-initializers.mjs`. Discovery and corroboration are automatic for supported rules; source-specific plans still require review. Saved incident history suppresses duplicate generic leads and does not clear a lead when its contract disappears from the sample.
+
+“Fe evaluates the deterministic policy/triage decisions on EVM and WASM. JavaScript acquires data and presents it. The worker performs bounded batches; we have not deployed a continuously running service or sent any on-chain transactions.”
+
+## Optional counterexample-lab walkthrough
 
 Serve the repository (`python -m http.server 8766 --bind 127.0.0.1`) and open `/demo/`.
 

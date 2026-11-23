@@ -1,14 +1,33 @@
 # FeGuard
 
-**Read-only deployment-policy checks and replayable counterexamples, evaluated in Fe.**
+**Public contract research, deployment-policy checks and replayable counterexamples, evaluated in Fe.**
 
 [![Fe checks](https://github.com/yeziR4/feguard/actions/workflows/ci.yml/badge.svg)](https://github.com/yeziR4/feguard/actions/workflows/ci.yml)
 
 FeGuard compares explicit documented governance policies with pinned public chain observations and turns supported discrepancies into review tasks. Its first independent deployment snapshot covers GangLaunchpad's router governance and handler ownership on BNB Chain: **32 matching observations, no measured mismatches, and 2 explicit verification gaps**. This is a prospect assessment, not an audit or a customer endorsement.
 
+The public research workbench adds bounded discovery and qualification: **300 BNB Chain contracts screened**, **153 with targeted getter coverage**, and **five source-reviewed initialization leads across two contract families**. These addresses accepted read-only initializer simulations while their reviewed initialization fields were zero. **Live deployment roles and financial impact remain unverified; confirmed impact findings and full audits are both zero.** See the [research method and results](docs/COHORT-RESEARCH.md).
+
 The companion counterexample lab generates sequences, checks an adapter's invariants, and reduces failures into replayable Fe regressions. Its agent spending/memory examples demonstrate that forgetting a spend must never restore allowance and remembering an approval must never bypass revocation.
 
 Both engines run in Fe's EVM tests and compile to WebAssembly for Node and the browser. JavaScript acquires and decodes public data and presents results; policy assessments, action-code selection, generation, replay and reduction are implemented in Fe.
+
+## Open the research workbench
+
+```sh
+node --test scripts/cohort.test.mjs   # offline evidence replay and failure cases
+python -m http.server 8766 --bind 127.0.0.1
+# Open http://127.0.0.1:8766/inspection/cohort.html
+```
+
+Search all 300 addresses, filter coverage, inspect the five leads' source/state/simulation evidence, and export visible rows. The browser replays recorded triage inputs in Fe before displaying them. Discovery and follow-up are separate, rerunnable commands; no continuously running hosted worker is implied.
+
+```sh
+node scripts/cohort.mjs --limit 100        # new bounded public sample
+node scripts/review-initializers.mjs      # five explicitly reviewed targets
+```
+
+The batch's compressed raw evidence and the follow-up's source hashes/RPC responses are included. These are contract counts, not customer/project counts. The generic scanner does not infer trustworthy project policies or promote zero-owner observations into vulnerabilities.
 
 ## Check a public deployment
 
@@ -50,6 +69,7 @@ fe build --backend wasm --out-dir demo/engine
 node scripts/demo.mjs --all --verify
 node scripts/verify.mjs
 node --test scripts/inspection.test.mjs
+node --test scripts/cohort.test.mjs
 node scripts/inspect.mjs --replay reports/gang-router.json
 ```
 
@@ -135,6 +155,7 @@ The corrected adapter calls the actual FeGuard policy and memory functions. The 
 | `src/evm_harness.fe` | ABI/storage replay harness |
 | `src/wasm_api.fe` | Thin scalar export ABI |
 | `src/deployment_policy.fe` | Evidence-aware deployment policy and action evaluator |
+| `src/cohort.fe` | Public-screening triage and evidence-gated initialization review |
 | `policies/` and `inspection/` | Explicit public policy and recorded-snapshot viewer |
 | `src/*tests.fe` | Unit, model, reduction, export, and EVM checks |
 | `demo/` | Browser UI, Web Worker, WASM, and compiler manifest |
@@ -151,10 +172,10 @@ The counterexample WASM ABI/UI expose the guard adapter; other adapters can use 
 
 ## Contest declaration
 
-- **Build period:** initial policy/memory prototype begun 16 November 2026; testing engine, deployment checker, cross-backend demos and evidence added from 23 November, within the contest window.
-- **Reused work:** Fe, its standard library/test runner, documented SplitMix64 mixing constants, and language/test conventions from official documentation. No third-party application dependencies or copied fuzzing implementation.
+- **Build period:** initial policy/memory prototype begun 16 November 2026; testing engine, discovery/screening worker, source-gated initialization follow-up, deployment checker and evidence added from 23 November, within the contest window.
+- **Reused work:** Fe, its standard library/test runner, documented SplitMix64 mixing constants, and language/test conventions from official documentation. Public input data comes from Sourcify and BNB RPC endpoints; source references are third-party work. No third-party application dependencies or copied fuzzing implementation.
 - **AI assistance:** OpenAI Codex assisted with design, implementation, tests, UI, documentation, and registration. The human entrant must review, understand, and explain the submission.
 - **License:** MIT.
-- **Registration:** form received; acceptance and project ID still need confirmation by email. Keep private submission credentials outside this repository.
+- **Registration:** the organizer's registration confirmation email was located on 23 November. Keep the project ID/private submission credentials outside this repository. Final submission is still outstanding.
 
 See [SUBMISSION.md](SUBMISSION.md). Final submission for judging has not been performed.

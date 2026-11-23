@@ -2,8 +2,8 @@
   "manifest_version": 1,
   "module": {
     "file": "feguard.wasm",
-    "sha256": "5a3c1572c9a3bde0465bd6e5058161b3c82939608679c8b6dec2eaffd374d9ff",
-    "size": 17534,
+    "sha256": "7a540c7cfbd89aa0c60c80d07f45200120f30fc1ad9b3d6dff823dfad02fba97",
+    "size": 17987,
     "initial_memory_pages": 17
   },
   "contract_version": 3,
@@ -227,6 +227,46 @@
         },
         {
           "name": "implementation",
+          "type": "u64",
+          "wasm": ["i64"]
+        }
+      ],
+      "result": {
+        "type": "u64",
+        "wasm": ["i64"]
+      }
+    },
+    {
+      "name": "fg_triage",
+      "kind": "function",
+      "params": [
+        {
+          "name": "kind",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "state",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "a",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "b",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "c",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "d",
           "type": "u64",
           "wasm": ["i64"]
         }
