@@ -29,6 +29,9 @@ const CASINO = [
   [/^bet$|^placeBet$|^place_bet$/i, 1],
   [/fulfillRandomWords|rawFulfillRandomWords/i, 2],
   [/^roll$|^spin$|^flip$|^draw$|^coinToss$/i, 2],
+  // BetSwirl-style games expose wager() plus per-game bet getters; the VRF callback is
+  // internal and never appears in the ABI, so this replaces that missing signal.
+  [/^getLastUserBets$|^diceBets$|^coinTossBets$|^kenoBets$|^rouletteBets$/i, 2],
   [/^cashOut$|^settleBet$|^resolveBet$/i, 1],
 ];
 const MARKET = [

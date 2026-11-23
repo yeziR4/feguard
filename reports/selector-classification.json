@@ -3,18 +3,18 @@
   "source": "bytecode-dispatch+4byte",
   "rows": [
     {
-      "address": "0x99d318b6402ce95b6b46f40f752ea96430a2ead0",
-      "selectors": 20,
-      "resolved": 10,
+      "address": "0x076c84d7691008045984bece7a3e595903039017",
+      "selectors": 31,
+      "resolved": 12,
       "cls": "other",
       "casinoScore": 0,
       "marketScore": 0,
       "hits": []
     },
     {
-      "address": "0xcb82fbd0edbb6facc46ffa50b39311d4c374c9f6",
-      "selectors": 3,
-      "resolved": 3,
+      "address": "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b",
+      "selectors": 54,
+      "resolved": 35,
       "cls": "other",
       "casinoScore": 0,
       "marketScore": 0,
