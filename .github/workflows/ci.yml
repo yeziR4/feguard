@@ -33,3 +33,5 @@ jobs:
       - run: fe build --backend wasm --out-dir demo/engine
       - run: node scripts/demo.mjs --all --verify
       - run: node scripts/verify.mjs
+      - run: node --test scripts/inspection.test.mjs
+      - run: node scripts/inspect.mjs --replay reports/gang-router.json

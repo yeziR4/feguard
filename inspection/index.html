@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FeGuard — Deployment review</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header><a class="brand" href="./"><span>Fg</span> FeGuard</a><nav><a href="../demo/">Counterexample lab ↗</a><a href="https://github.com/yeziR4/feguard">Source ↗</a></nav></header>
+  <main>
+    <section class="hero"><div><p class="eyebrow">INDEPENDENT DEPLOYMENT REVIEW</p><h1>What was promised.<br>What is deployed<span>.</span></h1><p class="lede">Public policy → pinned chain reads → Fe assessments.<br>Specific review tasks, with the evidence attached.</p></div><aside class="snapshot"><span class="pill">RECORDED PUBLIC SNAPSHOT</span><h2 id="project">Loading report…</h2><p id="block"></p><p id="timestamp"></p><p id="engine" class="engine" role="status">Loading Fe policy engine</p></aside></section>
+    <p id="error" class="error" role="alert" hidden></p>
+    <section id="report" hidden>
+      <div class="metrics" id="metrics"></div>
+      <div class="verdict"><span class="signal"></span><div><h2 id="verdict-title"></h2><p>Matching observations cover the listed checks. They do not certify contract safety.</p></div></div>
+      <section class="queue"><div class="section-title"><p class="eyebrow">01 / REVIEW QUEUE</p><span>No transactions or team contact</span></div><div id="queue"></div></section>
+      <section class="evidence"><div class="section-title"><p class="eyebrow">02 / CHECK THE EVIDENCE</p><a id="download" href="../reports/gang-router.json" download>Raw requests + responses ↓</a></div><p class="muted" id="scope"></p><div class="table-wrap"><table><thead><tr><th>Policy check</th><th>Observed</th><th>Expected</th><th>Assessment</th></tr></thead><tbody id="checks"></tbody></table></div></section>
+      <section class="next-run"><div><p class="eyebrow">03 / RUN IT AGAIN</p><h2>Keep a memory of<br>what changed.</h2><p>Save each snapshot. Compare it with the next run.<br>Changes become review tasks, never automatic transactions.</p></div><div><pre><code>node scripts/inspect.mjs \
+  --previous reports/gang-router.json \
+  --out reports/gang-router-next</code></pre><p>Two public RPC origins, one pinned block. No wallet, API key, account or model API required.</p><a href="../docs/DEPLOYMENT-CHECKS.md">Read the operating guide ↗</a></div></section>
+      <section class="limits"><p class="eyebrow">COVERAGE BOUNDARY</p><ul id="limits"></ul><details><summary>Published policy sources</summary><ul id="sources"></ul></details></section>
+    </section>
+    <footer><span>Fe 26.7.0 / policy evaluation in WASM</span><span>Independent research · no client relationship asserted</span></footer>
+  </main>
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>

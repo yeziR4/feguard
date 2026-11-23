@@ -1,0 +1,144 @@
+// Read-only deployment policy evaluator. Network acquisition is outside Fe;
+// observations carry an explicit evidence state. Unknown is never success.
+pub struct Observation { pub state: u64, pub value: u256 }
+
+pub struct Assessment {
+    // 0 meets this check, 1 mismatch, 2 unknown, 3 unsupported, 4 conflict.
+    pub status: u64,
+    pub action: u64,
+}
+
+impl Copy for Observation {}
+impl Copy for Assessment {}
+
+pub fn assess(_ kind: u64, _ observation: Observation, expected: u256) -> Assessment {
+    if kind < 1 || kind > 10 {
+        return Assessment { status: 3, action: 14 }
+    }
+    if observation.state != 0 {
+        return match observation.state {
+            4 => Assessment { status: 3, action: 14 },
+            5 => Assessment { status: 4, action: 13 },
+            _ => Assessment { status: 2, action: 12 },
+        }
+    }
+    let actual = observation.value
+    let meets = match kind {
+        2 => actual >= expected,
+        5 => actual == 0,
+        7 => actual != 0,
+        8 => actual == 1,
+        9 => actual >= 1 && actual <= expected,
+        _ => actual == expected,
+    }
+    if meets {
+        return Assessment { status: 0, action: 0 }
+    }
+    // Code 5 distinguishes an unfinished documented handoff from an unexpected
+    // pending recipient. A changed owner is a policy mismatch, not proof of theft.
+    let action = if kind == 6 {
+        15
+    } else if kind == 5 && actual != expected {
+        6
+    } else {
+        kind
+    }
+    Assessment { status: 1, action }
+}
+
+fn word(_ a: u64, _ b: u64, _ c: u64, _ d: u64) -> u256 {
+    (a as u256) | ((b as u256) << 64) | ((c as u256) << 128) | ((d as u256) << 192)
+}
+
+#[unsafe(export)]
+#[cfg(target = "wasm")]
+pub fn fg_assess(
+    _ kind: u64,
+    _ state: u64,
+    _ a: u64,
+    _ b: u64,
+    _ c: u64,
+    _ d: u64,
+    _ e: u64,
+    _ f: u64,
+    _ g: u64,
+    _ h: u64,
+) -> u64 {
+    let result = assess(
+        kind,
+        Observation { state, value: word(a, b, c, d) },
+        expected: word(e, f, g, h),
+    )
+    result.status | (result.action << 8)
+}
+
+#[test]
+fn policy_states_never_turn_missing_evidence_into_a_pass() {
+    for state in 1 .. 8 {
+        let result = assess(
+            1,
+            Observation { state: state.downcast().unwrap(), value: 0 },
+            expected: 0,
+        )
+        assert!(result.status != 0)
+        assert!(result.status != 1)
+    }
+    assert!(
+        assess(99, Observation { state: 0, value: 1 }, expected: 1).status == 3,
+    )
+}
+
+#[test]
+fn policy_delay_boundary_uses_full_uint256_precision() {
+    let minimum: u256 = ((1 as u256) << 200) | 172800
+    assert!(
+        assess(
+                2,
+                Observation { state: 0, value: minimum },
+                expected: minimum,
+            ).status == 0,
+    )
+    assert!(
+        assess(
+                2,
+                Observation { state: 0, value: minimum - 1 },
+                expected: minimum,
+            ).status == 1,
+    )
+    assert!(
+        word(1, 2, 3, 4)
+            == ((1 as u256) | ((2 as u256) << 64) | ((3 as u256) << 128) | ((4 as u256) << 192)),
+    )
+}
+
+#[test]
+fn policy_handoff_distinguishes_expected_and_unexpected_recipients() {
+    assert!(
+        assess(5, Observation { state: 0, value: 42 }, expected: 42).action == 5,
+    )
+    assert!(
+        assess(5, Observation { state: 0, value: 43 }, expected: 42).action == 6,
+    )
+    assert!(
+        assess(5, Observation { state: 0, value: 0 }, expected: 42).status == 0,
+    )
+}
+
+#[test]
+fn policy_required_forbidden_and_threshold_checks_have_distinct_actions() {
+    assert!(
+        assess(3, Observation { state: 0, value: 0 }, expected: 1).action == 3,
+    )
+    assert!(
+        assess(4, Observation { state: 0, value: 1 }, expected: 0).action == 4,
+    )
+    assert!(
+        assess(9, Observation { state: 0, value: 0 }, expected: 3).status == 1,
+    )
+    assert!(
+        assess(9, Observation { state: 0, value: 4 }, expected: 3).status == 1,
+    )
+    assert!(
+        assess(9, Observation { state: 0, value: 2 }, expected: 3).status == 0,
+    )
+}

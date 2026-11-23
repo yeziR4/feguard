@@ -2,8 +2,8 @@
   "manifest_version": 1,
   "module": {
     "file": "feguard.wasm",
-    "sha256": "ff2106b94f876dca90adc495fdf2629691364024b3e6d740ffe26639f1dbab1c",
-    "size": 16646,
+    "sha256": "5a3c1572c9a3bde0465bd6e5058161b3c82939608679c8b6dec2eaffd374d9ff",
+    "size": 17534,
     "initial_memory_pages": 17
   },
   "contract_version": 3,
@@ -47,6 +47,66 @@
         },
         {
           "name": "index",
+          "type": "u64",
+          "wasm": ["i64"]
+        }
+      ],
+      "result": {
+        "type": "u64",
+        "wasm": ["i64"]
+      }
+    },
+    {
+      "name": "fg_assess",
+      "kind": "function",
+      "params": [
+        {
+          "name": "kind",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "state",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "a",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "b",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "c",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "d",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "e",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "f",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "g",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "h",
           "type": "u64",
           "wasm": ["i64"]
         }

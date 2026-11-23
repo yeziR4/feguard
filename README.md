@@ -1,12 +1,25 @@
 # FeGuard
 
-**A stateful counterexample generator and trace reducer written in Fe.**
+**Read-only deployment-policy checks and replayable counterexamples, evaluated in Fe.**
 
 [![Fe checks](https://github.com/yeziR4/feguard/actions/workflows/ci.yml/badge.svg)](https://github.com/yeziR4/feguard/actions/workflows/ci.yml)
 
-FeGuard generates sequences of actions, checks a target's invariants, and reduces a failure into a reproducible regression test. Its first target is an agent's spending policy and bounded episodic memory: forgetting old actions must never restore spending allowance, and remembering an approval must never bypass revocation.
+FeGuard compares explicit documented governance policies with pinned public chain observations and turns supported discrepancies into review tasks. Its first independent deployment snapshot covers GangLaunchpad's router governance and handler ownership on BNB Chain: **32 matching observations, no measured mismatches, and 2 explicit verification gaps**. This is a prospect assessment, not an audit or a customer endorsement.
 
-The reusable engine runs in Fe's EVM test environment and compiles to WebAssembly for the CLI and browser demo. JavaScript marshals inputs and presents results; generation, policy evaluation, replay, and reduction are implemented in Fe.
+The companion counterexample lab generates sequences, checks an adapter's invariants, and reduces failures into replayable Fe regressions. Its agent spending/memory examples demonstrate that forgetting a spend must never restore allowance and remembering an approval must never bypass revocation.
+
+Both engines run in Fe's EVM tests and compile to WebAssembly for Node and the browser. JavaScript acquires and decodes public data and presents results; policy assessments, action-code selection, generation, replay and reduction are implemented in Fe.
+
+## Check a public deployment
+
+```sh
+node scripts/inspect.mjs --replay reports/gang-router.json  # offline replay
+node scripts/inspect.mjs                                # fresh public RPC reads
+python -m http.server 8766 --bind 127.0.0.1
+# Open http://127.0.0.1:8766/inspection/
+```
+
+See the [first report](reports/gang-router.md) and [operating guide](docs/DEPLOYMENT-CHECKS.md). This requires an explicit policy and supported interfaces. It does not infer arbitrary specifications, authenticate runtime code from ABI getters, or contact teams. Live collection uses two public HTTPS RPC origins; no wallet or API key is needed. Save snapshots and use `--previous` to track changes.
 
 ## Try it in one minute
 
@@ -36,6 +49,8 @@ fe test --backend wasm
 fe build --backend wasm --out-dir demo/engine
 node scripts/demo.mjs --all --verify
 node scripts/verify.mjs
+node --test scripts/inspection.test.mjs
+node scripts/inspect.mjs --replay reports/gang-router.json
 ```
 
 EVM integration tests are gated to the EVM target. Shared engine, oracle, reduction, and library tests also run under WASM. `fe build` additionally produces the policy demonstration contract and storage replay harness. Both hold no funds.
@@ -119,6 +134,8 @@ The corrected adapter calls the actual FeGuard policy and memory functions. The 
 | `src/lib.fe` | Typed policy, budget, memory, and `GuardDemo` |
 | `src/evm_harness.fe` | ABI/storage replay harness |
 | `src/wasm_api.fe` | Thin scalar export ABI |
+| `src/deployment_policy.fe` | Evidence-aware deployment policy and action evaluator |
+| `policies/` and `inspection/` | Explicit public policy and recorded-snapshot viewer |
 | `src/*tests.fe` | Unit, model, reduction, export, and EVM checks |
 | `demo/` | Browser UI, Web Worker, WASM, and compiler manifest |
 | `scripts/` | Dependency-free CLI and verification runner |
@@ -130,11 +147,11 @@ This bounded testing prototype requires a Fe adapter with explicit invariants. I
 
 The harness and original demonstration contract authorize or record actions; they do not implement wallet transfers, signature verification, or a semantic LLM memory service. Notes are synthetic memory operations. Evidence hashes are caller-supplied references, not proof of external facts. On-chain fields are public.
 
-The WASM ABI/UI expose the guard adapter; other adapters can use the generic Fe API. WASM state summaries are specialized to this model's small values. Native execution has not been verified. Local results are distinct from remote CI: an unrun workflow is not a passing check.
+The counterexample WASM ABI/UI expose the guard adapter; other adapters can use the generic Fe API. Its state summaries are specialized to that model's small values. The deployment-policy ABI separately preserves full `u256` inputs. Native execution has not been verified. Local results are distinct from remote CI: an unrun workflow is not a passing check.
 
 ## Contest declaration
 
-- **Build period:** initial policy/memory prototype begun 16 November 2026; testing engine, reduction, cross-backend demo, and evidence added from 23 November, within the contest window.
+- **Build period:** initial policy/memory prototype begun 16 November 2026; testing engine, deployment checker, cross-backend demos and evidence added from 23 November, within the contest window.
 - **Reused work:** Fe, its standard library/test runner, documented SplitMix64 mixing constants, and language/test conventions from official documentation. No third-party application dependencies or copied fuzzing implementation.
 - **AI assistance:** OpenAI Codex assisted with design, implementation, tests, UI, documentation, and registration. The human entrant must review, understand, and explain the submission.
 - **License:** MIT.

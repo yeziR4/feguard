@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "gang-router",
+  "project": "GangLaunchpad",
+  "scope": "Published router governance and handler ownership observations; not the entire launchpad or an audit",
+  "chainId": 56,
+  "adapter": "oz5-governance-observations-v1",
+  "sources": [
+    "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-2026-10-27.md",
+    "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/script/GangRouterDeployLib.sol",
+    "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/README.md"
+  ],
+  "rpcSources": ["https://docs.bnbchain.org/bnb-smart-chain/developers/json_rpc/json-rpc-endpoint/"],
+  "rpc": ["https://bsc-dataseed.bnbchain.org", "https://bsc-dataseed.defibit.io"],
+  "addresses": {
+    "router": "0xE040445690Aa56C8b68B7f7038C7b2562B5079C4",
+    "proxyAdmin": "0xddeAB7A254e42D96D5863dAeF4E89BD426017bDa",
+    "timelock": "0x3911996E2F6c5636d6b1b32f75cf94d0aF4604C5",
+    "safe": "0x2866369F7acEFC9760bdE7779362fae5cD68B41E",
+    "deployer": "0x4EEdcDF5fab775e10C0D09951b6F59Ab81ba19d3",
+    "handler": "0x6D8d3dE459629cBb7b552169a55D754db60cAe0c",
+    "handlerAdmin": "0xF56AF7a7a004B9bB3515480A1409BC1DAD8FE985"
+  },
+  "minimumDelaySeconds": "172800",
+  "ownership": [
+    {"contract": "proxyAdmin", "owner": "timelock", "twoStep": false},
+    {"contract": "handler", "owner": "handlerAdmin", "twoStep": true},
+    {"contract": "handlerAdmin", "owner": "safe", "twoStep": true}
+  ],
+  "limitations": [
+    "ABI observations do not authenticate runtime behavior. Runtime equivalence to the pinned source is not verified.",
+    "The ERC-1967 admin slot is checked as a storage observation. OpenZeppelin 5 uses an immutable actual admin; the active upgrade authority is not established by this slot.",
+    "Known Safe, deployer, zero-address and ProxyAdmin role memberships are sampled. Other role holders are not enumerated; exclusivity is not established.",
+    "A valid Safe threshold only establishes a numeric bound. Signer independence, modules, guards and recovery mechanisms are outside scope.",
+    "The initially published implementation is not treated as immutable policy: legitimate upgrades may have occurred.",
+    "Public RPC agreement is corroboration, not a verified state proof; provider independence is not established. No pending-operation or application-logic analysis."
+  ]
+}
