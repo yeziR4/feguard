@@ -8,6 +8,12 @@
 
 **Compiler:** Fe 26.7.0 (`e6e6342`).
 
+**Public repository:** https://github.com/yeziR4/feguard
+
+**CI:** https://github.com/yeziR4/feguard/actions/workflows/ci.yml
+
+Use `git rev-parse HEAD` from the final reviewed checkout to obtain the complete judged commit SHA. The latest source, license, tests, demonstration, and disclosures are public.
+
 **Demo:** `node scripts/demo.mjs --all --verify`, or serve the repository with `python -m http.server 8766 --bind 127.0.0.1` and open `/demo/`.
 
 **Evidence:** `reports/demonstration.json`, `reports/verification.json`, generated regressions, and the EVM storage replay test. Faults are intentional mutants, not discoveries in deployed software.
@@ -22,9 +28,9 @@ Before submission:
 
 - Confirm acceptance email and project ID.
 - Review implementation and AI declaration with the human entrant.
-- Approve and publish the prepared public repository; explicit public-disclosure approval is still pending.
+- Review the published repository linked above.
 - Run documented commands from a clean checkout and check remote CI.
 - Record the actual public repository URL and full final commit SHA.
 - Submit through the private link and check the automated acceptance email.
 
-The public URL and judged commit must come from the actual published result. Final submission has not been performed.
+The repository is published. Final submission has not been performed.

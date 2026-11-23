@@ -2,6 +2,8 @@
 
 **A stateful counterexample generator and trace reducer written in Fe.**
 
+[![Fe checks](https://github.com/yeziR4/feguard/actions/workflows/ci.yml/badge.svg)](https://github.com/yeziR4/feguard/actions/workflows/ci.yml)
+
 FeGuard generates sequences of actions, checks a target's invariants, and reduces a failure into a reproducible regression test. Its first target is an agent's spending policy and bounded episodic memory: forgetting old actions must never restore spending allowance, and remembering an approval must never bypass revocation.
 
 The reusable engine runs in Fe's EVM test environment and compiles to WebAssembly for the CLI and browser demo. JavaScript marshals inputs and presents results; generation, policy evaluation, replay, and reduction are implemented in Fe.
