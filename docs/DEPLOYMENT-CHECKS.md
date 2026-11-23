@@ -69,7 +69,7 @@ Synthetic short-delay and unfinished-transfer fixtures are tested separately. **
 - `policies/gang-router.json`: documented expected addresses, ownership edges, minimum delay and limitations.
 - `scripts/inspection.test.mjs`: offline replay from captured public responses plus synthetic negative/failure cases. CI makes no live RPC requests.
 
-RPC methods are restricted to `eth_chainId`, `eth_getBlockByNumber`, `eth_getCode`, `eth_getStorageAt` and `eth_call`. No send/sign methods are accepted. ABI selectors/role IDs are canonical values checked with Foundry `cast sig`/`cast keccak`. Runtime bytes are retained in raw evidence; the local SHA256 digest is an artifact-integrity digest, not an Ethereum code hash or a state proof.
+RPC methods are restricted to `eth_chainId`, `eth_getBlockByNumber`, `eth_getCode`, `eth_getStorageAt`, `eth_getBalance` and `eth_call`. No send/sign methods are accepted. ABI selectors/role IDs are canonical values checked with Foundry `cast sig`/`cast keccak`. Runtime bytes are retained in raw evidence; the local SHA256 digest is an artifact-integrity digest, not an Ethereum code hash or a state proof.
 
 ## Adding another prospect
 

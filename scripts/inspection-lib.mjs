@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { evaluate, summarize, changesSince, formatValue } from '../inspection/policy.mjs';
 
-export const ALLOWED_METHODS = new Set(['eth_chainId', 'eth_getBlockByNumber', 'eth_getCode', 'eth_getStorageAt', 'eth_call']);
+export const ALLOWED_METHODS = new Set(['eth_chainId', 'eth_getBlockByNumber', 'eth_getCode', 'eth_getStorageAt', 'eth_getBalance', 'eth_call']);
 // Canonical ABI selectors and role hashes, checked with Foundry `cast sig` and
 // `cast keccak`. No hashing with SHA3-256 (which is not Ethereum Keccak).
 const SIG = { owner: '0x8da5cb5b', pendingOwner: '0xe30c3978', delay: '0xf27a0c92', hasRole: '0x91d14854', roleAdmin: '0x248a9ca3', threshold: '0xe75235b8', owners: '0xa0e67e2b' };

@@ -8,6 +8,8 @@ Serve the repository (`python -m http.server 8766 --bind 127.0.0.1`) and open `/
 
 Point out that 300 addresses are not 300 independent projects. The interface replays 196 generic triage inputs and five source-specific follow-ups in Fe before showing results.
 
+Show QuickMiney A's later **Low hardening** disposition and the independent proxy evidence. Its named proxy is initialized and rejects the tested initializer, while the implementation's own simulation succeeds. The proxy held a named token despite having no native balance. Explain that the useful result is a reproducible hardening classification, without a live-takeover claim.
+
 ## 20–45 seconds: inspect one real lead
 
 Filter **Validated initialization leads**, search **QuickMiney**, and select a row. Show the reviewed source path, zero initialized field, arbitrary-caller read-only simulation and pinned follow-up block. The source function is spelled `initilize`.

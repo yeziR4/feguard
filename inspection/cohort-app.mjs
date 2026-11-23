@@ -9,12 +9,14 @@ const fmt = observation => observation.state !== 0 ? 'Unreadable / conflicting' 
 const link = (label, url) => { const a = el('a', label); const parsed = new URL(url, location.href); if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('Unsupported evidence link.'); a.href = parsed.href; return a; };
 let report, followUp, visible = [], selected;
 const reviewed = new Map();
+const dispositions = new Map();
 
 function selectContract(candidate) {
   selected = candidate.address;
   const root = $('detail-body'); root.replaceChildren();
   root.append(el('h3', candidate.name), el('code', candidate.address));
   const follow = reviewed.get(candidate.address.toLowerCase());
+  const disposition = dispositions.get(candidate.address.toLowerCase());
   const dl = document.createElement('dl');
   const fields = [['Coverage', candidate.coverage === 'targeted-reads' ? `${candidate.observations.length} supported getter observations` : 'Runtime corroboration only; application logic unassessed'], ['Deployment block', candidate.deployment?.blockNumber || 'Unavailable'], ['Verification recorded', utc(candidate.verifiedAt)], ['ABI context', candidate.abiContext || 'No supported reads']];
   if (candidate.proxy) fields.push(['Observed implementation slot', candidate.proxy.implementation || 'Unreadable']);
@@ -22,9 +24,15 @@ function selectContract(candidate) {
   root.append(dl, link('Verification record ↗', candidate.sourceUrl), link('Explorer ↗', `https://bscscan.com/address/${candidate.address}#code`));
   if (follow) {
     const box = el('div', '', 'callout');
-    box.append(badge('Validated review lead', 'review'), el('p', follow.assessment.label), el('p', follow.assessment.action), el('p', `Follow-up block ${follow.block.number} · ${utc(follow.block.timestamp)}`));
+    box.append(badge('Recorded initialization behavior', 'context'), el('p', follow.assessment.label), el('p', disposition ? 'Later deployment-context triage is recorded below. The successful implementation simulation is not a live-proxy takeover finding.' : follow.assessment.action), el('p', `Follow-up block ${follow.block.number} · ${utc(follow.block.timestamp)}`));
     root.append(box, el('h4', 'Source and simulation'), el('p', follow.semanticReview.conclusion), el('p', follow.semanticReview.deploymentRole), el('p', `${follow.source.path}:${follow.source.initializerLine} · initialized field = ${follow.initializedField}`), link('Source record ↗', follow.source.url));
     root.append(el('pre', 'node scripts/review-initializers.mjs'));
+  }
+  if (disposition) {
+    const box = el('div', '', 'callout');
+    box.append(badge(disposition.severity, 'context'), el('h4', 'Deployment-context follow-up'), el('p', disposition.summary), el('p', disposition.evidenceStatus), el('p', disposition.recommendation));
+    root.append(box, link('Disposition and provenance ↗', '../reports/case-dispositions.json'));
+    if (disposition.evidenceFile) root.append(link('Independent proxy evidence ↗', '../reports/' + disposition.evidenceFile));
   }
   if (candidate.observations.length) root.append(el('h4', 'Recorded getter observations'));
   for (const observation of candidate.observations) {
@@ -55,7 +63,7 @@ function renderRows() {
     const identity = el('td'); const button = el('button', c.name, 'contract-button'); button.type = 'button'; button.addEventListener('click', () => selectContract(c)); identity.append(button, el('code', short(c.address))); row.append(identity);
     row.append(el('td', c.coverage === 'targeted-reads' ? 'Targeted getters' : c.coverage === 'runtime-only' ? 'Runtime only' : 'Evidence gap'), el('td', c.observations.length));
     const status = el('td');
-    status.append(reviewed.has(c.address.toLowerCase()) ? badge('Validated lead', 'review') : c.signals.some(s => s.category === 'review') ? badge('Getter review lead', 'review') : c.signals.some(s => s.category === 'unknown') ? badge('Unreadable', 'gap') : c.signals.some(s => s.category === 'context') ? badge('Context', 'context') : c.coverage === 'runtime-only' ? badge('Logic unassessed', 'gap') : badge('No narrow signal'));
+    status.append(dispositions.has(c.address.toLowerCase()) ? badge('Low hardening', 'context') : reviewed.has(c.address.toLowerCase()) ? badge('Validated behavior', 'review') : c.signals.some(s => s.category === 'review') ? badge('Getter review lead', 'review') : c.signals.some(s => s.category === 'unknown') ? badge('Unreadable', 'gap') : c.signals.some(s => s.category === 'context') ? badge('Context', 'context') : c.coverage === 'runtime-only' ? badge('Logic unassessed', 'gap') : badge('No narrow signal'));
     row.append(status); $('rows').append(row);
   }
   $('visible-count').textContent = `${visible.length} / ${report.candidates.length}`;
@@ -70,9 +78,9 @@ function downloadCsv() {
 }
 
 try {
-  const responses = await Promise.all([fetch('../reports/cohort.json'), fetch('../reports/initialization-review.json'), fetch('../demo/engine/feguard.wasm'), fetch('../demo/engine/feguard.manifest.json')]);
+  const responses = await Promise.all([fetch('../reports/cohort.json'), fetch('../reports/initialization-review.json'), fetch('../demo/engine/feguard.wasm'), fetch('../demo/engine/feguard.manifest.json'), fetch('../reports/case-dispositions.json')]);
   if (responses.some(r => !r.ok)) throw new Error('Could not load research artifacts. Serve the repository over HTTP.');
-  const data = await Promise.all([responses[0].json(), responses[1].json(), responses[2].arrayBuffer(), responses[3].json()]);
+  const data = await Promise.all([responses[0].json(), responses[1].json(), responses[2].arrayBuffer(), responses[3].json(), responses[4].json()]);
   [report, followUp] = data; const bytes = data[2]; const manifest = data[3];
   const digest = [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map(x => x.toString(16).padStart(2, '0')).join('');
   if (digest !== manifest.module.sha256 || report.chainId !== 56 || followUp.chainId !== 56) throw new Error('Artifact identity mismatch.');
@@ -83,6 +91,8 @@ try {
     replayed++;
   }
   const cohortAddresses = new Set(report.candidates.map(c => c.address.toLowerCase()));
+  if (data[4].schemaVersion !== 1 || data[4].chainId !== 56 || !Array.isArray(data[4].cases)) throw new Error('Invalid case dispositions.');
+  for (const disposition of data[4].cases) if (cohortAddresses.has(disposition.address.toLowerCase())) dispositions.set(disposition.address.toLowerCase(), disposition);
   for (const result of followUp.results) {
     if (triage(engine, result.rule, { state: result.state, value: result.flags }).code !== result.assessment.code) throw new Error('Follow-up Fe replay differs.');
     if (result.assessment.code === 8 && cohortAddresses.has(result.address.toLowerCase())) reviewed.set(result.address.toLowerCase(), result);
@@ -94,17 +104,19 @@ try {
   $('batch-time').textContent = utc(report.block.timestamp);
   $('engine').textContent = `${replayed} triage decisions replayed in Fe ✓`;
   const families = new Set([...reviewed.values()].map(r => r.name)).size;
-  for (const [value, label, note, kind] of [[summary.discoveredContracts, 'CONTRACTS SCREENED', `${summary.distinctContractNames} distinct names · not project count`, ''], [summary.targetedContracts, 'TARGETED GETTER COVERAGE', `${summary.runtimeOnlyContracts} have runtime-only coverage`, ''], [reviewed.size, 'VALIDATED INITIALIZATION LEADS', `${families} contract families · impact unverified`, 'review'], [0, 'CONFIRMED IMPACT FINDINGS', 'No critical/high severity claim', '']]) {
+  for (const [value, label, note, kind] of [[summary.discoveredContracts, 'CONTRACTS SCREENED', `${summary.distinctContractNames} distinct names · not project count`, ''], [summary.targetedContracts, 'TARGETED GETTER COVERAGE', `${summary.runtimeOnlyContracts} have runtime-only coverage`, ''], [reviewed.size, 'VALIDATED INITIALIZATION BEHAVIORS', `${families} families · inspect deployment context`, 'review'], [0, 'CONFIRMED IMPACT FINDINGS', 'No critical/high severity claim', '']]) {
     const card = el('div', '', 'metric ' + kind); card.append(el('strong', value), el('span', label), el('small', note)); $('metrics').append(card);
   }
   $('stage-discovery').textContent = `${summary.discoveredContracts} deployments`;
   $('stage-runtime').textContent = `${summary.runtimeCorroborated} corroborated`;
   $('stage-reads').textContent = `${summary.observationsRead} observations`;
   $('stage-review').textContent = `${reviewed.size} initialization leads`;
-  $('lead-summary').textContent = reviewed.size ? `${reviewed.size} addresses accepted initializer simulations from an arbitrary caller while the reviewed initialized field was zero. These may be implementation contracts; live deployment roles and financial impact are unverified. Follow-up block ${followUp.block.number}.` : 'No validated initialization lead from the separate source-specific follow-up appears in this sample. This does not establish contract safety.';
+  const hasDisposition = [...reviewed.keys()].some(address => dispositions.has(address));
+  $('lead-summary').textContent = reviewed.size ? `${reviewed.size} addresses accepted initializer simulations while their reviewed initialization fields were zero. ${hasDisposition ? 'QuickMiney A is classified Low/informational hardening after independently checking its initialized proxy and rejected initializer. Other cases need their own deployment-context assessment.' : 'Deployment roles and impact require separate assessment.'} Original simulation block ${followUp.block.number}.` : 'No initialization behavior case from the separate source-specific follow-up appears in this sample. This does not establish contract safety.';
   for (const result of reviewed.values()) {
     const card = el('button', '', 'lead-card'); card.type = 'button';
-    card.append(el('h3', result.name), badge('Needs deployment context', 'review'), el('code', result.address), el('p', 'Uninitialized storage + source-reviewed authority assignment + successful read-only simulation.'), el('small', 'Inspect evidence and next step ↗'));
+    const disposition = dispositions.get(result.address.toLowerCase());
+    card.append(el('h3', result.name), badge(disposition ? 'Low hardening' : 'Needs deployment context', disposition ? 'context' : 'review'), el('code', result.address), el('p', disposition ? disposition.summary : 'Uninitialized storage + source-reviewed authority assignment + successful read-only simulation.'), el('small', 'Inspect evidence and next step ↗'));
     card.addEventListener('click', () => { $('search').value = ''; $('filter').value = 'leads'; renderRows(); const c = report.candidates.find(c => c.address.toLowerCase() === result.address.toLowerCase()); selectContract(c); $('detail').scrollIntoView({ block: 'start' }); });
     $('leads').append(card);
   }

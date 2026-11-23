@@ -19,10 +19,22 @@ These are **validated initialization review leads**, not confirmed financial-imp
 
 See [follow-up evidence](../reports/initialization-review.json) and the explicit [review plan](../policies/initialization-review.json). Do not collapse the batch and follow-up block timestamps into one snapshot.
 
+### Later deployment-context disposition
+
+The user's independent triage supplied the full linked proxy address, which was then checked independently at **BNB block 135300331 (2026-11-23 16:08:34 UTC)** using both public RPC origins. The named proxy `0x1fBD228d55d91e2A4CC1DdfEADF493d8646b8d72` stores implementation A, has consumed initialization, has populated `orcale` authority, and rejects the tested initializer with the already-initialized error. Implementation A still accepts its own initializer simulation. The appropriate analyst disposition for this surface is **Low/informational implementation hardening**, with no demonstrated takeover through the tested proxy initializer.
+
+The [independent proxy evidence](../reports/quickminey-proxy-context.json) retains block identity and raw requests/responses. [case-dispositions.json](../reports/case-dispositions.json) links that evidence and records the analyst assessment separately from the original exposed-initializer observations. Reproduce with `node scripts/review-proxy-context.mjs`; offline tests check the captured relationship, specific revert reason, scoped balances and evidence digest. No universal automatic severity engine is claimed.
+
+The proxy had **zero native BNB but 2654.14 units of the named USDT token** (18 decimals, read at the same block). Both named implementations had zero native balance and zero balance of that token. This is not an exhaustive asset inventory. The observed admin slot and `orcale` field point to the same address, which had no runtime code. That records concentrated authority; it is not evidence of an unintended access path.
+
+The generic proposed constructor fix is **not a drop-in change here**: QuickMiney's supplied source defines a custom `Initializable` base with private flags and no `_disableInitializers()` function. Any implementation lock must be compatible with that base, preserve proxy storage layout, and retain intended fresh-proxy initialization. No third-party contract was patched or deployed.
+
+Do not infer absence of every token holding from zero native balance, or infer an exhaustive proxy inventory from an explorer's known-proxy list. This disposition does not automatically classify QuickMiney B or the three Referral addresses. The Firelight comparison was supplied by the user and has not been independently sourced in this package.
+
 | Family | Addresses | Confirmed behavior | Still needed |
 | --- | ---: | --- | --- |
 | Referral | 3 | Public initializer accepts a simulated call; reviewed source assigns ownership from an argument; initialized storage is zero | Establish deployment role and impact; review whether implementation initialization should be locked |
-| QuickMiney | 2 | `initilize` (spelled this way in the ABI) accepts a simulated call; reviewed source assigns caller/argument-based authority; initialized storage is zero | Establish deployment role and impact; review initialization hardening for future implementations |
+| QuickMiney | 2 | `initilize` accepts a simulated call at both logic addresses. A's named proxy is initialized and rejects the tested call | A: Low/informational hardening; B: establish its own deployment relationships before assigning impact |
 
 The distinction mattered: MailChatRedPacket and OrbitV8PlatformControl also returned a zero owner at their implementation addresses, but reviewed constructors disable initialization. Their observed proxies returned nonzero owners. A zero-owner alarm would have overstated the evidence.
 

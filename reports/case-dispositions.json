@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "chainId": 56,
+  "updatedOn": "2026-11-23",
+  "scope": "Deployment-context follow-up; reported conclusions are kept separate from the captured RPC evidence.",
+  "cases": [
+    {
+      "address": "0x3C9acB71C8da760742D8FD9cbC945918A1Aac79F",
+      "name": "QuickMiney A",
+      "classification": "implementation-hardening",
+      "severity": "Low / informational",
+      "evidenceStatus": "independently captured from two public RPC origins at BNB block 135300331; severity is an analyst assessment of this initializer path",
+      "reportedProxyReference": "0x1fBD228d55d91e2A4CC1DdfEADF493d8646b8d72",
+      "summary": "The named proxy stores implementation A, has consumed initialization, has populated orcale authority, and rejects the tested initializer with the already-initialized error. Implementation A still accepts its own initializer simulation. This supports implementation hardening; no live-proxy takeover through this initializer was demonstrated.",
+      "recommendation": "For future implementation releases, add an initialization lock compatible with this custom Initializable base and verify proxy storage-layout compatibility and fresh-proxy initialization. The supplied source does not define _disableInitializers(), so the generic OpenZeppelin constructor snippet is not a drop-in fix.",
+      "limitations": [
+        "This verifies one named proxy and the tested initializer path at the recorded block; it is not a full audit or an exhaustive proxy inventory.",
+        "The admin slot is a storage observation; actual upgrade semantics require version-specific runtime/source verification.",
+        "Native BNB and one named ERC-20 were measured. Other token/assets are not inventoried.",
+        "QuickMiney B has no linked proxy independently established in this record. The three Referral cases remain separately unclassified.",
+        "The Firelight comparison was supplied by the user and is not the basis of the independent captured evidence."
+      ],
+      "evidenceFile": "quickminey-proxy-context.json",
+      "evidenceSha256": "c5e140ebf5e54d892fde46c5421d5912856747686896c0accabf0b468cbab6d1",
+      "block": {
+        "tag": "0x81084eb",
+        "number": "135300331",
+        "hash": "0xaadfcb8f7407ee1dd9532ae2237d644f8d88767a04b7c9e8f3b7468c63767700",
+        "timestamp": "2026-11-23T16:08:34.000Z"
+      },
+      "verifiedChecks": [
+        "The named proxy implementation slot agrees on implementation A across both RPC origins.",
+        "The proxy's initialized field is one and its authority fields are populated.",
+        "The proxy's initializer simulation reverts with an already-initialized error."
+      ],
+      "assetScope": {
+        "nativeAsset": "BNB",
+        "proxyNativeBalanceWei": "0",
+        "tokenAddress": "0x55d398326f99059ff775485246999027b3197955",
+        "tokenDecimals": 18,
+        "proxyTokenBalanceUnits": "2654.14",
+        "implementationANativeAndNamedTokenBalances": "zero",
+        "implementationBNativeAndNamedTokenBalances": "zero",
+        "exhaustiveAssetInventory": false
+      },
+      "authority": "The observed admin slot and effective orcale field point to the same code-empty address. This records concentrated authority, not a missing-authority vulnerability."
+    }
+  ]
+}
