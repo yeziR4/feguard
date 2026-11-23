@@ -1,5 +1,6 @@
 import { loadEngine } from '../demo/client.mjs';
 import { triage, summarizeCohort } from './cohort-policy.mjs';
+import { loadWorkflow, renderWorkflow } from './workflow.mjs';
 const $ = id => document.getElementById(id);
 const el = (tag, value = '', className) => { const n = document.createElement(tag); n.textContent = value; if (className) n.className = className; return n; };
 const badge = (label, kind = '') => el('span', label, 'tag ' + kind);
@@ -19,6 +20,7 @@ function selectContract(candidate) {
   const disposition = dispositions.get(candidate.address.toLowerCase());
   const dl = document.createElement('dl');
   const fields = [['Coverage', candidate.coverage === 'targeted-reads' ? `${candidate.observations.length} supported getter observations` : 'Runtime corroboration only; application logic unassessed'], ['Deployment block', candidate.deployment?.blockNumber || 'Unavailable'], ['Verification recorded', utc(candidate.verifiedAt)], ['ABI context', candidate.abiContext || 'No supported reads']];
+  if (candidate.snapshotBlock) fields.unshift(['Observation block', `${candidate.snapshotBlock.number} · ${utc(candidate.snapshotBlock.timestamp)}`]);
   if (candidate.proxy) fields.push(['Observed implementation slot', candidate.proxy.implementation || 'Unreadable']);
   for (const [label, value] of fields) dl.append(el('dt', label), el('dd', value));
   root.append(dl, link('Verification record ↗', candidate.sourceUrl), link('Explorer ↗', `https://bscscan.com/address/${candidate.address}#code`));
@@ -63,7 +65,7 @@ function renderRows() {
     const identity = el('td'); const button = el('button', c.name, 'contract-button'); button.type = 'button'; button.addEventListener('click', () => selectContract(c)); identity.append(button, el('code', short(c.address))); row.append(identity);
     row.append(el('td', c.coverage === 'targeted-reads' ? 'Targeted getters' : c.coverage === 'runtime-only' ? 'Runtime only' : 'Evidence gap'), el('td', c.observations.length));
     const status = el('td');
-    status.append(dispositions.has(c.address.toLowerCase()) ? badge('Low hardening', 'context') : reviewed.has(c.address.toLowerCase()) ? badge('Validated behavior', 'review') : c.signals.some(s => s.category === 'review') ? badge('Getter review lead', 'review') : c.signals.some(s => s.category === 'unknown') ? badge('Unreadable', 'gap') : c.signals.some(s => s.category === 'context') ? badge('Context', 'context') : c.coverage === 'runtime-only' ? badge('Logic unassessed', 'gap') : badge('No narrow signal'));
+    status.append(dispositions.has(c.address.toLowerCase()) ? badge(dispositions.get(c.address.toLowerCase()).severity, 'context') : reviewed.has(c.address.toLowerCase()) ? badge('Validated behavior', 'review') : c.signals.some(s => s.category === 'review') ? badge('Getter review lead', 'review') : c.signals.some(s => s.category === 'unknown') ? badge('Unreadable', 'gap') : c.signals.some(s => s.category === 'context') ? badge('Context', 'context') : c.coverage === 'runtime-only' ? badge('Logic unassessed', 'gap') : badge('No narrow signal'));
     row.append(status); $('rows').append(row);
   }
   $('visible-count').textContent = `${visible.length} / ${report.candidates.length}`;
@@ -86,10 +88,18 @@ try {
   if (digest !== manifest.module.sha256 || report.chainId !== 56 || followUp.chainId !== 56) throw new Error('Artifact identity mismatch.');
   if (new Set(report.candidates.map(c => c.address.toLowerCase())).size !== report.candidates.length) throw new Error('Duplicate cohort addresses.');
   const engine = await loadEngine(bytes); let replayed = 0;
+  const workflow = await loadWorkflow(engine, digest);
   for (const c of report.candidates) for (const observation of c.observations) {
     if (triage(engine, observation.kind, observation).code !== observation.triage.code) throw new Error('Recorded Fe triage differs.');
     replayed++;
   }
+  if (JSON.stringify(summarizeCohort(report.candidates)) !== JSON.stringify(report.summary)) throw new Error('Baseline totals differ.');
+  const combined = new Map(report.candidates.map(c => [c.address.toLowerCase(), { ...c, snapshotBlock: report.block }]));
+  for (const c of workflow.outputs.screen.report.candidates) combined.set(c.address.toLowerCase(), { ...c, snapshotBlock: workflow.outputs.screen.report.block });
+  report = { ...report, candidates: [...combined.values()], summary: summarizeCohort([...combined.values()]) };
+  followUp = workflow.outputs.initializers;
+  replayed += workflow.decisions - followUp.results.length;
+  renderWorkflow(workflow);
   const cohortAddresses = new Set(report.candidates.map(c => c.address.toLowerCase()));
   if (data[4].schemaVersion !== 1 || data[4].chainId !== 56 || !Array.isArray(data[4].cases)) throw new Error('Invalid case dispositions.');
   for (const disposition of data[4].cases) if (cohortAddresses.has(disposition.address.toLowerCase())) dispositions.set(disposition.address.toLowerCase(), disposition);
@@ -100,8 +110,8 @@ try {
   }
   const summary = summarizeCohort(report.candidates);
   if (JSON.stringify(summary) !== JSON.stringify(report.summary) || followUp.results.filter(r => r.assessment.code === 8).length !== followUp.summary.validatedReviewLeads) throw new Error('Report totals do not match their records.');
-  $('batch-block').textContent = `Batch block ${report.block.number} · two RPC origins`;
-  $('batch-time').textContent = utc(report.block.timestamp);
+  $('batch-block').textContent = `Saved baseline + ${workflow.outputs.screen.report.candidates.length}-address controller batch`;
+  $('batch-time').textContent = `Latest batch: ${utc(workflow.outputs.screen.report.block.timestamp)}`;
   $('engine').textContent = `${replayed} triage decisions replayed in Fe ✓`;
   const families = new Set([...reviewed.values()].map(r => r.name)).size;
   for (const [value, label, note, kind] of [[summary.discoveredContracts, 'CONTRACTS SCREENED', `${summary.distinctContractNames} distinct names · not project count`, ''], [summary.targetedContracts, 'TARGETED GETTER COVERAGE', `${summary.runtimeOnlyContracts} have runtime-only coverage`, ''], [reviewed.size, 'VALIDATED INITIALIZATION BEHAVIORS', `${families} families · inspect deployment context`, 'review'], [0, 'CONFIRMED IMPACT FINDINGS', 'No critical/high severity claim', '']]) {
@@ -116,7 +126,7 @@ try {
   for (const result of reviewed.values()) {
     const card = el('button', '', 'lead-card'); card.type = 'button';
     const disposition = dispositions.get(result.address.toLowerCase());
-    card.append(el('h3', result.name), badge(disposition ? 'Low hardening' : 'Needs deployment context', disposition ? 'context' : 'review'), el('code', result.address), el('p', disposition ? disposition.summary : 'Uninitialized storage + source-reviewed authority assignment + successful read-only simulation.'), el('small', 'Inspect evidence and next step ↗'));
+    card.append(el('h3', result.name), badge(disposition ? disposition.severity : 'Needs deployment context', disposition ? 'context' : 'review'), el('code', result.address), el('p', disposition ? disposition.summary : 'Uninitialized storage + source-reviewed authority assignment + successful read-only simulation.'), el('small', 'Inspect evidence and next step ↗'));
     card.addEventListener('click', () => { $('search').value = ''; $('filter').value = 'leads'; renderRows(); const c = report.candidates.find(c => c.address.toLowerCase() === result.address.toLowerCase()); selectContract(c); $('detail').scrollIntoView({ block: 'start' }); });
     $('leads').append(card);
   }

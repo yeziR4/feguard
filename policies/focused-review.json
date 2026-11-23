@@ -1,0 +1,356 @@
+{
+  "schemaVersion": 1,
+  "chainId": 56,
+  "safe": "0x2866369F7acEFC9760bdE7779362fae5cD68B41E",
+  "checks": [
+    {
+      "id": "gang-handler-admin-code",
+      "scope": "gang-pad3",
+      "address": "0xC833CEC2B283759003945C0Bf8C048aB1949Af76",
+      "recipe": "code",
+      "expected": "1",
+      "claim": "Documented handler admin has deployed runtime.",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-LAUNCHPAD-3-MODULES-2026-11-03.md"
+    },
+    {
+      "id": "gang-handler-admin-owner",
+      "scope": "gang-pad3",
+      "address": "0xC833CEC2B283759003945C0Bf8C048aB1949Af76",
+      "recipe": "owner",
+      "expected": "230639065174780911811527718598665333947505357854",
+      "claim": "Handler admin owner remains the documented Safe.",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-LAUNCHPAD-3-MODULES-2026-11-03.md"
+    },
+    {
+      "id": "gang-handler-admin-pending",
+      "scope": "gang-pad3",
+      "address": "0xC833CEC2B283759003945C0Bf8C048aB1949Af76",
+      "recipe": "pendingOwner",
+      "expected": "0",
+      "claim": "Handler admin has no unfinished ownership transfer.",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-LAUNCHPAD-3-MODULES-2026-11-03.md"
+    },
+    {
+      "id": "gang-pad3-1",
+      "scope": "gang-pad3",
+      "address": "0x2bEbED4be8c8F46C17776C71D7a6A45dbC5CAB29",
+      "recipe": "code",
+      "expected": "1",
+      "claim": "Documented contract has deployed runtime.",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-LAUNCHPAD-3-2026-11-03.md"
+    },
+    {
+      "id": "gang-pad3-2",
+      "scope": "gang-pad3",
+      "address": "0x2bEbED4be8c8F46C17776C71D7a6A45dbC5CAB29",
+      "recipe": "owner",
+      "expected": "230639065174780911811527718598665333947505357854",
+      "claim": "Owner matches documented authority.",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-LAUNCHPAD-3-2026-11-03.md"
+    },
+    {
+      "id": "gang-pad3-3",
+      "scope": "gang-pad3",
+      "address": "0x2bEbED4be8c8F46C17776C71D7a6A45dbC5CAB29",
+      "recipe": "pendingOwner",
+      "expected": "0",
+      "claim": "No unfinished ownership transfer.",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-LAUNCHPAD-3-2026-11-03.md"
+    },
+    {
+      "id": "gang-pad3-4",
+      "scope": "gang-pad3",
+      "address": "0xCe83Be827bf2B6bAFe0ca6d1320Dce965CE3df48",
+      "recipe": "code",
+      "expected": "1",
+      "claim": "Documented contract has deployed runtime.",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-LAUNCHPAD-3-2026-11-03.md"
+    },
+    {
+      "id": "gang-pad3-5",
+      "scope": "gang-pad3",
+      "address": "0xCe83Be827bf2B6bAFe0ca6d1320Dce965CE3df48",
+      "recipe": "owner",
+      "expected": "230639065174780911811527718598665333947505357854",
+      "claim": "Owner matches documented authority.",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-LAUNCHPAD-3-2026-11-03.md"
+    },
+    {
+      "id": "gang-pad3-6",
+      "scope": "gang-pad3",
+      "address": "0x99E882a21847012329351B598ceB93B135691b3B",
+      "recipe": "code",
+      "expected": "1",
+      "claim": "Documented contract has deployed runtime.",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-LAUNCHPAD-3-2026-11-03.md"
+    },
+    {
+      "id": "gang-pad3-7",
+      "scope": "gang-pad3",
+      "address": "0x99E882a21847012329351B598ceB93B135691b3B",
+      "recipe": "owner",
+      "expected": "1142953503552859250489788141434513921641024171894",
+      "claim": "Owner matches documented authority.",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-LAUNCHPAD-3-MODULES-2026-11-03.md"
+    },
+    {
+      "id": "gang-pad3-8",
+      "scope": "gang-pad3",
+      "address": "0x99E882a21847012329351B598ceB93B135691b3B",
+      "recipe": "pendingOwner",
+      "expected": "0",
+      "claim": "No unfinished ownership transfer.",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-LAUNCHPAD-3-2026-11-03.md"
+    },
+    {
+      "id": "gang-router3-1",
+      "scope": "gang-router3",
+      "address": "0x3de754eeeCd87987a282397d41BDa11cb4DaFDFc",
+      "recipe": "code",
+      "expected": "1",
+      "claim": "Documented contract has deployed runtime.",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-LAUNCHPAD-3-2026-11-03.md"
+    },
+    {
+      "id": "gang-router3-2",
+      "scope": "gang-router3",
+      "address": "0x3de754eeeCd87987a282397d41BDa11cb4DaFDFc",
+      "recipe": "owner",
+      "expected": "623701980386957851707044515138127565290194217379",
+      "claim": "Owner matches documented authority.",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-LAUNCHPAD-3-2026-11-03.md"
+    },
+    {
+      "id": "gang-router3-3",
+      "scope": "gang-router3",
+      "address": "0x6d3FC39a5a96429d1942930A845f891cdB7A29A3",
+      "recipe": "code",
+      "expected": "1",
+      "claim": "Documented timelock has runtime.",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-LAUNCHPAD-3-2026-11-03.md"
+    },
+    {
+      "id": "gang-router3-4",
+      "scope": "gang-router3",
+      "address": "0x6d3FC39a5a96429d1942930A845f891cdB7A29A3",
+      "recipe": "delay",
+      "expected": "172800",
+      "claim": "Minimum governance delay is at least two days.",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-LAUNCHPAD-3-2026-11-03.md"
+    },
+    {
+      "id": "gang-router3-5",
+      "scope": "gang-router3",
+      "address": "0x6d3FC39a5a96429d1942930A845f891cdB7A29A3",
+      "recipe": "proposer",
+      "expected": "1",
+      "claim": "Safe holds documented proposer role (non-exclusive sample).",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-LAUNCHPAD-3-2026-11-03.md"
+    },
+    {
+      "id": "gang-router3-6",
+      "scope": "gang-router3",
+      "address": "0x6d3FC39a5a96429d1942930A845f891cdB7A29A3",
+      "recipe": "executor",
+      "expected": "1",
+      "claim": "Safe holds documented executor role (non-exclusive sample).",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-LAUNCHPAD-3-2026-11-03.md"
+    },
+    {
+      "id": "gang-router3-7",
+      "scope": "gang-router3",
+      "address": "0x6d3FC39a5a96429d1942930A845f891cdB7A29A3",
+      "recipe": "canceller",
+      "expected": "1",
+      "claim": "Safe holds documented canceller role (non-exclusive sample).",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-LAUNCHPAD-3-2026-11-03.md"
+    },
+    {
+      "id": "gang-gateway-1",
+      "scope": "gang-gateway",
+      "address": "0x9dD16b73f624bdd8a210CBB2602FdF70f1B450B8",
+      "recipe": "code",
+      "expected": "1",
+      "claim": "Documented contract has deployed runtime.",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-GATEWAY-2026-10-30.md"
+    },
+    {
+      "id": "gang-gateway-2",
+      "scope": "gang-gateway",
+      "address": "0x9dD16b73f624bdd8a210CBB2602FdF70f1B450B8",
+      "recipe": "owner",
+      "expected": "230639065174780911811527718598665333947505357854",
+      "claim": "Owner matches documented authority.",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-GATEWAY-2026-10-30.md"
+    },
+    {
+      "id": "gang-gateway-3",
+      "scope": "gang-gateway",
+      "address": "0x9dD16b73f624bdd8a210CBB2602FdF70f1B450B8",
+      "recipe": "pendingOwner",
+      "expected": "0",
+      "claim": "No unfinished ownership transfer.",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-GATEWAY-2026-10-30.md"
+    },
+    {
+      "id": "gang-gateway-4",
+      "scope": "gang-gateway",
+      "address": "0x385690fa1459c90eb76728eE00E9c9937069Eec4",
+      "recipe": "code",
+      "expected": "1",
+      "claim": "Documented contract has deployed runtime.",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-GATEWAY-2026-10-30.md"
+    },
+    {
+      "id": "gang-gateway-5",
+      "scope": "gang-gateway",
+      "address": "0x385690fa1459c90eb76728eE00E9c9937069Eec4",
+      "recipe": "owner",
+      "expected": "1128956368856524040318711903811358013673367834251",
+      "claim": "Owner matches documented authority.",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-GATEWAY-2026-10-30.md"
+    },
+    {
+      "id": "gang-gateway-6",
+      "scope": "gang-gateway",
+      "address": "0xc5C02788CA0A1b6E9810B5CE3d6D49D5E8fe8e8B",
+      "recipe": "code",
+      "expected": "1",
+      "claim": "Documented timelock has runtime.",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-GATEWAY-2026-10-30.md"
+    },
+    {
+      "id": "gang-gateway-7",
+      "scope": "gang-gateway",
+      "address": "0xc5C02788CA0A1b6E9810B5CE3d6D49D5E8fe8e8B",
+      "recipe": "delay",
+      "expected": "172800",
+      "claim": "Minimum governance delay is at least two days.",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-GATEWAY-2026-10-30.md"
+    },
+    {
+      "id": "gang-gateway-8",
+      "scope": "gang-gateway",
+      "address": "0xc5C02788CA0A1b6E9810B5CE3d6D49D5E8fe8e8B",
+      "recipe": "proposer",
+      "expected": "1",
+      "claim": "Safe holds documented proposer role (non-exclusive sample).",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-GATEWAY-2026-10-30.md"
+    },
+    {
+      "id": "gang-gateway-9",
+      "scope": "gang-gateway",
+      "address": "0xc5C02788CA0A1b6E9810B5CE3d6D49D5E8fe8e8B",
+      "recipe": "executor",
+      "expected": "1",
+      "claim": "Safe holds documented executor role (non-exclusive sample).",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-GATEWAY-2026-10-30.md"
+    },
+    {
+      "id": "gang-gateway-10",
+      "scope": "gang-gateway",
+      "address": "0xc5C02788CA0A1b6E9810B5CE3d6D49D5E8fe8e8B",
+      "recipe": "canceller",
+      "expected": "1",
+      "claim": "Safe holds documented canceller role (non-exclusive sample).",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-GATEWAY-2026-10-30.md"
+    },
+    {
+      "id": "gang-registry-1",
+      "scope": "gang-registry",
+      "address": "0x4fF77D4d9ac080939a24E1B805206bA094C44e5C",
+      "recipe": "code",
+      "expected": "1",
+      "claim": "Documented contract has deployed runtime.",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-PAD-REGISTRY-2026-10-28.md"
+    },
+    {
+      "id": "gang-registry-2",
+      "scope": "gang-registry",
+      "address": "0x4fF77D4d9ac080939a24E1B805206bA094C44e5C",
+      "recipe": "owner",
+      "expected": "230639065174780911811527718598665333947505357854",
+      "claim": "Owner matches documented authority.",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-PAD-REGISTRY-2026-10-28.md"
+    },
+    {
+      "id": "gang-registry-3",
+      "scope": "gang-registry",
+      "address": "0x4fF77D4d9ac080939a24E1B805206bA094C44e5C",
+      "recipe": "pendingOwner",
+      "expected": "0",
+      "claim": "No unfinished ownership transfer.",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-PAD-REGISTRY-2026-10-28.md"
+    },
+    {
+      "id": "gang-registry-4",
+      "scope": "gang-registry",
+      "address": "0x9efbcf84b80Ab437AE82c74E2D047b997172f84D",
+      "recipe": "code",
+      "expected": "1",
+      "claim": "Documented contract has deployed runtime.",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-PAD-REGISTRY-2026-10-28.md"
+    },
+    {
+      "id": "gang-registry-5",
+      "scope": "gang-registry",
+      "address": "0x9efbcf84b80Ab437AE82c74E2D047b997172f84D",
+      "recipe": "owner",
+      "expected": "230639065174780911811527718598665333947505357854",
+      "claim": "Owner matches documented authority.",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-PAD-REGISTRY-2026-10-28.md"
+    },
+    {
+      "id": "awp-1",
+      "scope": "awp",
+      "address": "0x82562023a053025F3201785160CaE6051efD759e",
+      "recipe": "code",
+      "expected": "1",
+      "claim": "Published BSC deployment has runtime.",
+      "source": "https://github.com/awp-core/awp-skill/blob/b7dbddf19e81c6e45772b8331d8177d31353e3e3/references/protocol.md"
+    },
+    {
+      "id": "awp-2",
+      "scope": "awp",
+      "address": "0x000002bEfa6A1C99A710862Feb6dB50525dF00A3",
+      "recipe": "code",
+      "expected": "1",
+      "claim": "Published BSC deployment has runtime.",
+      "source": "https://github.com/awp-core/awp-skill/blob/b7dbddf19e81c6e45772b8331d8177d31353e3e3/references/protocol.md"
+    },
+    {
+      "id": "awp-3",
+      "scope": "awp",
+      "address": "0x0000F34Ed3594F54faABbCb2Ec45738DDD1c001A",
+      "recipe": "code",
+      "expected": "1",
+      "claim": "Published BSC deployment has runtime.",
+      "source": "https://github.com/awp-core/awp-skill/blob/b7dbddf19e81c6e45772b8331d8177d31353e3e3/references/protocol.md"
+    },
+    {
+      "id": "awp-4",
+      "scope": "awp",
+      "address": "0x00006879f79f3Da189b5D0fF6e58ad0127Cc0DA0",
+      "recipe": "code",
+      "expected": "1",
+      "claim": "Published BSC deployment has runtime.",
+      "source": "https://github.com/awp-core/awp-skill/blob/b7dbddf19e81c6e45772b8331d8177d31353e3e3/references/protocol.md"
+    },
+    {
+      "id": "awp-5",
+      "scope": "awp",
+      "address": "0x82562023a053025F3201785160CaE6051efD759e",
+      "recipe": "delay",
+      "expected": "172800",
+      "claim": "Published Treasury timelock delay is two days.",
+      "source": "https://github.com/awp-core/awp-skill/blob/b7dbddf19e81c6e45772b8331d8177d31353e3e3/references/protocol.md"
+    }
+  ],
+  "scope": "Focused public governance observations across two project repositories; deployment behavior and complete authority graph remain unverified.",
+  "limitations": [
+    "Documentation can be stale; discrepancies require deployment-history review before severity assessment.",
+    "Successful getters do not authenticate runtime semantics or immutable proxy admins.",
+    "Sampled roles do not establish exclusive membership. Immediate Safe ownership for Gang pad and registry is explicitly intentional; no timelock is imposed there.",
+    "Two public RPC origins are corroboration, not proven independent operators or cryptographic state proofs."
+  ]
+}

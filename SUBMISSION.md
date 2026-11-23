@@ -24,6 +24,10 @@ Use `git rev-parse HEAD` from the final reviewed checkout to obtain the complete
 
 **Limitations:** Generic screening does not infer project-specific policy. Source-specific follow-up requires a reviewed plan; deployment roles/asset exposure remain unverified. Proxy slots do not authenticate delegation/admin behavior; exhaustive role membership is unverified. Public provider agreement is not a state proof. No hosted scheduler, outreach, wallet execution or automatic remediation. See README and the research/deployment guides for full scope and AI disclosure.
 
+**Autonomous bounded workflow:** `node scripts/run.mjs --run ID` connects reviewed qualification inputs, bounded discovery, runtime/getter screening, explicit source probes, focused policy checks and persistent case memory. Completed stages are hash checked and reused on resume; the latest report advances only on full completion. The browser verifies artifacts and replays Fe decisions. Source plans and impact interpretations remain explicit reviewed inputs.
+
+**Focused investigation:** A saved 20-address batch expands the deduplicated research corpus to 320 addresses. The first policy pass flagged a handler owner differing from the initial deployment document. A later primary-source rollout record explains a migration to a Safe-owned admin. The original flag remains archived; a refreshed plan and extra admin checks produce 38 matching supported observations. Memory retains the documented explanation and QuickMiney's historical Low context. Four initializer cases still need deployment-context review; no high/critical finding is claimed. See `docs/CONTROLLER.md` and `reports/workflow.json`.
+
 Registration: **Confirmed by the organizer's registration email**, located on 23 November. Project ID and private submission credentials remain outside public source. Final submission is still outstanding.
 
 Final submission closes **24 November 2026, 23:59 UTC (25 November, 00:59 Lagos)**.

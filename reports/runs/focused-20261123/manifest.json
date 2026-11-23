@@ -1,0 +1,229 @@
+{
+  "schemaVersion": 1,
+  "id": "focused-20261123",
+  "fingerprint": "09350dadb038dc54ce3722fff15cb1f809b4f7257934e2ec10b946a2f310c476",
+  "startedAt": "2026-11-23T16:35:09.350Z",
+  "stageIds": [
+    "qualification",
+    "discovery",
+    "screen",
+    "initializers",
+    "focused",
+    "memory"
+  ],
+  "stages": [
+    {
+      "id": "qualification",
+      "attempts": 1,
+      "status": "complete",
+      "startedAt": "2026-11-23T16:35:09.357Z",
+      "file": "qualification.json.gz",
+      "sha256": "83e4bf57239ec5c26c401def82304f36b68201bc0aaae0a651e82b9e8ad29018",
+      "completedAt": "2026-11-23T16:35:09.394Z",
+      "summary": {
+        "acceptedProjectRepositories": 2,
+        "deferredEntries": 4,
+        "note": "This is a bounded research shortlist, not a client list or project endorsement."
+      }
+    },
+    {
+      "id": "discovery",
+      "attempts": 1,
+      "status": "complete",
+      "startedAt": "2026-11-23T16:35:09.402Z",
+      "file": "discovery.json.gz",
+      "sha256": "bdf199aa4db28dcda38b9225ee2d168b014bde00f90061c88d8d0f22acc5690c",
+      "completedAt": "2026-11-23T16:35:12.281Z",
+      "summary": {
+        "listed": 20,
+        "source": "https://sourcify.dev/server/v2/contracts/56?sort=desc&limit=20",
+        "note": "Recently verified, not necessarily recently deployed."
+      }
+    },
+    {
+      "id": "screen",
+      "attempts": 1,
+      "status": "complete",
+      "startedAt": "2026-11-23T16:35:12.292Z",
+      "file": "screen.json.gz",
+      "sha256": "38cb1110040a485c7346a71942141cb2f3dd6ca3e88b2a56c1ae05b31894eb91",
+      "completedAt": "2026-11-23T16:35:16.893Z",
+      "summary": {
+        "discoveredContracts": 20,
+        "runtimeCorroborated": 20,
+        "targetedContracts": 15,
+        "runtimeOnlyContracts": 5,
+        "notQualifiedContracts": 0,
+        "distinctContractNames": 16,
+        "observationsRead": 24,
+        "reviewLeads": 0,
+        "contextObservations": 5,
+        "unreadableObservations": 0,
+        "confirmedFindings": 0,
+        "fullAudits": 0,
+        "block": {
+          "tag": "0x81092bf",
+          "number": "135303871",
+          "hash": "0x6ac7df77f89c354028e5d9fca7216709693986a7e8ee5dafca42f2bba2c566fa",
+          "timestamp": "2026-11-23T16:35:11.000Z"
+        }
+      }
+    },
+    {
+      "id": "initializers",
+      "attempts": 1,
+      "status": "complete",
+      "startedAt": "2026-11-23T16:35:16.896Z",
+      "file": "initializers.json.gz",
+      "sha256": "ce7b21388b6bc85d8952d701a583ccdeb6a389c221c2cd070d74196bb3326445",
+      "completedAt": "2026-11-23T16:35:19.942Z",
+      "summary": {
+        "sourceReviewedTargets": 5,
+        "validatedReviewLeads": 5,
+        "unresolvedOrUnsupported": 0,
+        "confirmedImpactFindings": 0,
+        "block": {
+          "tag": "0x81092c8",
+          "number": "135303880",
+          "hash": "0x948bf23676460051e3434b9e820dd6d08898859c1c659f37cec9732eaedf2fd6",
+          "timestamp": "2026-11-23T16:35:15.000Z"
+        },
+        "note": "Fixed reviewed plan; deployment impact requires context."
+      }
+    },
+    {
+      "id": "focused",
+      "attempts": 1,
+      "status": "complete",
+      "startedAt": "2026-11-23T16:35:19.951Z",
+      "file": "focused.json.gz",
+      "sha256": "a88622403ad9137ee7e61089340ea4eadee1f9f65dfb3210d45eb59aa0bd73bc",
+      "completedAt": "2026-11-23T16:35:22.607Z",
+      "summary": {
+        "meets": 34,
+        "mismatch": 1,
+        "unknown": 0,
+        "unsupported": 0,
+        "conflict": 0,
+        "block": {
+          "tag": "0x81092cf",
+          "number": "135303887",
+          "hash": "0x6c729c4daa34502a88b046d34fe961cc6d4a9dd79250783efabafc513c80b941",
+          "timestamp": "2026-11-23T16:35:19.000Z"
+        },
+        "scopes": [
+          "gang-pad3",
+          "gang-router3",
+          "gang-gateway",
+          "gang-registry",
+          "awp"
+        ],
+        "exceptions": [
+          {
+            "id": "gang-pad3-7",
+            "address": "0x99E882a21847012329351B598ceB93B135691b3B",
+            "status": "mismatch",
+            "claim": "Owner matches documented authority.",
+            "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-LAUNCHPAD-3-2026-11-03.md"
+          }
+        ],
+        "confirmedImpactFindings": 0
+      }
+    },
+    {
+      "id": "memory",
+      "attempts": 1,
+      "status": "complete",
+      "startedAt": "2026-11-23T16:35:22.610Z",
+      "file": "memory.json.gz",
+      "sha256": "15e710e35b9cc73c1846da9faec33a8e6bc3aa855b90682c2c8cebedb68e3502",
+      "completedAt": "2026-11-23T16:35:22.617Z",
+      "summary": {
+        "uniqueSampledAddresses": 320,
+        "baselineAddresses": 300,
+        "currentBatchAddresses": 20,
+        "contextRecorded": 1,
+        "reviewTasks": 5,
+        "confirmedImpactFindings": 0,
+        "queue": [
+          {
+            "address": "0xd38B1B9CE1BbC7caaA5435c1791b6E6d90fd81c9",
+            "name": "Referral",
+            "observedAt": "2026-11-23T16:35:15.000Z",
+            "observationBlock": "135303880",
+            "status": "deployment-context-needed",
+            "severity": "Unassigned",
+            "confirmedImpact": false,
+            "nextStep": "Establish proxy/implementation role, initialized live storage and consequential authority before assigning impact.",
+            "key": "56:0xd38b1b9ce1bbc7caaa5435c1791b6e6d90fd81c9:initialization",
+            "firstSeen": "2026-11-23T16:35:15.000Z",
+            "seenRuns": 1
+          },
+          {
+            "address": "0x1369622bae6eAA5690aEB2Fd5d5057Ad0E0E570A",
+            "name": "QuickMiney",
+            "observedAt": "2026-11-23T16:35:15.000Z",
+            "observationBlock": "135303880",
+            "status": "deployment-context-needed",
+            "severity": "Unassigned",
+            "confirmedImpact": false,
+            "nextStep": "Establish proxy/implementation role, initialized live storage and consequential authority before assigning impact.",
+            "key": "56:0x1369622bae6eaa5690aeb2fd5d5057ad0e0e570a:initialization",
+            "firstSeen": "2026-11-23T16:35:15.000Z",
+            "seenRuns": 1
+          },
+          {
+            "address": "0xDF6495294eB535C5679e4636a0cb350d16976663",
+            "name": "Referral",
+            "observedAt": "2026-11-23T16:35:15.000Z",
+            "observationBlock": "135303880",
+            "status": "deployment-context-needed",
+            "severity": "Unassigned",
+            "confirmedImpact": false,
+            "nextStep": "Establish proxy/implementation role, initialized live storage and consequential authority before assigning impact.",
+            "key": "56:0xdf6495294eb535c5679e4636a0cb350d16976663:initialization",
+            "firstSeen": "2026-11-23T16:35:15.000Z",
+            "seenRuns": 1
+          },
+          {
+            "address": "0x3588af1ABa6A55a1cB52cc1BFb2DC4930a5cF480",
+            "name": "Referral",
+            "observedAt": "2026-11-23T16:35:15.000Z",
+            "observationBlock": "135303880",
+            "status": "deployment-context-needed",
+            "severity": "Unassigned",
+            "confirmedImpact": false,
+            "nextStep": "Establish proxy/implementation role, initialized live storage and consequential authority before assigning impact.",
+            "key": "56:0x3588af1aba6a55a1cb52cc1bfb2dc4930a5cf480:initialization",
+            "firstSeen": "2026-11-23T16:35:15.000Z",
+            "seenRuns": 1
+          },
+          {
+            "address": "0x99E882a21847012329351B598ceB93B135691b3B",
+            "name": "gang-pad3",
+            "observedAt": "2026-11-23T16:35:19.000Z",
+            "observationBlock": "135303887",
+            "status": "policy-review",
+            "severity": "Unassigned",
+            "confirmedImpact": false,
+            "nextStep": "Review the owner against the documented governance policy. Confirm any approved migration before planning an ownership change.",
+            "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-LAUNCHPAD-3-2026-11-03.md",
+            "key": "56:0x99e882a21847012329351b598ceb93b135691b3b:policy:ed658a511847aa14431e00a4a510bb6222e9b4603753f9857eb14b930e89866e:gang-pad3-7",
+            "firstSeen": "2026-11-23T16:35:19.000Z",
+            "seenRuns": 1
+          }
+        ],
+        "note": "Retains historical case context; never promotes a simulation into confirmed impact."
+      }
+    }
+  ],
+  "status": "complete",
+  "completedAt": "2026-11-23T16:35:22.620Z",
+  "runDirectory": "runs/focused-20261123",
+  "limitations": [
+    "Bounded CLI execution, not a continuously running hosted agent.",
+    "Source-specific follow-ups require an explicit human-reviewed plan.",
+    "Each network stage pins its own finalized block; stages are not a single atomic chain snapshot.",
+    "Hash checks establish artifact integrity relative to this manifest, not source truth or a trusted timestamp."
+  ]
+}

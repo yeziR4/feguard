@@ -22,7 +22,17 @@ python -m http.server 8766 --bind 127.0.0.1
 # Open http://127.0.0.1:8766/inspection/cohort.html
 ```
 
-Search all 300 addresses, filter coverage, inspect the five leads' source/state/simulation evidence, and export visible rows. The browser replays recorded triage inputs in Fe before displaying them. Discovery and follow-up are separate, rerunnable commands; no continuously running hosted worker is implied.
+Search the saved baseline and latest controller batch, filter coverage, inspect source/state/simulation evidence, and export visible rows. Each contract records its observation block. The browser verifies controller artifact hashes and replays recorded decisions in Fe before displaying them.
+
+The [resumable controller](docs/CONTROLLER.md) now connects the reviewed shortlist, discovery, screening, explicit source probes, documented-policy checks and case memory in one bounded command. The recorded pass flagged an ownership difference, then source review identified a documented Safe → admin → handler migration. A refreshed policy and extra authority-chain checks yielded 38 matching supported observations. The original flag and explanation are preserved; no high/critical issue is claimed.
+
+```sh
+node scripts/run.mjs --verify reports/workflow.json  # offline evidence/Fe replay
+node scripts/run.mjs --run my-pass --limit 20         # live bounded run
+# Repeat identical arguments with --resume after an interruption.
+```
+
+The saved baseline plus latest batch covers 320 unique addresses; this is not an audit count. Four initialization cases still require deployment-context review. Source-specific policies and interpretations require explicit review. No continuously running hosted worker is implied.
 
 ```sh
 node scripts/cohort.mjs --limit 100        # new bounded public sample
@@ -72,6 +82,8 @@ node scripts/demo.mjs --all --verify
 node scripts/verify.mjs
 node --test scripts/inspection.test.mjs
 node --test scripts/cohort.test.mjs
+node --test scripts/controller.test.mjs scripts/focused.test.mjs scripts/workflow-evidence.test.mjs
+node scripts/run.mjs --verify reports/workflow.json
 node scripts/inspect.mjs --replay reports/gang-router.json
 ```
 

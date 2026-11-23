@@ -1,0 +1,235 @@
+{
+  "schemaVersion": 1,
+  "id": "reviewed-20261123",
+  "fingerprint": "25ee316a8a027171b8b7bd7e56706842df8c8063d8cfcf65d4b7405114aa4758",
+  "startedAt": "2026-11-23T16:38:33.094Z",
+  "stageIds": [
+    "qualification",
+    "discovery",
+    "screen",
+    "initializers",
+    "focused",
+    "memory"
+  ],
+  "stages": [
+    {
+      "id": "qualification",
+      "attempts": 1,
+      "status": "complete",
+      "startedAt": "2026-11-23T16:38:33.166Z",
+      "file": "qualification.json.gz",
+      "sha256": "83e4bf57239ec5c26c401def82304f36b68201bc0aaae0a651e82b9e8ad29018",
+      "completedAt": "2026-11-23T16:38:33.267Z",
+      "summary": {
+        "acceptedProjectRepositories": 2,
+        "deferredEntries": 4,
+        "note": "This is a bounded research shortlist, not a client list or project endorsement."
+      }
+    },
+    {
+      "id": "discovery",
+      "attempts": 1,
+      "status": "complete",
+      "startedAt": "2026-11-23T16:38:33.364Z",
+      "file": "discovery.json.gz",
+      "sha256": "68373ea00fdd9f5a4abbee3d3112eaf9101bfa8274ff114603b2a72061edb6aa",
+      "completedAt": "2026-11-23T16:38:33.660Z",
+      "summary": {
+        "listed": 20,
+        "source": "https://sourcify.dev/server/v2/contracts/56?sort=desc&limit=20",
+        "note": "Reused captured metadata; runtime and state are refreshed."
+      }
+    },
+    {
+      "id": "screen",
+      "attempts": 1,
+      "status": "complete",
+      "startedAt": "2026-11-23T16:38:33.815Z",
+      "file": "screen.json.gz",
+      "sha256": "93760c5a3c65296cd7a9269a15a8784d9844dbdd5806ecf3529884c730a43a29",
+      "completedAt": "2026-11-23T16:38:42.611Z",
+      "summary": {
+        "discoveredContracts": 20,
+        "runtimeCorroborated": 20,
+        "targetedContracts": 15,
+        "runtimeOnlyContracts": 5,
+        "notQualifiedContracts": 0,
+        "distinctContractNames": 16,
+        "observationsRead": 24,
+        "reviewLeads": 0,
+        "contextObservations": 5,
+        "unreadableObservations": 0,
+        "confirmedFindings": 0,
+        "fullAudits": 0,
+        "block": {
+          "tag": "0x8109482",
+          "number": "135304322",
+          "hash": "0x640e3a7ac097a48365b88e8231ba309411478cc027e37676c72e3cbb1a21891b",
+          "timestamp": "2026-11-23T16:38:34.000Z"
+        }
+      }
+    },
+    {
+      "id": "initializers",
+      "attempts": 1,
+      "status": "complete",
+      "startedAt": "2026-11-23T16:38:42.627Z",
+      "file": "initializers.json.gz",
+      "sha256": "d9ccb8d71060cc13f14c1f4bfd9748219774107906d20c484c38017ceb23fa24",
+      "completedAt": "2026-11-23T16:38:45.840Z",
+      "summary": {
+        "sourceReviewedTargets": 5,
+        "validatedReviewLeads": 5,
+        "unresolvedOrUnsupported": 0,
+        "confirmedImpactFindings": 0,
+        "block": {
+          "tag": "0x8109491",
+          "number": "135304337",
+          "hash": "0xce48a734613f04195ca5b4aba52a678309353289333f439402074eef5b7f2d9b",
+          "timestamp": "2026-11-23T16:38:41.000Z"
+        },
+        "note": "Fixed reviewed plan; deployment impact requires context."
+      }
+    },
+    {
+      "id": "focused",
+      "attempts": 1,
+      "status": "complete",
+      "startedAt": "2026-11-23T16:38:45.848Z",
+      "file": "focused.json.gz",
+      "sha256": "1488d9b9f5d88155f3b9a64e3280f98360c90bfd44dda1cf238c815bfa8f4d3b",
+      "completedAt": "2026-11-23T16:38:49.172Z",
+      "summary": {
+        "meets": 38,
+        "mismatch": 0,
+        "unknown": 0,
+        "unsupported": 0,
+        "conflict": 0,
+        "block": {
+          "tag": "0x8109498",
+          "number": "135304344",
+          "hash": "0xafcb14982dbad5d6aaac2e30efc2bcc8873eea4273fac85bdbc50c59428359c9",
+          "timestamp": "2026-11-23T16:38:44.000Z"
+        },
+        "scopes": [
+          "gang-pad3",
+          "gang-router3",
+          "gang-gateway",
+          "gang-registry",
+          "awp"
+        ],
+        "exceptions": [],
+        "confirmedImpactFindings": 0
+      }
+    },
+    {
+      "id": "memory",
+      "attempts": 1,
+      "status": "complete",
+      "startedAt": "2026-11-23T16:38:49.182Z",
+      "file": "memory.json.gz",
+      "sha256": "86ff4acad57120d04dc924f82fa67191b8b34501c88a4db564be237db903aea2",
+      "completedAt": "2026-11-23T16:38:49.210Z",
+      "summary": {
+        "uniqueSampledAddresses": 320,
+        "baselineAddresses": 300,
+        "currentBatchAddresses": 20,
+        "contextRecorded": 1,
+        "explainedChanges": 1,
+        "reviewTasks": 4,
+        "confirmedImpactFindings": 0,
+        "queue": [
+          {
+            "address": "0xd38B1B9CE1BbC7caaA5435c1791b6E6d90fd81c9",
+            "name": "Referral",
+            "observedAt": "2026-11-23T16:38:41.000Z",
+            "observationBlock": "135304337",
+            "status": "deployment-context-needed",
+            "severity": "Unassigned",
+            "confirmedImpact": false,
+            "nextStep": "Establish proxy/implementation role, initialized live storage and consequential authority before assigning impact.",
+            "key": "56:0xd38b1b9ce1bbc7caaa5435c1791b6e6d90fd81c9:initialization",
+            "firstSeen": "2026-11-23T16:35:15.000Z",
+            "seenRuns": 2
+          },
+          {
+            "address": "0x1369622bae6eAA5690aEB2Fd5d5057Ad0E0E570A",
+            "name": "QuickMiney",
+            "observedAt": "2026-11-23T16:38:41.000Z",
+            "observationBlock": "135304337",
+            "status": "deployment-context-needed",
+            "severity": "Unassigned",
+            "confirmedImpact": false,
+            "nextStep": "Establish proxy/implementation role, initialized live storage and consequential authority before assigning impact.",
+            "key": "56:0x1369622bae6eaa5690aeb2fd5d5057ad0e0e570a:initialization",
+            "firstSeen": "2026-11-23T16:35:15.000Z",
+            "seenRuns": 2
+          },
+          {
+            "address": "0xDF6495294eB535C5679e4636a0cb350d16976663",
+            "name": "Referral",
+            "observedAt": "2026-11-23T16:38:41.000Z",
+            "observationBlock": "135304337",
+            "status": "deployment-context-needed",
+            "severity": "Unassigned",
+            "confirmedImpact": false,
+            "nextStep": "Establish proxy/implementation role, initialized live storage and consequential authority before assigning impact.",
+            "key": "56:0xdf6495294eb535c5679e4636a0cb350d16976663:initialization",
+            "firstSeen": "2026-11-23T16:35:15.000Z",
+            "seenRuns": 2
+          },
+          {
+            "address": "0x3588af1ABa6A55a1cB52cc1BFb2DC4930a5cF480",
+            "name": "Referral",
+            "observedAt": "2026-11-23T16:38:41.000Z",
+            "observationBlock": "135304337",
+            "status": "deployment-context-needed",
+            "severity": "Unassigned",
+            "confirmedImpact": false,
+            "nextStep": "Establish proxy/implementation role, initialized live storage and consequential authority before assigning impact.",
+            "key": "56:0x3588af1aba6a55a1cb52cc1bfb2dc4930a5cf480:initialization",
+            "firstSeen": "2026-11-23T16:35:15.000Z",
+            "seenRuns": 2
+          }
+        ],
+        "explained": [
+          {
+            "address": "0x99E882a21847012329351B598ceB93B135691b3B",
+            "name": "gang-pad3",
+            "observedAt": "2026-11-23T16:35:19.000Z",
+            "observationBlock": "135303887",
+            "status": "explained-change",
+            "severity": "Unassigned",
+            "confirmedImpact": false,
+            "nextStep": "Review the owner against the documented governance policy. Confirm any approved migration before planning an ownership change.",
+            "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-LAUNCHPAD-3-2026-11-03.md",
+            "key": "56:0x99e882a21847012329351b598ceb93b135691b3b:policy:ed658a511847aa14431e00a4a510bb6222e9b4603753f9857eb14b930e89866e:gang-pad3-7",
+            "firstSeen": "2026-11-23T16:35:19.000Z",
+            "seenRuns": 1,
+            "lastChecked": "2026-11-23T16:38:42.002Z",
+            "interpretation": {
+              "key": "56:0x99e882a21847012329351b598ceb93b135691b3b:policy:ed658a511847aa14431e00a4a510bb6222e9b4603753f9857eb14b930e89866e:gang-pad3-7",
+              "classification": "documented-migration",
+              "severity": "No vulnerability established",
+              "replacementCheckId": "gang-pad3-7",
+              "expected": "1142953503552859250489788141434513921641024171894",
+              "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-LAUNCHPAD-3-MODULES-2026-11-03.md",
+              "conclusion": "The first plan used the initial deployment's direct Safe owner. A later module rollout document records transferring the handler to GangHandlerAdmin and the admin being owned by the Safe. The initial mismatch is explained only when the replacement checks corroborate that documented chain.",
+              "requiredChecks": [
+                "gang-handler-admin-code",
+                "gang-handler-admin-owner",
+                "gang-handler-admin-pending",
+                "gang-pad3-7"
+              ],
+              "initialEvidence": "runs/focused-20261123/focused.json.gz",
+              "provenance": "Primary-source review after the bounded worker flagged an ownership difference; this interpretation was not autonomously inferred."
+            }
+          }
+        ],
+        "note": "Retains historical case context; never promotes a simulation into confirmed impact."
+      }
+    }
+  ],
+  "status": "complete",
+  "completedAt": "2026-11-23T16:38:49.225Z"
+}

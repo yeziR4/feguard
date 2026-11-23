@@ -2,19 +2,19 @@
 
 Serve the repository (`python -m http.server 8766 --bind 127.0.0.1`) and open `/inspection/cohort.html`.
 
-## 0–20 seconds: show measured coverage
+## 0–20 seconds: show a flag that required context
 
-“We screened 300 public contract addresses on BNB Chain. All 300 had corroborated runtime evidence, 153 had supported getter coverage, and five source-reviewed initialization leads were reproduced. We are claiming zero full audits and zero proven financial-impact findings.”
+“A deployed handler's owner differed from its initial deployment document. Our worker flagged the difference. Following the project's rollout record showed a documented migration to a Safe-owned admin. We kept the original evidence, checked the replacement authority chain, and recorded why this is not a demonstrated vulnerability.”
 
-Point out that 300 addresses are not 300 independent projects. The interface replays 196 generic triage inputs and five source-specific follow-ups in Fe before showing results.
+Show the controller's **Flag → source review → documented migration** panel, original flag evidence, project source link and 38 matching supported policy observations. The semantic interpretation required review; it was not autonomously inferred by the worker.
 
 Show QuickMiney A's later **Low hardening** disposition and the independent proxy evidence. Its named proxy is initialized and rejects the tested initializer, while the implementation's own simulation succeeds. The proxy held a named token despite having no native balance. Explain that the useful result is a reproducible hardening classification, without a live-takeover claim.
 
-## 20–45 seconds: inspect one real lead
+## 20–45 seconds: contrast behavior with impact
 
 Filter **Validated initialization leads**, search **QuickMiney**, and select a row. Show the reviewed source path, zero initialized field, arbitrary-caller read-only simulation and pinned follow-up block. The source function is spelled `initilize`.
 
-“The exposed initialization behavior is reproduced. We still need to establish whether this address is a live deployment or a logic implementation and whether any user assets are affected. The next step is deployment-context review, not an unsupported claim of stolen funds.”
+“On QuickMiney A, the implementation accepts initialization, but the independently checked named proxy is already initialized and rejects that call. We classify this path as Low/informational hardening. Four other initialization cases still need their own context; we have not demonstrated a high or critical issue.”
 
 ## 45–65 seconds: explain the evidence gates
 
@@ -24,7 +24,9 @@ The offline cohort tests reconstruct the 300-contract batch from compressed publ
 
 ## 65–90 seconds: show the repeatable process
 
-Show `node scripts/cohort.mjs --limit 100` and `node scripts/review-initializers.mjs`. Discovery and corroboration are automatic for supported rules; source-specific plans still require review. Saved incident history suppresses duplicate generic leads and does not clear a lead when its contract disappears from the sample.
+Show `node scripts/run.mjs --verify reports/workflow.json` for a quick offline replay. Then show the live command `node scripts/run.mjs --run my-pass --limit 20`. The controller connects six stages, saves verified checkpoints and supports resume with identical arguments plus `--resume`. Failure tests show that a failed stage does not publish a partial latest report.
+
+The workbench combines 320 unique addresses from the baseline and current batch, with each observation's block retained. Address counts are not audits or independent-project counts. Memory retains the historical Low assessment, the documented migration explanation and four open context tasks. Omission from a later batch never silently resolves a case.
 
 “Fe evaluates the deterministic policy/triage decisions on EVM and WASM. JavaScript acquires data and presents it. The worker performs bounded batches; we have not deployed a continuously running service or sent any on-chain transactions.”
 

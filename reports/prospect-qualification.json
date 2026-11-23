@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-11-23",
+  "accepted": [
+    {
+      "project": "GangLaunchpad",
+      "reason": "Pinned deployment records give live BSC addresses and explicit ownership/delay promises.",
+      "sources": [
+        "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-LAUNCHPAD-3-2026-11-03.md",
+        "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-GATEWAY-2026-10-30.md",
+        "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-PAD-REGISTRY-2026-10-28.md"
+      ]
+    },
+    {
+      "project": "AWP",
+      "reason": "Project repository states BSC is live and publishes Treasury, Safe and deployment addresses. Verify those claims against runtime before follow-up.",
+      "source": "https://github.com/awp-core/awp-skill/blob/b7dbddf19e81c6e45772b8331d8177d31353e3e3/references/protocol.md"
+    }
+  ],
+  "deferred": [
+    {
+      "project": "globalmpc/globalmpc-registry",
+      "source": "https://github.com/globalmpc/globalmpc-registry/blob/79a08a6e827745d826423391f531e075318409b4/docs/operations/mainnet-contract.md",
+      "reason": "Mainnet preparation document does not establish a completed protocol deployment."
+    },
+    {
+      "project": "khenzarr/arcns",
+      "source": "https://github.com/khenzarr/arcns/blob/15af280015ab804dd55754ef6e895919dfe81156/docs/mainnet/ADMIN_SAFE_READINESS_PLAN.md",
+      "reason": "Admin Safe exists, but protocol deployment and handoff explicitly pending."
+    },
+    {
+      "project": "Tekyyy/verifaid",
+      "source": "https://github.com/Tekyyy/verifaid/blob/882d9994f93e02d26394c3678727a11f0c8797e6/docs/MAINNET.md",
+      "reason": "Mainnet preparation document does not establish a completed protocol deployment."
+    },
+    {
+      "project": "W3SStakingVaults / OrbitPlatformControl / PoolCopyProviderBSC",
+      "reason": "Verification names alone did not establish a trustworthy official project-policy link."
+    }
+  ],
+  "note": "This is a bounded research shortlist, not a client list or project endorsement."
+}

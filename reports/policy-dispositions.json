@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "key": "56:0x99e882a21847012329351b598ceb93b135691b3b:policy:ed658a511847aa14431e00a4a510bb6222e9b4603753f9857eb14b930e89866e:gang-pad3-7",
+      "classification": "documented-migration",
+      "severity": "No vulnerability established",
+      "replacementCheckId": "gang-pad3-7",
+      "expected": "1142953503552859250489788141434513921641024171894",
+      "source": "https://github.com/gangfun/gang-launchpad/blob/4e3433076c0eac1cffa20b76e8e05bea6b17238d/docs/MAINNET-GANG-LAUNCHPAD-3-MODULES-2026-11-03.md",
+      "conclusion": "The first plan used the initial deployment's direct Safe owner. A later module rollout document records transferring the handler to GangHandlerAdmin and the admin being owned by the Safe. The initial mismatch is explained only when the replacement checks corroborate that documented chain.",
+      "requiredChecks": [
+        "gang-handler-admin-code",
+        "gang-handler-admin-owner",
+        "gang-handler-admin-pending",
+        "gang-pad3-7"
+      ],
+      "initialEvidence": "runs/focused-20261123/focused.json.gz",
+      "provenance": "Primary-source review after the bounded worker flagged an ownership difference; this interpretation was not autonomously inferred."
+    }
+  ]
+}
