@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { loadEngine } from '../demo/client.mjs';
-import { classify, roleBits, wordToAddress, isZeroWord } from './role-lib.mjs';
+import { classify, roleBits, wordToAddress, isZeroWord, isInitialized } from './role-lib.mjs';
 
 const bytes = await readFile(new URL('../demo/engine/feguard.wasm', import.meta.url));
 const engine = await loadEngine(bytes);
@@ -35,6 +35,12 @@ test('missing runtime evidence stays unresolved, never a zero-owner finding', ()
   const r = classify(engine, { runtimeCorroborated: false, isProxy: false, initialized: false, nativeValue: false, tokenValue: false });
   assert.equal(r.code, 13);
   assert.equal(r.category, 'coverage-gap');
+});
+
+test('initialization requires slot or owner corroboration, never a bare guess', () => {
+  assert.equal(isInitialized({ slotInitialized: true, ownerSet: false }), true); // OZ v4
+  assert.equal(isInitialized({ slotInitialized: false, ownerSet: true }), true); // OZ v5 / custom
+  assert.equal(isInitialized({ slotInitialized: false, ownerSet: false }), false);
 });
 
 test('roleBits packs the five evidence bits', () => {

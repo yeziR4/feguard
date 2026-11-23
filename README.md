@@ -64,6 +64,24 @@ Example: the QuickMiney proxy resolves to **11** (2,555 USDT held) while its imp
 resolves to **9** — which is exactly why that lead is Low and not critical. Tests:
 `node --test scripts/role.test.mjs`.
 
+### Cohort run
+
+`node scripts/cohort-roles.mjs` resolves every address in `reports/cohort.json` in one pass
+(`reports/cohort-roles.json`). Latest run, block 135,345,096:
+
+| code | role | count |
+|---|---|---|
+| 9 | plain uninitialized implementation | 286 |
+| 11 | proxy instance initialized | 7 |
+| 12 | plain contract holding value | 7 |
+| **10** | **proxy instance uninitialized** | **0** |
+
+The first pass reported **2** code-10 candidates. Qualification showed both proxies return a
+non-zero `owner()` — they *are* initialized but store `_initialized` outside slot 0 (OZ v5 /
+ERC-7201). The rule now requires slot **or** owner corroboration, and both leads were
+withdrawn before anything was reported. That is the intended behaviour: a candidate is not a
+finding, and a single storage slot is not proof.
+
 ## Check a public deployment
 
 ```sh
