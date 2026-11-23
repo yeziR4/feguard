@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "chainId": 56,
+  "block": {
+    "tag": "0x81107ca",
+    "number": "135333834",
+    "hash": "0xb9aab55cfe5197aaf4d1407ab33a8a25619c4eec9d91a802dd8b85a7853bbf8d",
+    "timestamp": "2026-11-23T20:20:02.000Z"
+  },
+  "rows": [
+    {
+      "address": "0x3C9acB71C8da760742D8FD9cbC945918A1Aac79F",
+      "block": {
+        "tag": "0x81107ca",
+        "number": "135333834",
+        "hash": "0xb9aab55cfe5197aaf4d1407ab33a8a25619c4eec9d91a802dd8b85a7853bbf8d",
+        "timestamp": "2026-11-23T20:20:02.000Z"
+      },
+      "impl": "0x0000000000000000000000000000000000000000",
+      "legacyImpl": "0x0000000000000000000000000000000000000000",
+      "token": "0x55d398326f99059ff775485246999027b3197955",
+      "tokenBalance": "0",
+      "evidence": {
+        "runtimeCorroborated": true,
+        "isProxy": false,
+        "initialized": false,
+        "nativeValue": false,
+        "tokenValue": false
+      },
+      "bits": 1,
+      "verdict": {
+        "code": 9,
+        "label": "Plain uninitialized implementation",
+        "category": "implementation-hardening",
+        "action": "Lock initialization in future releases; the implementation has no proxy and holds no value. This is hardening, not user-asset impact."
+      }
+    },
+    {
+      "address": "0x1fBD228d55d91e2A4CC1DdfEADF493d8646b8d72",
+      "block": {
+        "tag": "0x81107ca",
+        "number": "135333834",
+        "hash": "0xb9aab55cfe5197aaf4d1407ab33a8a25619c4eec9d91a802dd8b85a7853bbf8d",
+        "timestamp": "2026-11-23T20:20:02.000Z"
+      },
+      "impl": "0x3c9acb71c8da760742d8fd9cbc945918a1aac79f",
+      "legacyImpl": "0x0000000000000000000000000000000000000000",
+      "token": "0x55d398326f99059ff775485246999027b3197955",
+      "tokenBalance": "2555140000000000000000",
+      "evidence": {
+        "runtimeCorroborated": true,
+        "isProxy": true,
+        "initialized": true,
+        "nativeValue": false,
+        "tokenValue": true
+      },
+      "bits": 23,
+      "verdict": {
+        "code": 11,
+        "label": "Proxy instance is initialized",
+        "category": "context",
+        "action": "The proxy has consumed initialization. An exposed implementation initializer does not reach proxy storage; treat as context unless the authority fields are also empty."
+      }
+    },
+    {
+      "address": "0xd38B1B9CE1BbC7caaA5435c1791b6E6d90fd81c9",
+      "block": {
+        "tag": "0x81107ca",
+        "number": "135333834",
+        "hash": "0xb9aab55cfe5197aaf4d1407ab33a8a25619c4eec9d91a802dd8b85a7853bbf8d",
+        "timestamp": "2026-11-23T20:20:02.000Z"
+      },
+      "impl": "0x0000000000000000000000000000000000000000",
+      "legacyImpl": "0x0000000000000000000000000000000000000000",
+      "token": "0x55d398326f99059ff775485246999027b3197955",
+      "tokenBalance": "0",
+      "evidence": {
+        "runtimeCorroborated": true,
+        "isProxy": false,
+        "initialized": false,
+        "nativeValue": false,
+        "tokenValue": false
+      },
+      "bits": 1,
+      "verdict": {
+        "code": 9,
+        "label": "Plain uninitialized implementation",
+        "category": "implementation-hardening",
+        "action": "Lock initialization in future releases; the implementation has no proxy and holds no value. This is hardening, not user-asset impact."
+      }
+    },
+    {
+      "address": "0x55d398326f99059ff775485246999027b3197955",
+      "block": {
+        "tag": "0x81107ca",
+        "number": "135333834",
+        "hash": "0xb9aab55cfe5197aaf4d1407ab33a8a25619c4eec9d91a802dd8b85a7853bbf8d",
+        "timestamp": "2026-11-23T20:20:02.000Z"
+      },
+      "impl": "0x0000000000000000000000000000000000000000",
+      "legacyImpl": "0x0000000000000000000000000000000000000000",
+      "token": "0x55d398326f99059ff775485246999027b3197955",
+      "tokenBalance": "10892039121814699403306773",
+      "evidence": {
+        "runtimeCorroborated": true,
+        "isProxy": false,
+        "initialized": true,
+        "nativeValue": false,
+        "tokenValue": true
+      },
+      "bits": 21,
+      "verdict": {
+        "code": 12,
+        "label": "Plain contract holding value",
+        "category": "context",
+        "action": "A non-proxy contract holds native or token value. Review its own authority and reachability directly; a proxy-role argument does not apply."
+      }
+    }
+  ]
+}

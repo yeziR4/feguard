@@ -2,8 +2,8 @@
   "manifest_version": 1,
   "module": {
     "file": "feguard.wasm",
-    "sha256": "7a540c7cfbd89aa0c60c80d07f45200120f30fc1ad9b3d6dff823dfad02fba97",
-    "size": 17987,
+    "sha256": "e78f7379a41109268a2b394110e8a8aa81e9e7c4a8781371c575d6401e1cc9be",
+    "size": 18158,
     "initial_memory_pages": 17
   },
   "contract_version": 3,
@@ -157,6 +157,21 @@
         },
         {
           "name": "count",
+          "type": "u64",
+          "wasm": ["i64"]
+        }
+      ],
+      "result": {
+        "type": "u64",
+        "wasm": ["i64"]
+      }
+    },
+    {
+      "name": "fg_role",
+      "kind": "function",
+      "params": [
+        {
+          "name": "bits",
           "type": "u64",
           "wasm": ["i64"]
         }

@@ -60,3 +60,54 @@ fn cohort_initialization_requires_source_runtime_state_and_simulation_evidence()
     assert!(triage(6, 0, 11) == 0)
     assert!(triage(6, 0, 7) == 2)
 }
+
+// Deployment-role resolution for an initialization lead. This is the step that
+// turns "owner is zero" into a resolved role instead of an open question.
+// Evidence bits:
+//   1  runtime code corroborated across two providers
+//   2  proxy shape (EIP-1967 implementation slot, or EIP-1167 minimal proxy)
+//   4  the proxy's storage reports initialized
+//   8  native balance is nonzero
+//   16 a named ERC-20 balance is nonzero
+// Codes: 9 plain uninitialized implementation (hardening); 10 proxy instance
+// uninitialized (review-critical); 11 proxy instance initialized (authority set);
+// 12 plain contract holding value; 13 role unresolved (missing evidence).
+pub fn role(_ bits: u64) -> u64 {
+    if (bits & 1) == 0 {
+        13
+    } else {
+        if (bits & 2) != 0 {
+            if (bits & 4) == 0 { 10 } else { 11 }
+        } else {
+            if (bits & 24) != 0 { 12 } else { 9 }
+        }
+    }
+}
+
+#[unsafe(export)]
+#[cfg(target = "wasm")]
+pub fn fg_role(_ bits: u64) -> u64 {
+    role(bits)
+}
+
+#[test]
+fn role_without_runtime_corroboration_stays_unresolved() {
+    assert!(role(0) == 13)
+    assert!(role(2) == 13)
+    assert!(role(6) == 13)
+}
+
+#[test]
+fn role_separates_uninitialized_proxy_from_initialized_proxy() {
+    assert!(role(3) == 10)
+    assert!(role(7) == 11)
+    assert!(role(23) == 11)
+}
+
+#[test]
+fn role_separates_plain_value_from_plain_implementation() {
+    assert!(role(1) == 9)
+    assert!(role(9) == 12)
+    assert!(role(17) == 12)
+    assert!(role(25) == 12)
+}

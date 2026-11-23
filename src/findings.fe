@@ -1,0 +1,73 @@
+// Source-verified defect in Referral.sol (Monkey King / mking.fun, BNB chain).
+//
+// Rewards and withdrawal both gate on a strict equality between the recorded LP amount
+// (userLpAmount) and the live LP balance (pair.balanceOf). The recorded value is only
+// written in buyPower (+) and _removeLiquidity (=0); nothing re-synchronises it. A
+// one-wei external LP transfer therefore desynchronises a victim permanently: pending
+// rewards read zero and removeLiquidity reverts with LpAmountDifferent forever.
+//
+// These functions encode the predicate so the defect is an executable regression, not prose.
+pub fn referral_pending(_ recorded: u256, _ live: u256, _ power: u256, _ accrued: u256) -> u256 {
+    if power == 0 {
+        0
+    } else {
+        if recorded != live { 0 } else { accrued }
+    }
+}
+
+pub fn referral_withdrawable(_ recorded: u256, _ live: u256) -> u8 {
+    if recorded != live { 0 } else { 1 }
+}
+
+#[test]
+fn a_synced_account_can_accrue() {
+    assert!(referral_pending(100, 100, 5, 42) == 42)
+    assert!(referral_withdrawable(100, 100) == 1)
+}
+
+#[test]
+fn one_wei_lp_transfer_zeroes_pending_rewards_and_blocks_withdrawal() {
+    // 100 recorded vs 100 live is healthy; 101 live after an unsolicited 1-wei transfer
+    // is not. Power is unchanged, yet every claim and withdrawal path is now closed.
+    assert!(referral_pending(100, 101, 5, 42) == 0)
+    assert!(referral_withdrawable(100, 101) == 0)
+}
+
+#[test]
+fn under_balance_does_not_recover_either() {
+    // Moving LP away desynchronises the same way; the recorded value never self-heals.
+    assert!(referral_pending(100, 0, 5, 42) == 0)
+    assert!(referral_withdrawable(100, 0) == 0)
+}
+
+// Second defect: _removeLiquidity zeroes userPower but never decrements totalPower, so the
+// release denominator only grows. Allocation per share shrinks and the difference between
+// dailyTotalReward and what the remaining power can claim is stranded.
+pub fn release_allocated(_ daily: u256, _ totalPower: u256) -> u256 {
+    if totalPower == 0 {
+        0
+    } else {
+        daily * 1000000000000000000 / totalPower
+    }
+}
+
+#[test]
+fn removal_inflates_total_power_and_strands_half_the_pool() {
+    // Two holders at power 100: totalPower 200. After one removes, only 100 power can claim,
+    // yet the denominator still reads 200, so half of the day's reward is never allocated.
+    let daily = 1000
+    let perShare = release_allocated(daily, 200)
+    let claimable = (perShare * 100) / 1000000000000000000
+    assert!(claimable * 2 == daily)
+}
+
+#[test]
+fn repeated_cycles_drive_allocation_toward_zero() {
+    let daily = 1000
+    assert!(
+        release_allocated(daily, 200) > release_allocated(daily, 2000),
+    )
+    assert!(
+        release_allocated(daily, 2000) > release_allocated(daily, 20000),
+    )
+}

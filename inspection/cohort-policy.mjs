@@ -19,6 +19,23 @@ export function triage(engine, kind, observation) {
   return { code, ...TRIAGE[code] };
 }
 
+// Deployment-role resolution. Codes 9-13 mirror src/cohort.fe::role().
+export const ROLE = {
+  9: { label: 'Plain uninitialized implementation', category: 'implementation-hardening', action: 'Lock initialization in future releases; the implementation has no proxy and holds no value. This is hardening, not user-asset impact.' },
+  10: { label: 'Proxy instance is uninitialized', category: 'review-critical', action: 'A deployed proxy has no recorded initialization. Establish whether an unprivileged caller can initialize it and what it holds before any remediation. This is the one role that can reach user assets.' },
+  11: { label: 'Proxy instance is initialized', category: 'context', action: 'The proxy has consumed initialization. An exposed implementation initializer does not reach proxy storage; treat as context unless the authority fields are also empty.' },
+  12: { label: 'Plain contract holding value', category: 'context', action: 'A non-proxy contract holds native or token value. Review its own authority and reachability directly; a proxy-role argument does not apply.' },
+  13: { label: 'Deployment role unresolved', category: 'coverage-gap', action: 'Runtime or storage evidence was missing or providers disagreed. Resolve before drawing any role conclusion; missing evidence is not a role.' },
+};
+
+export function resolveRole(engine, bits) {
+  const value = BigInt(bits);
+  if (value < 0n || value >= (1n << 32n)) throw new Error('Invalid role evidence bits.');
+  const code = Number(engine.fg_role(value));
+  if (!ROLE[code]) throw new Error('Invalid Fe role code.');
+  return { code, ...ROLE[code] };
+}
+
 export function summarizeCohort(candidates) {
   return {
     discoveredContracts: candidates.length,

@@ -35,6 +35,7 @@ jobs:
       - run: node scripts/verify.mjs
       - run: node --test scripts/inspection.test.mjs
       - run: node --test scripts/cohort.test.mjs
+      - run: node --test scripts/role.test.mjs
       - run: node --test scripts/proxy-context.test.mjs
       - run: node --test scripts/controller.test.mjs scripts/focused.test.mjs scripts/workflow-evidence.test.mjs
       - run: node scripts/run.mjs --verify reports/workflow.json

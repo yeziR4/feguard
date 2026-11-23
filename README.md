@@ -41,6 +41,29 @@ node scripts/review-initializers.mjs      # five explicitly reviewed targets
 
 The batch's compressed raw evidence and the follow-up's source hashes/RPC responses are included. These are contract counts, not customer/project counts. The generic scanner does not infer trustworthy project policies or promote zero-owner observations into vulnerabilities.
 
+## Resolve a deployment's role
+
+Before an "owner is zero" observation means anything, resolve what the address **is**. This
+classifies a target as proxy or plain, initialized or not, and value-bearing or not, using two
+public RPC providers at a pinned block. The decision is Fe (`src/cohort.fe::role`, exported as
+`fg_role`); Node only collects evidence.
+
+```
+node scripts/role.mjs 0xADDRESS [0xADDRESS ...] [--token 0xERC20] [--chain 56] [--json reports/role.json]
+```
+
+| code | role | meaning |
+|---|---|---|
+| 9 | plain uninitialized implementation | hardening only; no proxy, no value |
+| 10 | **proxy instance uninitialized** | the one role that can reach user assets — investigate |
+| 11 | proxy instance initialized | implementation initializer does not reach proxy storage |
+| 12 | plain contract holding value | review its own authority directly |
+| 13 | role unresolved | missing or conflicting evidence — never a finding |
+
+Example: the QuickMiney proxy resolves to **11** (2,555 USDT held) while its implementation
+resolves to **9** — which is exactly why that lead is Low and not critical. Tests:
+`node --test scripts/role.test.mjs`.
+
 ## Check a public deployment
 
 ```sh
@@ -183,6 +206,26 @@ This bounded testing prototype requires a Fe adapter with explicit invariants. I
 The harness and original demonstration contract authorize or record actions; they do not implement wallet transfers, signature verification, or a semantic LLM memory service. Notes are synthetic memory operations. Evidence hashes are caller-supplied references, not proof of external facts. On-chain fields are public.
 
 The counterexample WASM ABI/UI expose the guard adapter; other adapters can use the generic Fe API. Its state summaries are specialized to that model's small values. The deployment-policy ABI separately preserves full `u256` inputs. Native execution has not been verified. Local results are distinct from remote CI: an unrun workflow is not a passing check.
+
+## Findings
+
+Two source-verified defects in `Referral.sol` (Monkey King / `mking.fun`, BNB Chain):
+
+1. **LP-balance desynchronisation (griefing, Low–Medium, demonstrated).** `_pending` and
+   `_removeLiquidity` both require `userLpAmount[user] == pair.balanceOf(user)`, and nothing
+   re-synchronises the recorded value. A one-wei `pair.transfer(victim, 1)` makes
+   `pendingReward` read zero and `removeLiquidity` revert permanently. Reproduce with
+   `node scripts/poc-referral-desync.mjs` (state-override `eth_call` against the deployed
+   implementation; no transaction). Details: `reports/finding-referral-lp-desync.md`.
+2. **`totalPower` is never decremented (accounting, Medium, demonstrated).** `_removeLiquidity`
+   zeroes `userPower` but not `totalPower`, so the release denominator only grows. Each
+   removal dilutes remaining users and strands reward tokens; repeated buy/remove cycles
+   drive per-share allocation toward zero. Executed `release()` on a fork: with
+   `dailyTotalReward = 1000e18`, `totalPower = 200` allocates `5e36` per share versus `1e37`
+   at the true `100` — a 100-power holder claims `500e18` instead of `1000e18`. Details:
+   `reports/finding-referral-totalpower.md`.
+
+Both are encoded as executable regressions in `src/findings.fe` (`fe test --filter referral`).
 
 ## Contest declaration
 
