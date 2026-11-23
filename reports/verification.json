@@ -1,0 +1,91 @@
+{
+  "compiler": "fe 26.7.0 (e6e6342)",
+  "wasmSha256": "ff2106b94f876dca90adc495fdf2629691364024b3e6d740ffe26639f1dbab1c",
+  "mutantCampaigns": [
+    {
+      "target": 1,
+      "startSeed": "0",
+      "failingSeed": "0",
+      "prefix": 25,
+      "reduced": 9,
+      "replays": 103
+    },
+    {
+      "target": 2,
+      "startSeed": "0",
+      "failingSeed": "0",
+      "prefix": 9,
+      "reduced": 1,
+      "replays": 8
+    },
+    {
+      "target": 3,
+      "startSeed": "0",
+      "failingSeed": "0",
+      "prefix": 32,
+      "reduced": 3,
+      "replays": 33
+    },
+    {
+      "target": 1,
+      "startSeed": "42",
+      "failingSeed": "42",
+      "prefix": 16,
+      "reduced": 9,
+      "replays": 85
+    },
+    {
+      "target": 2,
+      "startSeed": "42",
+      "failingSeed": "42",
+      "prefix": 48,
+      "reduced": 1,
+      "replays": 18
+    },
+    {
+      "target": 3,
+      "startSeed": "42",
+      "failingSeed": "42",
+      "prefix": 48,
+      "reduced": 3,
+      "replays": 46
+    },
+    {
+      "target": 1,
+      "startSeed": "2026",
+      "failingSeed": "2026",
+      "prefix": 12,
+      "reduced": 9,
+      "replays": 63
+    },
+    {
+      "target": 2,
+      "startSeed": "2026",
+      "failingSeed": "2026",
+      "prefix": 4,
+      "reduced": 1,
+      "replays": 10
+    },
+    {
+      "target": 3,
+      "startSeed": "2026",
+      "failingSeed": "2026",
+      "prefix": 7,
+      "reduced": 3,
+      "replays": 25
+    }
+  ],
+  "correctCampaign": {
+    "traces": 4096,
+    "actionsPerTrace": 64,
+    "invariantViolations": 0
+  },
+  "wraparoundCampaign": {
+    "startSeed": "18446744073709551600",
+    "traces": 32,
+    "invariantViolations": 0
+  },
+  "replayDeterminism": "pass",
+  "abiInputValidation": "pass",
+  "scope": "Intentional model mutants; finite bounded campaigns; no claim of exhaustive security or globally shortest reduction."
+}

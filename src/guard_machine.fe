@@ -1,0 +1,263 @@
+use ingot::{
+    SpendPolicy,
+    Budget,
+    AgentMemory,
+    SpendRequest,
+    new_memory,
+    authorize,
+    preview,
+    remember,
+    recall,
+}
+use ingot::fuzz::{Action, Machine}
+use std::evm::wei
+
+// These three mutants are intentional demonstration fixtures, NOT discoveries
+// in a deployed wallet. The correct target uses the real FeGuard library.
+pub const CORRECT: u64 = 0
+pub const EVICTION_REFUND: u64 = 1
+pub const REJECTED_DEBIT: u64 = 2
+pub const STALE_PERMISSION: u64 = 3
+
+pub struct GuardMachine {
+    pub target: u64,
+    pub policy: SpendPolicy,
+    pub budget: Budget,
+    pub memory: AgentMemory,
+    pub spent: u256,
+    pub clock: u64,
+    pub cached_permission: bool,
+    pub last_decision: u64,
+}
+
+pub fn guard(_ target: u64) -> GuardMachine {
+    GuardMachine {
+        target,
+        policy: initial_policy(),
+        budget: Budget { remaining: wei(100) },
+        memory: new_memory(),
+        spent: 0,
+        clock: 0,
+        cached_permission: false,
+        last_decision: 0,
+    }
+}
+
+fn initial_policy() -> SpendPolicy {
+    SpendPolicy {
+        delegate: Address::new(0xA11CE),
+        recipient: Address::new(0xB0B),
+        per_transfer: wei(60),
+        valid_before: Timestamp::from_seconds(1000),
+        revoked: false,
+    }
+}
+
+// An independent scalar oracle. It deliberately does not call preview or
+// authorize, nor inspect the target's budget to compute the correct allowance.
+fn expected(_ m: GuardMachine, _ r: SpendRequest) -> u64 {
+    if m.policy.revoked {
+        return 1
+    }
+    if r.caller != Address::new(0xA11CE) {
+        return 2
+    }
+    if m.clock >= 1000 {
+        return 3
+    }
+    if r.recipient != Address::new(0xB0B) {
+        return 4
+    }
+    if r.amount.as_wei() == 0 {
+        return 5
+    }
+    if r.amount.as_wei() > 60 {
+        return 6
+    }
+    if r.amount.as_wei() > 100 - m.spent {
+        return 7
+    }
+    0
+}
+
+impl Machine for GuardMachine {
+    fn reset(mut self) {
+        let target = self.target
+        self = guard(target)
+    }
+
+    fn action(self, _ random: u64) -> Action {
+        let selector = random % 16
+        let opcode: u64 = if selector < 7 {
+            0
+        } else if selector == 7 {
+            1
+        } else if selector == 8 {
+            2
+        } else if selector == 9 {
+            3
+        } else if selector == 10 {
+            4
+        } else if selector == 11 {
+            5
+        } else if selector == 12 { 6 } else { 7 }
+        let edge = (random >> 8) % 10
+        let value: u64 = match edge {
+            0 => 0,
+            1 => 1,
+            2 => 10,
+            3 => 50,
+            4 => 60,
+            5 => 61,
+            6 => 99,
+            7 => 100,
+            8 => 101,
+            _ => (random >> 16) % 121,
+        }
+        Action { opcode, value }
+    }
+
+    fn step(mut self, _ action: Action) -> u64 {
+        self.last_decision = 0
+        if action.opcode == 3 {
+            self.policy.revoked = true
+            return 0
+        }
+        if action.opcode == 4 {
+            // Time after expiry is equivalent for this model. Saturation also
+            // keeps arbitrary replay arguments from overflowing the clock.
+            self.clock = if action.value >= 1000 - self.clock {
+                1000
+            } else {
+                self.clock + action.value
+            }
+            return 0
+        }
+        if action.opcode == 5 {
+            let _ = with (AgentMemory = self.memory) {
+                recall(action.value as u256)
+            }
+            return 0
+        }
+        if action.opcode == 7 {
+            let note = SpendRequest {
+                caller: Address::new(0xA11CE),
+                recipient: Address::new(0xB0B),
+                amount: Wei::zero(),
+                now: Timestamp::from_seconds(self.clock as u256),
+            }
+            let _ = with (AgentMemory = mut self.memory) {
+                remember(
+                    note,
+                    decision_code: 5,
+                    evidence_hash: action.value as u256,
+                )
+            }
+            return self.check_accounting()
+        }
+        if action.opcode > 7 {
+            return 0
+        }
+
+        let request = SpendRequest {
+            caller: if action.opcode == 6 {
+                Address::new(0xBAD)
+            } else {
+                Address::new(0xA11CE)
+            },
+            recipient: if action.opcode == 1 {
+                Address::new(0xBAD)
+            } else {
+                Address::new(0xB0B)
+            },
+            amount: wei(action.value as u256),
+            now: Timestamp::from_seconds(self.clock as u256),
+        }
+        let oracle = expected(self, request)
+        let before = self.budget.remaining
+        if action.opcode == 2 {
+            let code = with (SpendPolicy = self.policy, Budget = self.budget) {
+                preview(request).code()
+            }
+            self.last_decision = code.downcast().unwrap()
+            if self.budget.remaining != before {
+                return 5
+            }
+            if code != oracle as u256 {
+                return 4
+            }
+            return 0
+        }
+
+        var code: u256 = 0
+        if self.target == STALE_PERMISSION
+            && self.policy.revoked
+            && self.cached_permission
+            && request.caller == self.policy.delegate
+            && request.recipient == self.policy.recipient
+            && request.amount > Wei::zero()
+            && request.amount <= self.policy.per_transfer
+            && request.amount <= self.budget.remaining
+            && self.clock < 1000 {
+            // Intentionally wrong: a remembered approval bypasses revocation.
+            var stale = initial_policy()
+            stale.valid_before = self.policy.valid_before
+            code = with (SpendPolicy = stale, Budget = mut self.budget) {
+                authorize(request).code()
+            }
+        } else {
+            code = with (SpendPolicy = self.policy, Budget = mut self.budget) {
+                authorize(request).code()
+            }
+        }
+        self.last_decision = code.downcast().unwrap()
+        if self.target == REJECTED_DEBIT && code != 0 && request.amount <= self.budget.remaining {
+            // Intentionally wrong: a rejected request still burns allowance.
+            self.budget.remaining = self.budget.remaining - request.amount
+        }
+        if code == 0 {
+            self.spent += request.amount.as_wei()
+            self.cached_permission = true
+        }
+        if request.caller == self.policy.delegate {
+            let _ = with (AgentMemory = mut self.memory) {
+                remember(request, decision_code: code, evidence_hash: 0)
+            }
+        }
+        if code == 0 && self.policy.revoked {
+            return 3
+        }
+        if code != 0 && self.budget.remaining != before {
+            return 2
+        }
+        if code != oracle as u256 {
+            return 4
+        }
+        self.check_accounting()
+    }
+}
+
+impl GuardMachine {
+    fn check_accounting(mut self) -> u64 {
+        if self.target == EVICTION_REFUND {
+            // Intentionally wrong: reconstruct allowance from the bounded ring.
+            var visible_spent: u256 = 0
+            for i in 0 .. 8 {
+                let entry = self.memory.slots[i]
+                if entry.sequence != 0 && entry.decision_code == 0 {
+                    visible_spent += entry.amount.as_wei()
+                }
+            }
+            if visible_spent <= 100 {
+                self.budget.remaining = wei(100 - visible_spent)
+            }
+        }
+        if self.spent > 100 {
+            return 1
+        }
+        if self.budget.remaining.as_wei() + self.spent != 100 {
+            return 1
+        }
+        0
+    }
+}

@@ -1,0 +1,34 @@
+// Storage replay adapter for the testing model. This is an intentionally
+// configurable test harness, including demonstration mutants. It holds no funds.
+use ingot::fuzz::{Action, Machine}
+use ingot::guard_machine::{GuardMachine, guard}
+
+#[cfg(target = "evm")]
+pub msg HarnessMsg {
+    #[selector = sol("step(uint64,uint64)")]
+    Step { opcode: u64, value: u64 } -> u64,
+    #[selector = sol("inspect()")]
+    Inspect -> (u256, u256, u256, bool),
+}
+
+#[cfg(target = "evm")]
+pub contract FuzzModelHarness {
+    mut model: GuardMachine,
+
+    init(target: u64) uses (mut model) { model = guard(target) }
+
+    recv HarnessMsg {
+        Step { opcode, value } -> u64 uses (mut model) {
+            model.step(Action { opcode, value })
+        }
+
+        Inspect -> (u256, u256, u256, bool) uses (model) {
+            (
+                model.budget.remaining.as_wei(),
+                model.spent,
+                model.memory.written,
+                model.policy.revoked,
+            )
+        }
+    }
+}

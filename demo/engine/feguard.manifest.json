@@ -1,0 +1,209 @@
+{
+  "manifest_version": 1,
+  "module": {
+    "file": "feguard.wasm",
+    "sha256": "ff2106b94f876dca90adc495fdf2629691364024b3e6d740ffe26639f1dbab1c",
+    "size": 16646,
+    "initial_memory_pages": 17
+  },
+  "contract_version": 3,
+  "optimization": "1",
+  "compiler": "fe 26.7.0 (e6e6342)",
+  "imports": [
+    {
+      "module": "env",
+      "name": "__fe_revert",
+      "kind": "function",
+      "type": {
+        "params": ["i32", "i32"],
+        "results": []
+      }
+    }
+  ],
+  "exports": [
+    {
+      "name": "fg_action",
+      "kind": "function",
+      "params": [
+        {
+          "name": "target",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "seed",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "count",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "reduced",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "index",
+          "type": "u64",
+          "wasm": ["i64"]
+        }
+      ],
+      "result": {
+        "type": "u64",
+        "wasm": ["i64"]
+      }
+    },
+    {
+      "name": "fg_failure",
+      "kind": "function",
+      "params": [
+        {
+          "name": "target",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "seed",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "count",
+          "type": "u64",
+          "wasm": ["i64"]
+        }
+      ],
+      "result": {
+        "type": "u64",
+        "wasm": ["i64"]
+      }
+    },
+    {
+      "name": "fg_info",
+      "kind": "function",
+      "params": [
+        {
+          "name": "target",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "seed",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "count",
+          "type": "u64",
+          "wasm": ["i64"]
+        }
+      ],
+      "result": {
+        "type": "u64",
+        "wasm": ["i64"]
+      }
+    },
+    {
+      "name": "fg_search",
+      "kind": "function",
+      "params": [
+        {
+          "name": "target",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "seed",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "cases",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "count",
+          "type": "u64",
+          "wasm": ["i64"]
+        }
+      ],
+      "result": {
+        "type": "u64",
+        "wasm": ["i64"]
+      }
+    },
+    {
+      "name": "fg_state",
+      "kind": "function",
+      "params": [
+        {
+          "name": "target",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "seed",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "count",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "reduced",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "prefix",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "implementation",
+          "type": "u64",
+          "wasm": ["i64"]
+        }
+      ],
+      "result": {
+        "type": "u64",
+        "wasm": ["i64"]
+      }
+    },
+    {
+      "name": "fg_validate",
+      "kind": "function",
+      "params": [
+        {
+          "name": "target",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "seed",
+          "type": "u64",
+          "wasm": ["i64"]
+        },
+        {
+          "name": "count",
+          "type": "u64",
+          "wasm": ["i64"]
+        }
+      ],
+      "result": {
+        "type": "u64",
+        "wasm": ["i64"]
+      }
+    },
+    {
+      "name": "memory",
+      "kind": "memory"
+    }
+  ]
+}

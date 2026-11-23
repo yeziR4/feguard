@@ -67,6 +67,7 @@ fn ring_eviction_is_detectable_and_capacity_is_bounded() {
 }
 
 #[test]
+#[cfg(target = "evm")]
 fn contract_remembers_both_allowed_and_rejected_delegate_requests()
 uses (evm: mut Evm)
 {
@@ -121,6 +122,7 @@ uses (evm: mut Evm)
 }
 
 #[test]
+#[cfg(target = "evm")]
 fn contract_does_not_let_an_outsider_pollute_memory() uses (evm: mut Evm) {
     let to = Address::new(0xB0B)
     let guard = evm
@@ -183,6 +185,7 @@ fn recalled_permission_cannot_override_current_policy() {
 }
 
 #[test]
+#[cfg(target = "evm")]
 fn contract_eviction_does_not_restore_spending_budget() uses (evm: mut Evm) {
     let to = Address::new(0xB0B)
     let guard = evm

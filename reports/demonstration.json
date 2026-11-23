@@ -1,0 +1,1827 @@
+[
+  {
+    "schemaVersion": 1,
+    "compiler": "Fe 26.7.0",
+    "target": 1,
+    "targetName": "Memory eviction refund",
+    "startSeed": "0",
+    "cases": 64,
+    "steps": 64,
+    "found": true,
+    "casesChecked": 1,
+    "failingSeed": "0",
+    "failureCode": 1,
+    "failure": "Budget conservation violated",
+    "generatedLength": 64,
+    "originalLength": 25,
+    "reducedLength": 9,
+    "reductionReplays": 103,
+    "deletionMinimal": true,
+    "correctedReplayPasses": true,
+    "originalTrace": [
+      {
+        "index": 0,
+        "opcode": 7,
+        "action": "Remember note",
+        "value": 61,
+        "state": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 1,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 1,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 1,
+        "opcode": 7,
+        "action": "Remember note",
+        "value": 60,
+        "state": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 2,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 2,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 2,
+        "opcode": 0,
+        "action": "Spend",
+        "value": 101,
+        "state": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 3,
+          "revoked": false,
+          "failure": 0,
+          "decision": 6
+        },
+        "correctedState": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 3,
+          "revoked": false,
+          "failure": 0,
+          "decision": 6
+        }
+      },
+      {
+        "index": 3,
+        "opcode": 2,
+        "action": "Preview",
+        "value": 10,
+        "state": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 3,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 3,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 4,
+        "opcode": 7,
+        "action": "Remember note",
+        "value": 10,
+        "state": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 4,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 4,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 5,
+        "opcode": 0,
+        "action": "Spend",
+        "value": 60,
+        "state": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 5,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 5,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 6,
+        "opcode": 2,
+        "action": "Preview",
+        "value": 99,
+        "state": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 5,
+          "revoked": false,
+          "failure": 0,
+          "decision": 6
+        },
+        "correctedState": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 5,
+          "revoked": false,
+          "failure": 0,
+          "decision": 6
+        }
+      },
+      {
+        "index": 7,
+        "opcode": 0,
+        "action": "Spend",
+        "value": 50,
+        "state": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 6,
+          "revoked": false,
+          "failure": 0,
+          "decision": 7
+        },
+        "correctedState": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 6,
+          "revoked": false,
+          "failure": 0,
+          "decision": 7
+        }
+      },
+      {
+        "index": 8,
+        "opcode": 6,
+        "action": "Wrong caller",
+        "value": 1,
+        "state": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 6,
+          "revoked": false,
+          "failure": 0,
+          "decision": 2
+        },
+        "correctedState": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 6,
+          "revoked": false,
+          "failure": 0,
+          "decision": 2
+        }
+      },
+      {
+        "index": 9,
+        "opcode": 4,
+        "action": "Advance time",
+        "value": 10,
+        "state": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 6,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 6,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 10,
+        "opcode": 0,
+        "action": "Spend",
+        "value": 99,
+        "state": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 7,
+          "revoked": false,
+          "failure": 0,
+          "decision": 6
+        },
+        "correctedState": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 7,
+          "revoked": false,
+          "failure": 0,
+          "decision": 6
+        }
+      },
+      {
+        "index": 11,
+        "opcode": 7,
+        "action": "Remember note",
+        "value": 0,
+        "state": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 8,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 8,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 12,
+        "opcode": 4,
+        "action": "Advance time",
+        "value": 24,
+        "state": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 8,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 8,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 13,
+        "opcode": 0,
+        "action": "Spend",
+        "value": 99,
+        "state": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 8,
+          "revoked": false,
+          "failure": 0,
+          "decision": 6
+        },
+        "correctedState": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 8,
+          "revoked": false,
+          "failure": 0,
+          "decision": 6
+        }
+      },
+      {
+        "index": 14,
+        "opcode": 0,
+        "action": "Spend",
+        "value": 1,
+        "state": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 15,
+        "opcode": 3,
+        "action": "Revoke",
+        "value": 101,
+        "state": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 16,
+        "opcode": 5,
+        "action": "Recall",
+        "value": 61,
+        "state": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 17,
+        "opcode": 7,
+        "action": "Remember note",
+        "value": 1,
+        "state": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 18,
+        "opcode": 1,
+        "action": "Wrong recipient",
+        "value": 99,
+        "state": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 1
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 1
+        }
+      },
+      {
+        "index": 19,
+        "opcode": 2,
+        "action": "Preview",
+        "value": 101,
+        "state": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 1
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 1
+        }
+      },
+      {
+        "index": 20,
+        "opcode": 5,
+        "action": "Recall",
+        "value": 61,
+        "state": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 21,
+        "opcode": 3,
+        "action": "Revoke",
+        "value": 1,
+        "state": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 22,
+        "opcode": 4,
+        "action": "Advance time",
+        "value": 100,
+        "state": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 23,
+        "opcode": 5,
+        "action": "Recall",
+        "value": 1,
+        "state": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 24,
+        "opcode": 7,
+        "action": "Remember note",
+        "value": 61,
+        "state": {
+          "remaining": 99,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 1,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        }
+      }
+    ],
+    "reducedTrace": [
+      {
+        "index": 0,
+        "opcode": 0,
+        "action": "Spend",
+        "value": 1,
+        "state": {
+          "remaining": 99,
+          "spent": 1,
+          "retained": 1,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 99,
+          "spent": 1,
+          "retained": 1,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 1,
+        "opcode": 0,
+        "action": "Spend",
+        "value": 0,
+        "state": {
+          "remaining": 99,
+          "spent": 1,
+          "retained": 2,
+          "revoked": false,
+          "failure": 0,
+          "decision": 5
+        },
+        "correctedState": {
+          "remaining": 99,
+          "spent": 1,
+          "retained": 2,
+          "revoked": false,
+          "failure": 0,
+          "decision": 5
+        }
+      },
+      {
+        "index": 2,
+        "opcode": 0,
+        "action": "Spend",
+        "value": 0,
+        "state": {
+          "remaining": 99,
+          "spent": 1,
+          "retained": 3,
+          "revoked": false,
+          "failure": 0,
+          "decision": 5
+        },
+        "correctedState": {
+          "remaining": 99,
+          "spent": 1,
+          "retained": 3,
+          "revoked": false,
+          "failure": 0,
+          "decision": 5
+        }
+      },
+      {
+        "index": 3,
+        "opcode": 7,
+        "action": "Remember note",
+        "value": 0,
+        "state": {
+          "remaining": 99,
+          "spent": 1,
+          "retained": 4,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 99,
+          "spent": 1,
+          "retained": 4,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 4,
+        "opcode": 0,
+        "action": "Spend",
+        "value": 0,
+        "state": {
+          "remaining": 99,
+          "spent": 1,
+          "retained": 5,
+          "revoked": false,
+          "failure": 0,
+          "decision": 5
+        },
+        "correctedState": {
+          "remaining": 99,
+          "spent": 1,
+          "retained": 5,
+          "revoked": false,
+          "failure": 0,
+          "decision": 5
+        }
+      },
+      {
+        "index": 5,
+        "opcode": 0,
+        "action": "Spend",
+        "value": 0,
+        "state": {
+          "remaining": 99,
+          "spent": 1,
+          "retained": 6,
+          "revoked": false,
+          "failure": 0,
+          "decision": 5
+        },
+        "correctedState": {
+          "remaining": 99,
+          "spent": 1,
+          "retained": 6,
+          "revoked": false,
+          "failure": 0,
+          "decision": 5
+        }
+      },
+      {
+        "index": 6,
+        "opcode": 7,
+        "action": "Remember note",
+        "value": 0,
+        "state": {
+          "remaining": 99,
+          "spent": 1,
+          "retained": 7,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 99,
+          "spent": 1,
+          "retained": 7,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 7,
+        "opcode": 1,
+        "action": "Wrong recipient",
+        "value": 0,
+        "state": {
+          "remaining": 99,
+          "spent": 1,
+          "retained": 8,
+          "revoked": false,
+          "failure": 0,
+          "decision": 4
+        },
+        "correctedState": {
+          "remaining": 99,
+          "spent": 1,
+          "retained": 8,
+          "revoked": false,
+          "failure": 0,
+          "decision": 4
+        }
+      },
+      {
+        "index": 8,
+        "opcode": 7,
+        "action": "Remember note",
+        "value": 0,
+        "state": {
+          "remaining": 100,
+          "spent": 1,
+          "retained": 8,
+          "revoked": false,
+          "failure": 1,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 99,
+          "spent": 1,
+          "retained": 8,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        }
+      }
+    ],
+    "limitation": "Intentional model mutants. A finite campaign is not a security proof. Reduction preserves the same failure class and is single-action-deletion minimal, not globally shortest."
+  },
+  {
+    "schemaVersion": 1,
+    "compiler": "Fe 26.7.0",
+    "target": 2,
+    "targetName": "Rejected request debit",
+    "startSeed": "0",
+    "cases": 64,
+    "steps": 64,
+    "found": true,
+    "casesChecked": 1,
+    "failingSeed": "0",
+    "failureCode": 2,
+    "failure": "Rejected request changed allowance",
+    "generatedLength": 64,
+    "originalLength": 9,
+    "reducedLength": 1,
+    "reductionReplays": 8,
+    "deletionMinimal": true,
+    "correctedReplayPasses": true,
+    "originalTrace": [
+      {
+        "index": 0,
+        "opcode": 7,
+        "action": "Remember note",
+        "value": 61,
+        "state": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 1,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 1,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 1,
+        "opcode": 7,
+        "action": "Remember note",
+        "value": 60,
+        "state": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 2,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 2,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 2,
+        "opcode": 0,
+        "action": "Spend",
+        "value": 101,
+        "state": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 3,
+          "revoked": false,
+          "failure": 0,
+          "decision": 6
+        },
+        "correctedState": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 3,
+          "revoked": false,
+          "failure": 0,
+          "decision": 6
+        }
+      },
+      {
+        "index": 3,
+        "opcode": 2,
+        "action": "Preview",
+        "value": 10,
+        "state": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 3,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 3,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 4,
+        "opcode": 7,
+        "action": "Remember note",
+        "value": 10,
+        "state": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 4,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 4,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 5,
+        "opcode": 0,
+        "action": "Spend",
+        "value": 60,
+        "state": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 5,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 5,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 6,
+        "opcode": 2,
+        "action": "Preview",
+        "value": 99,
+        "state": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 5,
+          "revoked": false,
+          "failure": 0,
+          "decision": 6
+        },
+        "correctedState": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 5,
+          "revoked": false,
+          "failure": 0,
+          "decision": 6
+        }
+      },
+      {
+        "index": 7,
+        "opcode": 0,
+        "action": "Spend",
+        "value": 50,
+        "state": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 6,
+          "revoked": false,
+          "failure": 0,
+          "decision": 7
+        },
+        "correctedState": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 6,
+          "revoked": false,
+          "failure": 0,
+          "decision": 7
+        }
+      },
+      {
+        "index": 8,
+        "opcode": 6,
+        "action": "Wrong caller",
+        "value": 1,
+        "state": {
+          "remaining": 39,
+          "spent": 60,
+          "retained": 6,
+          "revoked": false,
+          "failure": 2,
+          "decision": 2
+        },
+        "correctedState": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 6,
+          "revoked": false,
+          "failure": 0,
+          "decision": 2
+        }
+      }
+    ],
+    "reducedTrace": [
+      {
+        "index": 0,
+        "opcode": 6,
+        "action": "Wrong caller",
+        "value": 1,
+        "state": {
+          "remaining": 99,
+          "spent": 0,
+          "retained": 0,
+          "revoked": false,
+          "failure": 2,
+          "decision": 2
+        },
+        "correctedState": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 0,
+          "revoked": false,
+          "failure": 0,
+          "decision": 2
+        }
+      }
+    ],
+    "limitation": "Intentional model mutants. A finite campaign is not a security proof. Reduction preserves the same failure class and is single-action-deletion minimal, not globally shortest."
+  },
+  {
+    "schemaVersion": 1,
+    "compiler": "Fe 26.7.0",
+    "target": 3,
+    "targetName": "Stale permission replay",
+    "startSeed": "0",
+    "cases": 64,
+    "steps": 64,
+    "found": true,
+    "casesChecked": 1,
+    "failingSeed": "0",
+    "failureCode": 3,
+    "failure": "Authorization after revocation",
+    "generatedLength": 64,
+    "originalLength": 32,
+    "reducedLength": 3,
+    "reductionReplays": 33,
+    "deletionMinimal": true,
+    "correctedReplayPasses": true,
+    "originalTrace": [
+      {
+        "index": 0,
+        "opcode": 7,
+        "action": "Remember note",
+        "value": 61,
+        "state": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 1,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 1,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 1,
+        "opcode": 7,
+        "action": "Remember note",
+        "value": 60,
+        "state": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 2,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 2,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 2,
+        "opcode": 0,
+        "action": "Spend",
+        "value": 101,
+        "state": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 3,
+          "revoked": false,
+          "failure": 0,
+          "decision": 6
+        },
+        "correctedState": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 3,
+          "revoked": false,
+          "failure": 0,
+          "decision": 6
+        }
+      },
+      {
+        "index": 3,
+        "opcode": 2,
+        "action": "Preview",
+        "value": 10,
+        "state": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 3,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 3,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 4,
+        "opcode": 7,
+        "action": "Remember note",
+        "value": 10,
+        "state": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 4,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 100,
+          "spent": 0,
+          "retained": 4,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 5,
+        "opcode": 0,
+        "action": "Spend",
+        "value": 60,
+        "state": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 5,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 5,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 6,
+        "opcode": 2,
+        "action": "Preview",
+        "value": 99,
+        "state": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 5,
+          "revoked": false,
+          "failure": 0,
+          "decision": 6
+        },
+        "correctedState": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 5,
+          "revoked": false,
+          "failure": 0,
+          "decision": 6
+        }
+      },
+      {
+        "index": 7,
+        "opcode": 0,
+        "action": "Spend",
+        "value": 50,
+        "state": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 6,
+          "revoked": false,
+          "failure": 0,
+          "decision": 7
+        },
+        "correctedState": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 6,
+          "revoked": false,
+          "failure": 0,
+          "decision": 7
+        }
+      },
+      {
+        "index": 8,
+        "opcode": 6,
+        "action": "Wrong caller",
+        "value": 1,
+        "state": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 6,
+          "revoked": false,
+          "failure": 0,
+          "decision": 2
+        },
+        "correctedState": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 6,
+          "revoked": false,
+          "failure": 0,
+          "decision": 2
+        }
+      },
+      {
+        "index": 9,
+        "opcode": 4,
+        "action": "Advance time",
+        "value": 10,
+        "state": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 6,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 6,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 10,
+        "opcode": 0,
+        "action": "Spend",
+        "value": 99,
+        "state": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 7,
+          "revoked": false,
+          "failure": 0,
+          "decision": 6
+        },
+        "correctedState": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 7,
+          "revoked": false,
+          "failure": 0,
+          "decision": 6
+        }
+      },
+      {
+        "index": 11,
+        "opcode": 7,
+        "action": "Remember note",
+        "value": 0,
+        "state": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 8,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 8,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 12,
+        "opcode": 4,
+        "action": "Advance time",
+        "value": 24,
+        "state": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 8,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 8,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 13,
+        "opcode": 0,
+        "action": "Spend",
+        "value": 99,
+        "state": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 8,
+          "revoked": false,
+          "failure": 0,
+          "decision": 6
+        },
+        "correctedState": {
+          "remaining": 40,
+          "spent": 60,
+          "retained": 8,
+          "revoked": false,
+          "failure": 0,
+          "decision": 6
+        }
+      },
+      {
+        "index": 14,
+        "opcode": 0,
+        "action": "Spend",
+        "value": 1,
+        "state": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 15,
+        "opcode": 3,
+        "action": "Revoke",
+        "value": 101,
+        "state": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 16,
+        "opcode": 5,
+        "action": "Recall",
+        "value": 61,
+        "state": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 17,
+        "opcode": 7,
+        "action": "Remember note",
+        "value": 1,
+        "state": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 18,
+        "opcode": 1,
+        "action": "Wrong recipient",
+        "value": 99,
+        "state": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 1
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 1
+        }
+      },
+      {
+        "index": 19,
+        "opcode": 2,
+        "action": "Preview",
+        "value": 101,
+        "state": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 1
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 1
+        }
+      },
+      {
+        "index": 20,
+        "opcode": 5,
+        "action": "Recall",
+        "value": 61,
+        "state": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 21,
+        "opcode": 3,
+        "action": "Revoke",
+        "value": 1,
+        "state": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 22,
+        "opcode": 4,
+        "action": "Advance time",
+        "value": 100,
+        "state": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 23,
+        "opcode": 5,
+        "action": "Recall",
+        "value": 1,
+        "state": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 24,
+        "opcode": 7,
+        "action": "Remember note",
+        "value": 61,
+        "state": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 25,
+        "opcode": 6,
+        "action": "Wrong caller",
+        "value": 10,
+        "state": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 1
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 1
+        }
+      },
+      {
+        "index": 26,
+        "opcode": 4,
+        "action": "Advance time",
+        "value": 60,
+        "state": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 27,
+        "opcode": 0,
+        "action": "Spend",
+        "value": 100,
+        "state": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 1
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 1
+        }
+      },
+      {
+        "index": 28,
+        "opcode": 0,
+        "action": "Spend",
+        "value": 99,
+        "state": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 1
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 1
+        }
+      },
+      {
+        "index": 29,
+        "opcode": 2,
+        "action": "Preview",
+        "value": 60,
+        "state": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 1
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 1
+        }
+      },
+      {
+        "index": 30,
+        "opcode": 1,
+        "action": "Wrong recipient",
+        "value": 10,
+        "state": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 1
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 1
+        }
+      },
+      {
+        "index": 31,
+        "opcode": 0,
+        "action": "Spend",
+        "value": 1,
+        "state": {
+          "remaining": 38,
+          "spent": 62,
+          "retained": 8,
+          "revoked": true,
+          "failure": 3,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 39,
+          "spent": 61,
+          "retained": 8,
+          "revoked": true,
+          "failure": 0,
+          "decision": 1
+        }
+      }
+    ],
+    "reducedTrace": [
+      {
+        "index": 0,
+        "opcode": 0,
+        "action": "Spend",
+        "value": 1,
+        "state": {
+          "remaining": 99,
+          "spent": 1,
+          "retained": 1,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 99,
+          "spent": 1,
+          "retained": 1,
+          "revoked": false,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 1,
+        "opcode": 3,
+        "action": "Revoke",
+        "value": 0,
+        "state": {
+          "remaining": 99,
+          "spent": 1,
+          "retained": 1,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 99,
+          "spent": 1,
+          "retained": 1,
+          "revoked": true,
+          "failure": 0,
+          "decision": 0
+        }
+      },
+      {
+        "index": 2,
+        "opcode": 0,
+        "action": "Spend",
+        "value": 1,
+        "state": {
+          "remaining": 98,
+          "spent": 2,
+          "retained": 2,
+          "revoked": true,
+          "failure": 3,
+          "decision": 0
+        },
+        "correctedState": {
+          "remaining": 99,
+          "spent": 1,
+          "retained": 2,
+          "revoked": true,
+          "failure": 0,
+          "decision": 1
+        }
+      }
+    ],
+    "limitation": "Intentional model mutants. A finite campaign is not a security proof. Reduction preserves the same failure class and is single-action-deletion minimal, not globally shortest."
+  },
+  {
+    "schemaVersion": 1,
+    "compiler": "Fe 26.7.0",
+    "target": 0,
+    "targetName": "Correct implementation",
+    "startSeed": "0",
+    "cases": 64,
+    "steps": 64,
+    "found": false,
+    "casesChecked": 64,
+    "actionsBound": 4096
+  }
+]

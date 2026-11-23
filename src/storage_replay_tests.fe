@@ -1,0 +1,50 @@
+use ingot::fuzz::{Machine, generate}
+use ingot::guard_machine::guard
+#[cfg(target = "evm")]
+use ingot::evm_harness::{FuzzModelHarness, HarnessMsg}
+
+#[test]
+#[cfg(target = "evm")]
+fn generated_actions_match_between_memory_and_deployed_storage()
+uses (evm: mut Evm)
+{
+    for target in 0 .. 4 {
+        let id: u64 = target.downcast().unwrap()
+        let address = evm
+            .create2<FuzzModelHarness>(value: Wei::zero(), args: (id,), salt: target as u256)
+        var model = guard(id)
+        let trace = generate(model, seed: 0, steps: 64)
+        var failed = false
+        for i in 0 .. trace.len {
+            if !failed {
+                let action = trace.actions[i]
+                let local = model.step(action)
+                let stored: u64 = evm
+                    .call(
+                        addr: address,
+                        gas: 5000000,
+                        value: Wei::zero(),
+                        message: HarnessMsg::Step { opcode: action.opcode, value: action.value },
+                    )
+                assert!(local == stored)
+                let state: (u256, u256, u256, bool) = evm
+                    .call(
+                        addr: address,
+                        gas: 1000000,
+                        value: Wei::zero(),
+                        message: HarnessMsg::Inspect {},
+                    )
+                assert!(state.0 == model.budget.remaining.as_wei())
+                assert!(state.1 == model.spent)
+                assert!(state.2 == model.memory.written)
+                assert!(state.3 == model.policy.revoked)
+                failed = local != 0
+            }
+        }
+        if id == 0 {
+            assert!(!failed)
+        } else {
+            assert!(failed)
+        }
+    }
+}

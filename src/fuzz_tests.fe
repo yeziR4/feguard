@@ -1,0 +1,213 @@
+use ingot::fuzz::{
+    Action,
+    Trace,
+    Machine,
+    empty_trace,
+    random_word,
+    generate,
+    replay,
+    search,
+    reduce,
+    one_minimal,
+    remove_range,
+}
+use ingot::guard_machine::{guard, CORRECT, EVICTION_REFUND, REJECTED_DEBIT, STALE_PERMISSION}
+
+#[test]
+fn random_stream_has_a_known_independent_vector() {
+    assert!(random_word(0) == 0xe220a8397b1dcdaf)
+}
+
+#[test]
+fn generated_traces_are_seeded_bounded_and_target_independent() {
+    let correct = guard(CORRECT)
+    let broken = guard(EVICTION_REFUND)
+    let a = generate(correct, seed: 42, steps: 999)
+    let b = generate(broken, seed: 42, steps: 64)
+    assert!(a.len == 64)
+    for i in 0 .. 64 {
+        assert!(a.actions[i].opcode == b.actions[i].opcode)
+        assert!(a.actions[i].value == b.actions[i].value)
+    }
+    assert!(generate(correct, seed: 42, steps: 0).len == 0)
+}
+
+#[test]
+fn rejected_request_reduces_to_one_small_action() {
+    var model = guard(REJECTED_DEBIT)
+    var trace = empty_trace()
+    trace.len = 3
+    trace.actions[0] = Action { opcode: 5, value: 42 }
+    trace.actions[1] = Action { opcode: 1, value: 50 }
+    trace.actions[2] = Action { opcode: 7, value: 99 }
+    let result = reduce(mut model, trace)
+    assert!(result.failure.code == 2)
+    assert!(result.trace.len == 1)
+    assert!(result.trace.actions[0].opcode == 1)
+    assert!(result.trace.actions[0].value == 1)
+    assert!(one_minimal(mut model, result.trace, code: 2))
+    var fixed = guard(CORRECT)
+    assert!(replay(mut fixed, result.trace).code == 0)
+}
+
+#[test]
+fn stale_permission_requires_the_whole_temporal_sequence() {
+    var trace = empty_trace()
+    trace.len = 5
+    trace.actions[0] = Action { opcode: 5, value: 1 }
+    trace.actions[1] = Action { opcode: 0, value: 10 }
+    trace.actions[2] = Action { opcode: 3, value: 99 }
+    trace.actions[3] = Action { opcode: 5, value: 4 }
+    trace.actions[4] = Action { opcode: 0, value: 10 }
+    var model = guard(STALE_PERMISSION)
+    let result = reduce(mut model, trace)
+    assert!(result.failure.code == 3)
+    assert!(result.trace.len == 3)
+    assert!(result.trace.actions[0].value == 1)
+    assert!(result.trace.actions[1].opcode == 3)
+    assert!(result.trace.actions[2].value == 1)
+    assert!(one_minimal(mut model, result.trace, code: 3))
+    var fixed = guard(CORRECT)
+    assert!(replay(mut fixed, result.trace).code == 0)
+}
+
+#[test]
+fn memory_eviction_failure_preserves_its_nine_action_precondition() {
+    var trace = empty_trace()
+    trace.len = 12
+    trace.actions[0] = Action { opcode: 5, value: 42 }
+    trace.actions[1] = Action { opcode: 0, value: 50 }
+    for i in 2 .. 12 {
+        trace.actions[i] = Action { opcode: 7, value: 99 }
+    }
+    var model = guard(EVICTION_REFUND)
+    let result = reduce(mut model, trace)
+    assert!(result.failure.code == 1)
+    assert!(result.trace.len == 9)
+    assert!(one_minimal(mut model, result.trace, code: 1))
+    var fixed = guard(CORRECT)
+    assert!(replay(mut fixed, result.trace).code == 0)
+}
+
+#[test]
+fn seeded_campaign_discovers_all_three_demonstration_faults() {
+    for target in 1 .. 4 {
+        let target_id: u64 = target.downcast().unwrap()
+        var model = guard(target_id)
+        let found = search(mut model, seed: 0, cases: 64, steps: 64)
+        assert!(found.failure.code == target_id)
+        assert!(found.attempts > 0 && found.attempts <= 64)
+        assert!(replay(mut model, found.trace).code == found.failure.code)
+        let reduced = reduce(mut model, found.trace)
+        assert!(reduced.trace.len <= found.trace.len)
+        assert!(reduced.failure.code == found.failure.code)
+        assert!(
+            one_minimal(mut model, reduced.trace, code: found.failure.code),
+        )
+        var fixed = guard(CORRECT)
+        assert!(replay(mut fixed, reduced.trace).code == 0)
+    }
+}
+
+#[test]
+fn corrected_model_passes_the_same_campaign() {
+    var model = guard(CORRECT)
+    let found = search(mut model, seed: 0, cases: 64, steps: 64)
+    assert!(found.failure.code == 0)
+    assert!(found.attempts == 64)
+}
+
+#[test]
+fn passing_and_empty_traces_are_not_reported_as_attacks() {
+    var model = guard(CORRECT)
+    let trace = generate(model, seed: 7, steps: 64)
+    let result = reduce(mut model, trace)
+    assert!(result.failure.code == 0)
+    assert!(result.trace.len == trace.len)
+    assert!(!one_minimal(mut model, trace, code: 0))
+    assert!(replay(mut model, empty_trace()).code == 0)
+    assert!(
+        search(mut model, seed: 7, cases: 0, steps: 64).attempts == 0,
+    )
+}
+
+// An unrelated target proves that generation, replay, search and reduction do
+// not depend on GuardMachine, its memory, its oracle, or its failure codes.
+struct Counter { value: u64 }
+impl Machine for Counter {
+    fn reset(mut self) {
+        self.value = 0
+    }
+    fn action(self, _ random: u64) -> Action {
+        Action { opcode: 42, value: random % 4 }
+    }
+    fn step(mut self, _ a: Action) -> u64 {
+        if a.opcode == 42 {
+            self.value += a.value
+        }
+        if self.value > 5 { 99 } else { 0 }
+    }
+}
+
+#[test]
+fn external_machine_adapter_uses_the_same_engine() {
+    var counter = Counter { value: 0 }
+    let found = search(mut counter, seed: 0, cases: 8, steps: 16)
+    assert!(found.failure.code == 99)
+    let result = reduce(mut counter, found.trace)
+    assert!(result.failure.code == 99)
+    assert!(one_minimal(mut counter, result.trace, code: 99))
+}
+
+struct CompetingFailures { primed: bool }
+impl Machine for CompetingFailures {
+    fn reset(mut self) {
+        self.primed = false
+    }
+    fn action(self, _ random: u64) -> Action {
+        Action { opcode: random % 2, value: 0 }
+    }
+    fn step(mut self, _ action: Action) -> u64 {
+        if action.opcode == 0 {
+            self.primed = true
+            return 0
+        }
+        if self.primed { 7 } else { 9 }
+    }
+}
+
+#[test]
+fn reduction_does_not_replace_a_failure_with_a_different_bug() {
+    var model = CompetingFailures { primed: false }
+    var trace = empty_trace()
+    trace.len = 2
+    trace.actions[0] = Action { opcode: 0, value: 50 }
+    trace.actions[1] = Action { opcode: 1, value: 50 }
+    let result = reduce(mut model, trace)
+    assert!(result.failure.code == 7)
+    assert!(result.trace.len == 2)
+    assert!(one_minimal(mut model, result.trace, code: 7))
+}
+
+#[test]
+fn external_trace_lengths_and_ranges_are_safely_bounded() {
+    var trace = empty_trace()
+    trace.len = 999
+    assert!(remove_range(trace, start: 999, count: 999).len == 64)
+    assert!(remove_range(trace, start: 63, count: 999).len == 63)
+    var model = guard(CORRECT)
+    assert!(replay(mut model, trace).at == 64)
+    assert!(reduce(mut model, trace).trace.len == 64)
+    assert!(!one_minimal(mut model, trace, code: 1))
+}
+
+#[test]
+fn arbitrary_time_argument_cannot_overflow_the_model_clock() {
+    var model = guard(CORRECT)
+    assert!(
+        model.step(Action { opcode: 4, value: 0xffffffffffffffff }) == 0,
+    )
+    assert!(model.clock == 1000)
+    assert!(model.step(Action { opcode: 0, value: 1 }) == 0)
+    assert!(model.last_decision == 3)
+}

@@ -1,25 +1,30 @@
-# Contest handoff
+# FeGuard contest handoff
 
-Working title: **FeGuard**
+**Pitch:** FeGuard generates stateful counterexamples and reduces them into replayable Fe regressions, demonstrated on agent memory and spending-policy failures.
 
-Pitch: Spending policies and bounded episodic memory for automated wallets, written in Fe.
+**Problem:** Bugs may require a sequence of plausible actions: an old spend is evicted, a cached approval survives revocation, or a rejected request silently consumes allowance. A seed, trace, and reduced regression make the failure inspectable.
 
-Fe highlight: Read-only preview, mutable budget authorization, and read-only recall declare separate application-owned effects; memory never acts as spending authority.
+**Contribution:** Generation, replay, search, invariant adapters, and same-failure reduction are written in Fe. Shared code runs under EVM tests and WASM. The browser presents results from the compiled engine. Generic adapters, explicit effects, typed units, and deployed-storage replay demonstrate Fe-specific value.
 
-Registration form: **Received — validation pending.** A form receipt is not acceptance. Wait for the organizer's email containing the project ID and private submission link. Keep those credentials out of this repository.
+**Compiler:** Fe 26.7.0 (`e6e6342`).
 
-Registration deadline: 17 November 2026, 23:59 UTC (18 November, 00:59 Africa/Lagos).
+**Demo:** `node scripts/demo.mjs --all --verify`, or serve the repository with `python -m http.server 8766 --bind 127.0.0.1` and open `/demo/`.
 
-Submission deadline: 24 November 2026, 23:59 UTC (25 November, 00:59 Africa/Lagos).
+**Evidence:** `reports/demonstration.json`, `reports/verification.json`, generated regressions, and the EVM storage replay test. Faults are intentional mutants, not discoveries in deployed software.
 
-Before final submission:
+**Limitations:** Explicit adapter required; bounded, non-coverage-guided search; deterministic reset and stable failure classes required; deletion-minimal rather than globally shortest output; no shrinking of target panics or wallet execution. See README for full scope and AI disclosure.
 
-- Confirm organizer acceptance and project ID by email.
-- Review the scope, architecture, tests, limitations, and AI disclosure with the responsible human.
-- Publish the project in a public GitHub repository with the included MIT license.
-- Run the exact Fe version and all build and test commands from a clean checkout.
-- Include the full commit SHA to be judged and the public repository URL.
-- Include the reproducible demonstration commands from the README.
+Registration: **Received — validation pending.** Acceptance/project ID has not been confirmed in this chat. Keep the private link/code outside public source.
+
+Final submission closes **24 November 2026, 23:59 UTC (25 November, 00:59 Lagos)**.
+
+Before submission:
+
+- Confirm acceptance email and project ID.
+- Review implementation and AI declaration with the human entrant.
+- Approve and publish the prepared public repository; explicit public-disclosure approval is still pending.
+- Run documented commands from a clean checkout and check remote CI.
+- Record the actual public repository URL and full final commit SHA.
 - Submit through the private link and check the automated acceptance email.
 
-The latest valid submission before the deadline counts. Final contest submission has not been performed.
+The public URL and judged commit must come from the actual published result. Final submission has not been performed.

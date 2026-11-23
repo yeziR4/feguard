@@ -1,0 +1,205 @@
+// A dependency-free, bounded state-machine testing engine.
+// The engine knows nothing about wallets: a Machine supplies actions and checks.
+
+pub const MAX_ACTIONS: usize = 64
+
+pub struct Action { pub opcode: u64, pub value: u64 }
+impl Copy for Action {}
+impl Snapshot for Action {}
+
+pub struct Trace { pub actions: [Action; 64], pub len: usize }
+impl Copy for Trace {}
+impl Snapshot for Trace {}
+
+pub struct Failure { pub code: u64, pub at: usize }
+impl Copy for Failure {}
+impl Snapshot for Failure {}
+
+pub struct Search { pub seed: u64, pub attempts: u64, pub failure: Failure, pub trace: Trace }
+
+pub struct Reduction {
+    pub trace: Trace,
+    pub failure: Failure,
+    pub replays: u64,
+    pub original_len: usize,
+}
+
+pub trait Machine {
+    fn reset(mut self)
+    fn action(self, _ random: u64) -> Action
+    // Zero means the invariants still hold. Other codes identify a failure class.
+    fn step(mut self, _ action: Action) -> u64
+}
+
+pub fn empty_trace() -> Trace {
+    Trace { actions: [Action { opcode: 0, value: 0 }; 64], len: 0 }
+}
+
+// The SplitMix64 mixer, with wrapping arithmetic explicit at both multiplications.
+// Its output is deterministic; it is not a cryptographic random generator.
+pub fn random_word(_ state: u64) -> u64 {
+    var z = state.wrapping_add(0x9e3779b97f4a7c15)
+    z = (z ^ (z >> 30)).wrapping_mul(0xbf58476d1ce4e5b9)
+    z = (z ^ (z >> 27)).wrapping_mul(0x94d049bb133111eb)
+    z ^ (z >> 31)
+}
+
+pub fn generate<M: Machine>(_ machine: M, seed: u64, steps: usize) -> Trace {
+    var trace = empty_trace()
+    trace.len = if steps > MAX_ACTIONS {
+        MAX_ACTIONS
+    } else {
+        steps
+    }
+    var state = seed
+    for i in 0 .. trace.len {
+        state = random_word(state)
+        trace.actions[i] = machine.action(state)
+    }
+    trace
+}
+
+pub fn replay<M: Machine>(_ machine: mut M, _ trace: Trace) -> Failure {
+    machine.reset()
+    let bound = if trace.len > MAX_ACTIONS {
+        MAX_ACTIONS
+    } else {
+        trace.len
+    }
+    for i in 0 .. bound {
+        let code = machine.step(trace.actions[i])
+        if code != 0 {
+            return Failure { code, at: i }
+        }
+    }
+    Failure { code: 0, at: bound }
+}
+
+pub fn search<M: Machine>(_ machine: mut M, seed: u64, cases: u64, steps: usize) -> Search {
+    var n: u64 = 0
+    // Bound work independently of inputs received from a CLI or browser.
+    let limit = if cases > 4096 { 4096 } else { cases }
+    while n < limit {
+        let candidate_seed = seed.wrapping_add(n)
+        let trace = generate(machine, seed: candidate_seed, steps)
+        let failure = replay(mut machine, trace)
+        if failure.code != 0 {
+            return Search { seed: candidate_seed, attempts: n + 1, failure, trace }
+        }
+        n += 1
+    }
+    Search { seed, attempts: n, failure: Failure { code: 0, at: 0 }, trace: empty_trace() }
+}
+
+pub fn remove_range(_ trace: Trace, start: usize, count: usize) -> Trace {
+    var result = empty_trace()
+    let bound = if trace.len > MAX_ACTIONS {
+        MAX_ACTIONS
+    } else {
+        trace.len
+    }
+    let begin = if start > bound { bound } else { start }
+    let length = if count > bound - begin {
+        bound - begin
+    } else {
+        count
+    }
+    let end = begin + length
+    for i in 0 .. bound {
+        if i < begin || i >= end {
+            result.actions[result.len] = trace.actions[i]
+            result.len += 1
+        }
+    }
+    result
+}
+
+// Chunk deletion followed by greedy numeric simplification and another complete
+// deletion pass. The final result is one-action-deletion minimal for the SAME
+// failure code, not a claim of a globally shortest trace or smallest arguments.
+pub fn reduce<M: Machine>(_ machine: mut M, _ trace: Trace) -> Reduction {
+    // Normalize externally constructed lengths before copying or deleting.
+    let bounded = remove_range(trace, start: MAX_ACTIONS, count: 0)
+    let original = replay(mut machine, bounded)
+    if original.code == 0 {
+        return Reduction {
+            trace: bounded,
+            failure: original,
+            replays: 1,
+            original_len: bounded.len,
+        }
+    }
+    var current = bounded
+    // The suffix after the first failing action is irrelevant to this failure.
+    current.len = original.at + 1
+    var checks: u64 = 1
+    var phase: usize = 0
+    while phase < 2 {
+        var chunk = if current.len > 1 { current.len / 2 } else { 1 }
+        loop {
+            var start: usize = 0
+            while start + chunk <= current.len {
+                let candidate = remove_range(current, start, count: chunk)
+                let result = replay(mut machine, candidate)
+                checks += 1
+                if result.code == original.code {
+                    current = candidate
+                    start = 0
+                } else {
+                    start += chunk
+                }
+            }
+            if chunk == 1 { break }
+            chunk = chunk / 2
+        }
+        if phase == 0 {
+            for i in 0 .. current.len {
+                // Useful boundary anchors are not necessarily reachable by
+                // clearing bits (50 -> 2, for example, would miss 1).
+                for anchor in 0 .. 2 {
+                    let value: u64 = anchor.downcast().unwrap()
+                    if value < current.actions[i].value {
+                        var candidate = current
+                        candidate.actions[i].value = value
+                        let result = replay(mut machine, candidate)
+                        checks += 1
+                        if result.code == original.code {
+                            current = candidate
+                        }
+                    }
+                }
+                // Clear high bits first; only retain changes preserving failure.
+                for bit in 0 .. 64 {
+                    let shift: u64 = (63 - bit).downcast().unwrap()
+                    let one: u64 = 1
+                    let value = current.actions[i].value & ~(one << shift)
+                    if value != current.actions[i].value {
+                        var candidate = current
+                        candidate.actions[i].value = value
+                        let result = replay(mut machine, candidate)
+                        checks += 1
+                        if result.code == original.code {
+                            current = candidate
+                        }
+                    }
+                }
+            }
+        }
+        phase += 1
+    }
+    let failure = replay(mut machine, current)
+    Reduction { trace: current, failure, replays: checks + 1, original_len: bounded.len }
+}
+
+pub fn one_minimal<M: Machine>(_ machine: mut M, _ trace: Trace, code: u64) -> bool {
+    let bounded = remove_range(trace, start: MAX_ACTIONS, count: 0)
+    if code == 0 || replay(mut machine, bounded).code != code {
+        return false
+    }
+    for i in 0 .. bounded.len {
+        if replay(mut machine, remove_range(bounded, start: i, count: 1)).code == code {
+            return false
+        }
+    }
+    true
+}

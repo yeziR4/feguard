@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FeGuard — Find the sequence</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./"><span class="mark">F<span>g</span></span> FeGuard</a>
+    <div class="build"><span id="engine-dot" class="dot"></span><span id="engine-status">Loading Fe engine</span><span class="version">26.7.0 / WASM</span></div>
+  </header>
+  <main>
+    <section class="intro">
+      <div><p class="eyebrow">STATEFUL COUNTEREXAMPLE LAB</p><h1>Find the sequence<br>that breaks the rule<span>.</span></h1></div>
+      <div class="intro-copy"><p>Generate actions. Check invariants.<br>Reduce a failure to a reproducible test.</p><p class="quiet">Agent memory and spending policies are the first targets. The testing engine is written in Fe.</p></div>
+    </section>
+
+    <section class="workbench" aria-labelledby="campaign-title">
+      <div class="section-heading"><h2 id="campaign-title">01 <span>Configure a campaign</span></h2><span class="small-tag">100-unit session budget · 8-record memory</span></div>
+      <form id="campaign-form">
+        <label class="target-field">Implementation<select id="target" name="target"><option value="1">Fault 01 · Memory eviction refund</option><option value="2">Fault 02 · Rejected request debit</option><option value="3">Fault 03 · Stale permission replay</option><option value="0">Correct implementation</option></select></label>
+        <label>Starting seed<input id="seed" name="seed" value="0" inputmode="numeric" pattern="[0-9]+" required></label>
+        <label>Traces<input id="cases" name="cases" type="number" min="1" max="4096" value="64" required></label>
+        <label>Actions / trace<input id="steps" name="steps" type="number" min="1" max="64" value="64" required></label>
+        <button id="run" class="primary" type="submit" disabled>Find a counterexample <span>↗</span></button>
+      </form>
+      <p id="target-description" class="target-description">Intentionally faulty: reconstructs allowance from a memory window that forgets old spending.</p>
+      <p id="error" class="error" role="alert" hidden></p>
+    </section>
+
+    <section id="empty" class="empty-state"><div class="empty-icon">{ }</div><h2>A seed. A sequence. A result you can replay.</h2><p>Run a faulty target to discover and reduce a counterexample,<br>or test the corrected implementation against the same action generator.</p><div class="legend"><span><i class="dot red"></i> Intentional defect</span><span><i class="dot green"></i> Corrected replay</span></div></section>
+
+    <section id="results" aria-live="polite" hidden>
+      <div class="result-title"><div><p class="eyebrow" id="result-kicker">COUNTEREXAMPLE FOUND</p><h2 id="result-title"></h2><p id="result-description"></p></div><span id="result-badge" class="result-badge">INVARIANT FAILED</span></div>
+      <div id="metrics" class="metrics"></div>
+      <div id="failure-panel" hidden>
+        <div class="trace-heading"><h2>02 <span>Inspect the evidence</span></h2><div class="tabs" role="group" aria-label="Trace view"><button id="reduced-tab" type="button" aria-pressed="true">Reduced trace</button><button id="original-tab" type="button" aria-pressed="false">Failing trace</button></div></div>
+        <div class="trace-layout"><div class="table-wrap"><table><thead><tr><th>#</th><th>Action</th><th>Input</th><th>Faulty<br>allowance</th><th>Correct<br>allowance</th><th>Result</th></tr></thead><tbody id="trace-rows"></tbody></table></div><aside class="evidence"><p class="eyebrow">REPRODUCTION</p><dl><dt>Failing seed</dt><dd id="failing-seed"></dd><dt>Invariant</dt><dd id="failure-class"></dd><dt>Reduction check</dt><dd id="minimal-status"></dd><dt>Corrected implementation</dt><dd id="fixed-status" class="positive"></dd></dl><p class="evidence-note">Every remaining action is necessary to preserve this failure class under single-action deletion. Global shortestness is not claimed.</p><button id="export-fe" type="button" class="outline">Export Fe regression <span>↓</span></button><button id="export-json" type="button" class="text-button">Download evidence JSON ↓</button></aside></div>
+      </div>
+      <div id="passing-panel" class="passing-panel" hidden><span class="pass-symbol">✓</span><div><h3>The campaign completed without an invariant violation.</h3><p>This result covers the displayed seeds and action bound. It is not a security proof.</p></div></div>
+    </section>
+
+    <section class="method"><div><p class="eyebrow">WHAT IS BEING CHECKED?</p><h2>Memory can forget.<br>The budget cannot.</h2><p>The reference accounting tracks lifetime spending independently of the target’s retained history.</p></div><div class="invariants"><article><span>01</span><div><h3>Budget conservation</h3><p>Remaining allowance + lifetime authorized spending always equals the initial budget.</p></div></article><article><span>02</span><div><h3>Rejection leaves allowance intact</h3><p>A request that fails authorization must not consume its spending allowance.</p></div></article><article><span>03</span><div><h3>Revocation takes effect</h3><p>A remembered approval cannot authorize a new request after the session is revoked.</p></div></article></div></section>
+    <footer><p>Fe Builders Challenge · 2026</p><p>Demonstration targets contain intentional defects. No funds are held or transferred.</p><a href="../README.md">Read the source guide ↗</a></footer>
+  </main>
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>

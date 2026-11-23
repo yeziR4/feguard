@@ -17,10 +17,10 @@ jobs:
         run: |
           set -euo pipefail
           curl --fail --location --retry 3 \
-            https://github.com/argotorg/fe/releases/download/v26.6.0/fe_linux_amd64 \
+            https://github.com/argotorg/fe/releases/download/v26.7.0/fe_linux_amd64 \
             --output "$RUNNER_TEMP/fe"
           printf '%s  %s\n' \
-            '697081cb9265bd1be7a5d33e6bb0c8559ee5ff542abab9a046540fc151b4edaa' \
+            '4ef2b818e260f0ba0b0af4bd78468dda589dc4949503fffaef25d8188e5107d5' \
             "$RUNNER_TEMP/fe" | sha256sum --check -
           chmod +x "$RUNNER_TEMP/fe"
           echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
@@ -29,3 +29,7 @@ jobs:
       - run: fe check
       - run: fe test
       - run: fe build
+      - run: fe test --backend wasm
+      - run: fe build --backend wasm --out-dir demo/engine
+      - run: node scripts/demo.mjs --all --verify
+      - run: node scripts/verify.mjs
