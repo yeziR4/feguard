@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "source": "bytecode-dispatch+4byte",
+  "rows": [
+    {
+      "address": "0x3C9acB71C8da760742D8FD9cbC945918A1Aac79F",
+      "selectors": 42,
+      "resolved": 12,
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": []
+    }
+  ]
+}

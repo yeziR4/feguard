@@ -1,0 +1,1610 @@
+{
+  "schemaVersion": 1,
+  "chainId": 56,
+  "scanned": 200,
+  "counts": {
+    "other": 200
+  },
+  "rows": [
+    {
+      "address": "0x327f9B551EbC850891111EE394741709294CC1A8",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 12
+    },
+    {
+      "address": "0x2A9775e3E4B88b1B4F96a71bb53d2C74c25E9CAE",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 5
+    },
+    {
+      "address": "0x3845048F6292dD344C8EC59c31B11b4F5B02d6ea",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 34
+    },
+    {
+      "address": "0xefEA7298472eCdA727190F76d9Df107B5edBaFe2",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 35
+    },
+    {
+      "address": "0x2C4E1dd276b74680a8bcF8a41e3942102Ef7bAD7",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 5
+    },
+    {
+      "address": "0x8FBDCBb63F1DbB846297888Cdef6a834329E2888",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 25
+    },
+    {
+      "address": "0x45ed4B133abCC6b0FF5f900619099c7371522D74",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 5
+    },
+    {
+      "address": "0x851a1249933D19b2cef9c4A61716E8a94935F072",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 7
+    },
+    {
+      "address": "0xa912569f9a6Bb13935c2732b8f06b6020463f222",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 34
+    },
+    {
+      "address": "0x3E4322378C5D02F149f9f24134FAdD5391A160AF",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 9
+    },
+    {
+      "address": "0xf21E605Bd3FeE79540FCe66d5Ddef80297ae2888",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 29
+    },
+    {
+      "address": "0x0396E2Bf91c15c1feaBd4c93d92d0c8868F74ad7",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 36
+    },
+    {
+      "address": "0x5b16AF9DC95d7DFE31c7867EC321F27d8b7DA433",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 6
+    },
+    {
+      "address": "0x939aea397dD68c522b63b31E17170fE2a58a85CC",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 12
+    },
+    {
+      "address": "0x6773b229E60A8aDD9299F4F94BEC5Ef2ac5437A1",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 12
+    },
+    {
+      "address": "0x4354393b1031B72dC99Cd176117cFa9A72c6F10a",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 11
+    },
+    {
+      "address": "0x1155dA089FE527A69C7d3915707afE45516d9c62",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 6
+    },
+    {
+      "address": "0x4B429DE1356170c940A1Ffad269701c8E168E0DB",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 25
+    },
+    {
+      "address": "0x67C115F1217AC556582aaA052dcbBC5BDD8F0cd5",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 36
+    },
+    {
+      "address": "0xD7ee879ADDf66bc3117A3DEF5367fB05c5d6bc53",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 1,
+      "hits": [],
+      "functions": 7
+    },
+    {
+      "address": "0x58d54Abb59C02b371aD1A8CE6AECb98EcF1d5950",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 11
+    },
+    {
+      "address": "0xf6521b8F7BeB513F6a16B6D9A1A23e6Ad2f71d0f",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 1,
+      "hits": [],
+      "functions": 16
+    },
+    {
+      "address": "0x1Fc8Ecb2a0D0a50efa4c5ACad54262231f97A17f",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 1,
+      "hits": [],
+      "functions": 5
+    },
+    {
+      "address": "0xAF26D0ED26b510583e6625B0b18f1f6e00C358EA",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 9
+    },
+    {
+      "address": "0x44dCDA7464C318a3fC4F41D92A35103Dd6c2E75B",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 19
+    },
+    {
+      "address": "0x4DA129b5038509801021B80c7Fd5771e82530C6b",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 47
+    },
+    {
+      "address": "0xe62Aff022EA18B055f7F3ccc98E06d69A7072be7",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 8
+    },
+    {
+      "address": "0x6bf1F1e1B5568E8b12736B6F63144a7E152881E1",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 14
+    },
+    {
+      "address": "0xeD8b5cCf3554A6b9933ee2E456D4962c78640F01",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 14
+    },
+    {
+      "address": "0x9b356dDea42042B0f2D13DA4646B156255747E1b",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 10
+    },
+    {
+      "address": "0xf0693C3d34d2a84c264de0480991cd2bcf06Afae",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 2
+    },
+    {
+      "address": "0x1c7F95144584e8b75e2FA45A6aFF861f30862888",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 32
+    },
+    {
+      "address": "0x1248F299534cA1e26c1fbF726F5F790E87194ce3",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 7
+    },
+    {
+      "address": "0x24B674B33F6E974308d0CEB46CBCe7bAa08732ee",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 36
+    },
+    {
+      "address": "0x47966A5717b4f1c0E989a96ce07553C4045Bd856",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 6
+    },
+    {
+      "address": "0xC51A7571F0F2f4Fcc9Df3b1fCBf8472251832888",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 33
+    },
+    {
+      "address": "0xc1FE70ad43faAD00DfF8832911b2875227d0EF94",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 24
+    },
+    {
+      "address": "0x0013205EdcdD1Fe6806E55d20f419F5695CfADc3",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 49
+    },
+    {
+      "address": "0x8AE2bBDbC89D5d2A9FA1A3BA90Ff7C38f6Ac19E3",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 19
+    },
+    {
+      "address": "0xc8744bFf0c0f702C219BEb0f2f4b044fFa8866Ff",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 30
+    },
+    {
+      "address": "0xDC8776a8fE4D28E1a41B036b5d995fBAd5852888",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 33
+    },
+    {
+      "address": "0xAb53a9CEB4dFdDB50b2B2428eB449291f06246da",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 1,
+      "hits": [],
+      "functions": 48
+    },
+    {
+      "address": "0x893eF58B1bBFb4284DCd7Bb46bc32a7b03321C68",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 1,
+      "hits": [],
+      "functions": 48
+    },
+    {
+      "address": "0x3904E764eA00Bc456699B56aC397aF146180a003",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 1,
+      "hits": [],
+      "functions": 42
+    },
+    {
+      "address": "0xE894684cdab0C48D216Fe851Db3eAaC76aB1B076",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 9
+    },
+    {
+      "address": "0xaF20344E59259f17c905bD788dFC03e56BD978af",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 60
+    },
+    {
+      "address": "0x0b8E96408db01211bF5f75A5Fa18c29B7B97e658",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 37
+    },
+    {
+      "address": "0xbCEB82B4F5160bE48983F5E113A847B7B887ACe9",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 101
+    },
+    {
+      "address": "0x8103a06e33C84070EEBCf6Eb644dA31c322160f8",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 23
+    },
+    {
+      "address": "0x122A8fcfC0A798A52F511217d1D3f762C9596C83",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 33
+    },
+    {
+      "address": "0x84917235011D76C9843E66eCbb9ad008DEA90e67",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 23
+    },
+    {
+      "address": "0x0c3B8CCb40926326b04F163aC718141105E562db",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 1,
+      "hits": [],
+      "functions": 75
+    },
+    {
+      "address": "0x055A7b5696Ee88D0a4905d256817Cbc7d60c5aAe",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 9
+    },
+    {
+      "address": "0x8317F0156bE56a99FAfaE20b30e32e4852067f06",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 29
+    },
+    {
+      "address": "0xe54Bcfe4Ac5304F51AB542Bb3f2AbE881c4e2C93",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 2,
+      "hits": [],
+      "functions": 76
+    },
+    {
+      "address": "0x5B3028454a628F73A5fe9198DE4fddefCC43c73A",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 28
+    },
+    {
+      "address": "0xC52D553cbA19740bd41cb603ceC05A91f1Cd2888",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 27
+    },
+    {
+      "address": "0xec132027b19BC46F08899D3502A57917B32F5f17",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 24
+    },
+    {
+      "address": "0xAEF96d23708A8707F5f30881f2feE7c10C3C099d",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 6
+    },
+    {
+      "address": "0x5477dF01Ea4Ad609ac44d029A81AB8c6409B8c64",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 16
+    },
+    {
+      "address": "0xb0d8F2744f737DF671Ed5AF88A478E4594679CCC",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 9
+    },
+    {
+      "address": "0xC55Dcd58eBBD408a91294fF71Ea51ab5fe1E4517",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 10
+    },
+    {
+      "address": "0xEb32f7204A1DAbd4EAa9632174b27BB6FAd2fDF6",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 11
+    },
+    {
+      "address": "0x0089beD119946F6f84cD35758BaA8E1D308732Be",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 34
+    },
+    {
+      "address": "0xBfd8757F68748e8d0FEC06E12bd2B7b4A45716EA",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 34
+    },
+    {
+      "address": "0x23420eC450741117a4cC5915b5D99e5C349eDe04",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 45
+    },
+    {
+      "address": "0x15E1607a0F5895Ec6831883B4E7aCA7a0C4f3Ff3",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 24
+    },
+    {
+      "address": "0xa7Fd099E4E0858dd4f0CB0416Bf3b0F2aAa85461",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 24
+    },
+    {
+      "address": "0x6bB8350Faff486e7838c3845De63876925dd5555",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 9
+    },
+    {
+      "address": "0xF6Be1DDCeb7dF7b7825445ed905063fa9e000a16",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 1,
+      "hits": [],
+      "functions": 42
+    },
+    {
+      "address": "0x2678d68fB61ef0BD2BF835d6102506d2536Ff4a8",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 1,
+      "hits": [],
+      "functions": 48
+    },
+    {
+      "address": "0xE31d6F745F4A3c5CFfbe784102d8D9177E5ECEA2",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 1,
+      "hits": [],
+      "functions": 48
+    },
+    {
+      "address": "0x155dB7F4bB581103ae47fc009F0e858c8B7aCB4B",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 24
+    },
+    {
+      "address": "0xD0196DaA5c4Bc2FcA8c3aCF3F72d0B509567f6af",
+      "cls": "other",
+      "casinoScore": 2,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 54
+    },
+    {
+      "address": "0x02a5ff9b9e14DD75BAb479182103e0Cac1FfFA0F",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 1,
+      "hits": [],
+      "functions": 48
+    },
+    {
+      "address": "0x16b2049c798506EE2d76e041d97A8477186EfFeA",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 1,
+      "hits": [],
+      "functions": 48
+    },
+    {
+      "address": "0xC14aeba7496e40C29DFD4B9E7529256D67d4e2ea",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 1,
+      "hits": [],
+      "functions": 30
+    },
+    {
+      "address": "0x4596307050e72e6C4261bC25B2aa4784E238Fe83",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 14
+    },
+    {
+      "address": "0x0e6822a039C3DEAbF1E6A4e02643607CC97b0ACc",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 53
+    },
+    {
+      "address": "0xa6f83171Bc47A137232465Dca5CFCbBf9598470a",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 6
+    },
+    {
+      "address": "0xc860b9f078587F27025b92654c145F6287A41F25",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 21
+    },
+    {
+      "address": "0x64B1BfC23D749687AAB5D1148d78727e206DA281",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 16
+    },
+    {
+      "address": "0x82C01647716C3B080D3fF94FA527f38Fb956cD83",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 19
+    },
+    {
+      "address": "0x60Fd39C99BED9a3E9d51827961a98ca234d9D06e",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 1,
+      "hits": [],
+      "functions": 25
+    },
+    {
+      "address": "0x4B24825AB618709fBe39F784d4854742734e6Ea6",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 9
+    },
+    {
+      "address": "0xC971AFe0933352C681C5201137FFC4b6A41C9A7B",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 18
+    },
+    {
+      "address": "0x259cB6849201A7C9EDd6206702b2eD96bdCD3158",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 53
+    },
+    {
+      "address": "0x6122Be630e4aC2392C180D3Fcd4532a38decA5E1",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 14
+    },
+    {
+      "address": "0x83dA6C1ea8971319560BAdE13aE8065bB8aC5089",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 20
+    },
+    {
+      "address": "0xa8fea3fc55F7C40D065f961B9015689DfB6673e4",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 1,
+      "hits": [],
+      "functions": 27
+    },
+    {
+      "address": "0x6A090fFb000ff9942438563FabCC81C4A8685F77",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 34
+    },
+    {
+      "address": "0xe42982c2c68e57fCC9dfd192aEDccCA3563906Ea",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 34
+    },
+    {
+      "address": "0xE1f7a06af5affd8223C6149A0f6B85e90271febC",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 17
+    },
+    {
+      "address": "0x8aCa735668c528A1c6F1642d9CDD234Fc4e09FB8",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 20
+    },
+    {
+      "address": "0x078B3438e5AC77F992194Fc82202A479c696a6E5",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 1,
+      "hits": [],
+      "functions": 21
+    },
+    {
+      "address": "0x97B6D68b43c8a3aD56D4131bC59CA50B61Bf38a1",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 60
+    },
+    {
+      "address": "0x97224E7e8807FA78b3683F77578F02A0Cd038cc9",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 12
+    },
+    {
+      "address": "0x1955C97a4df0E6682F887d608dd6bd22057f37a9",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 17
+    },
+    {
+      "address": "0x87eDf6f53A87DC7BE9B7443dA11eFF3CA9DEa8b5",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 17
+    },
+    {
+      "address": "0xF7Ec29A26eAE6ed906Fc63cD5a122Ff12EDC10d6",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 13
+    },
+    {
+      "address": "0x999Df4C62359a3659cD4FB9fADe9Ce0774457736",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 21
+    },
+    {
+      "address": "0x6babb12996cF331e5280970E40C2fd23814b61eC",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 17
+    },
+    {
+      "address": "0x6bd70eA1aacF09933BC5A66a07004F6486Ec7738",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 12
+    },
+    {
+      "address": "0xB73a6Bed6fFf555ADCA74c3ef25e5f2bF05b1D79",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 0
+    },
+    {
+      "address": "0xA7Fc6B299870990F6eD13f887f46c5467f52Eb8E",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 21
+    },
+    {
+      "address": "0xec6d95D5012d29302F9E7a6f5046d14E9cE46183",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 0
+    },
+    {
+      "address": "0xA6067b345A0d1b8d5C337d50A22bB55Ae5e4AdB2",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 51
+    },
+    {
+      "address": "0x490E5399B36DF16cf99A38ABF6e025A4Dc21eEFC",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 0
+    },
+    {
+      "address": "0x054eBdD55359871c2b5c5b4f4f844b2c913ca9a8",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 21
+    },
+    {
+      "address": "0xADeF475eFdCB0634D464421F700CE263d4F13B95",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 0
+    },
+    {
+      "address": "0x57a697868cACc1c2d7AFb6F06B1A33C197430d15",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 51
+    },
+    {
+      "address": "0x1403a54Fc4e2E2a6171B6D7B5d93f29Ed5Eef164",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 1,
+      "hits": [],
+      "functions": 30
+    },
+    {
+      "address": "0x98336CfDc876cEa1663cbcA5A224A207179f6101",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 12
+    },
+    {
+      "address": "0x6F5F9a7decfF9370e549b2cF12446850411E4Ce9",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 2
+    },
+    {
+      "address": "0xf2D9B31F9FFC424345F342B304214F074cCDF3Ff",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 17
+    },
+    {
+      "address": "0x2824A791Fb0bb4a8b682Ea987FF63a6E57C564C2",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 29
+    },
+    {
+      "address": "0xdc65b2b2eD4ce8917588c41Aa0eF29D88A090DDa",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 12
+    },
+    {
+      "address": "0x2ec1E89F63bB9366191BDE09d0D0B42fDCf679C2",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 31
+    },
+    {
+      "address": "0x6E908eE594B447efe7C70A50b17E9d583e674D60",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 28
+    },
+    {
+      "address": "0x886e955A7B1f5027d029d2a47Dcd43ad6a1b73cf",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 1,
+      "hits": [],
+      "functions": 27
+    },
+    {
+      "address": "0x3e4a1E282a6fffB148ddeE01dFB85ca967b6C775",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 1,
+      "hits": [],
+      "functions": 28
+    },
+    {
+      "address": "0xdf4499f5690474F502a774eCF6B93E73f57944C8",
+      "cls": "other",
+      "casinoScore": 2,
+      "marketScore": 1,
+      "hits": [],
+      "functions": 63
+    },
+    {
+      "address": "0xD093745a1BB0Dc11D5Dc2ded64905a9D27f08038",
+      "cls": "other",
+      "casinoScore": 2,
+      "marketScore": 1,
+      "hits": [],
+      "functions": 60
+    },
+    {
+      "address": "0xeC5942C5B8952C007E4DCB6c6fF04183e3aBe494",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 26
+    },
+    {
+      "address": "0x9d2a285d244689221cB49a60ed8C738A4219cEF3",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 13
+    },
+    {
+      "address": "0xc102c1d5F308722d24850bb5ebF7214831D63E51",
+      "cls": "other",
+      "casinoScore": 2,
+      "marketScore": 1,
+      "hits": [],
+      "functions": 77
+    },
+    {
+      "address": "0xe58846aEF8fDe148E0bf5895Db6Cae4ee9C41269",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 20
+    },
+    {
+      "address": "0x929BE747Cf8b3f21509B8bfeD0ae098bafD768E5",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 17
+    },
+    {
+      "address": "0x40681cFB4c523A51E96aBDfa7d175BB6DDECaD90",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 9
+    },
+    {
+      "address": "0xa32f42b45a3A2c65cB6F6e53108A635a5f3EA770",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 18
+    },
+    {
+      "address": "0xc95ae3178103772FCb72a0bAec7942456963Db8c",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 47
+    },
+    {
+      "address": "0x8707d0d9D47ce89cd95c56b6E8f1C7955a79D548",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 1,
+      "hits": [],
+      "functions": 53
+    },
+    {
+      "address": "0xE81c7F31b4412Cb9EfbF105cf0B446DaC280b5f8",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 47
+    },
+    {
+      "address": "0x410118fF075A166f1420DD5e4f16fDFa0bd4f678",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 16
+    },
+    {
+      "address": "0x3bC9c72574B2c1DD24F190Ff44c8Df580FDBCD23",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 18
+    },
+    {
+      "address": "0xD4dC11513598c426295d61eC25390996Dec47413",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 1
+    },
+    {
+      "address": "0x941fb2491D680c57C5826b2E345eb727b21B3970",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 12
+    },
+    {
+      "address": "0x485e53A3a34A3569b0EA45f8EDcF54b3d70CCD57",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 10
+    },
+    {
+      "address": "0xfCeF13Bd97c60C718A3535F973E73eB1a724125F",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 12
+    },
+    {
+      "address": "0x5582309AB0f32979F4df279D34842d0317904845",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 17
+    },
+    {
+      "address": "0x9bf68D1656ce6D7eb32aB29c12e0f3152C12da7B",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 12
+    },
+    {
+      "address": "0xb8486678E32d79A9658ED9be9fDD954Ffc03dEac",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 18
+    },
+    {
+      "address": "0x401B8225D903cAB146edC8373470291ff0b90084",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 34
+    },
+    {
+      "address": "0x22904df9A6d85f495808E49D4014015B480f06Ea",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 34
+    },
+    {
+      "address": "0xcFa0D1574F1Db901930473CdC111e9B0a2898770",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 58
+    },
+    {
+      "address": "0x27Fb88B177B467Ae5EcEf7a24F185c37136cC24e",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 1
+    },
+    {
+      "address": "0x1f258B07B6C0B2A0656764383923d08590dE14a4",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 11
+    },
+    {
+      "address": "0xBF616378f44C5e5f3d7B88C17e57180a2462839e",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 9
+    },
+    {
+      "address": "0x876035f0A02EB1d59c6b2a508a2938895161525c",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 27
+    },
+    {
+      "address": "0xb2AeF756D02217eEE7D90Eee635Be0A86aD90Aa2",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 40
+    },
+    {
+      "address": "0xAccb6cc1Fc568dCDEa14234d9AbF7f5e929DeD01",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 64
+    },
+    {
+      "address": "0x9B45568D4f606Be771A256fD1776C1Ec7A79EfeA",
+      "cls": "other",
+      "casinoScore": 2,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 39
+    },
+    {
+      "address": "0x33586adFc76cBb3E18D6853e849898aB33dc48b6",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 12
+    },
+    {
+      "address": "0x9D6DA7fa9Ae29e96312ee04a92ABB4106b14D9eA",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 70
+    },
+    {
+      "address": "0x96E8F7097ADf0301Ff0907Ec6c1f5F03504ed739",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 9
+    },
+    {
+      "address": "0x509c57e14cF3f77c320A8213cc6A0768559F3C94",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 17
+    },
+    {
+      "address": "0xc670AC6b94e2112D128D245BB70A13b1dF88224E",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 1
+    },
+    {
+      "address": "0x4e76EbAf055DBA48ab11039AfE6F53daED689633",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 21
+    },
+    {
+      "address": "0xb43CF1d851d631c935e0FfD8b45016213F58bB82",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 10
+    },
+    {
+      "address": "0x804822A2A5Ba35ece08920F654F286De026EeFA0",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 62
+    },
+    {
+      "address": "0xD46B8b6AeDCf9314A14B362D8ADF7b38D61D564D",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 1,
+      "hits": [],
+      "functions": 47
+    },
+    {
+      "address": "0x0a3B43Bc10Cc987883dda2bA2fAb7E92b63bDb5D",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 29
+    },
+    {
+      "address": "0x7be46539BF0d9f3E36D4237197aF02Aa091e34F2",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 64
+    },
+    {
+      "address": "0x86A29e127f012EcCa34Df86b6e9049Af185B5858",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 5
+    },
+    {
+      "address": "0x39Dd4F6F306f1376D662a670E0aDd96d7f3e177D",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 26
+    },
+    {
+      "address": "0xE5e2a4f642F5299E9E852a4Be6FF4B7F93D5987c",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 1
+    },
+    {
+      "address": "0x11Ca705A7dB1429dB6E633837da952D8A48145e1",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 13
+    },
+    {
+      "address": "0xf7FE8201443198495B1E56d0276bdA0B2010EA72",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 10
+    },
+    {
+      "address": "0x737A65b186775EeFf103B58B77E25CD64f6a055A",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 68
+    },
+    {
+      "address": "0xC7829A0e18F0d19Dc4D131659B0f2813847A3732",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 28
+    },
+    {
+      "address": "0x940157Cc5366d74854d2A125119F7bA1beE70F04",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 9
+    },
+    {
+      "address": "0xCde62e256eAdB590E2f4ED542392fe865722f260",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 10
+    },
+    {
+      "address": "0x4d4E2EbEb924e96fC954014e2575f95cb2C697E4",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 6
+    },
+    {
+      "address": "0x045733c0902EF3F1d7Ba528d6F44862B25fD2110",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 4
+    },
+    {
+      "address": "0x80C40eB7cD09C3C152dF0A30BCF25D1C7a157d16",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 68
+    },
+    {
+      "address": "0x8B8519876c953511b804C59e0B75F07922617A1d",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 14
+    },
+    {
+      "address": "0x2D972C38067Ff164963428C277c83451bae2999f",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 1,
+      "hits": [],
+      "functions": 2
+    },
+    {
+      "address": "0x3b748B9ddF728Fa04a5e433132d7f393D9fa21f6",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 6
+    },
+    {
+      "address": "0xc2ED67f74B1FC24b7eaD29Db254c868dAB9C8012",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 62
+    },
+    {
+      "address": "0x0eB2f856C4eA309f99F58D8F43Df083817604b9e",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 8
+    },
+    {
+      "address": "0x44724d239D0CF027Ab2f15BF89A79Fa52BB9983D",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 47
+    },
+    {
+      "address": "0xb35B5E37c2834408F9648F335729F7B2a684C4f9",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 64
+    },
+    {
+      "address": "0x40016e2Aed5901FBc88975510F45a1d732FB1E14",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 30
+    },
+    {
+      "address": "0x3efB48453887424A4DB46c3a58741c2482fa1c33",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 1,
+      "hits": [],
+      "functions": 46
+    },
+    {
+      "address": "0x83F59f2d006b0Aa118F3d76ffc521Ca64e471451",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 10
+    },
+    {
+      "address": "0x1c938c1CE7D08bc3fD4eb349D72E17862060479C",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 6
+    },
+    {
+      "address": "0x561916CbcfaBaFCB01092C12c2F1CbB1226e75FF",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 11
+    },
+    {
+      "address": "0xdcFF9138B2d9fa40C1C9982DB6d99E29C876f0E8",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 15
+    },
+    {
+      "address": "0xb47c4d44FB9D357Ef40233F1eA2Ce321a7deCa89",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 29
+    },
+    {
+      "address": "0xBc9F5e32D652F847705EF6b6b243f1cE6B5C0f61",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 6
+    },
+    {
+      "address": "0xab185508DE0ea340406b2b6BbD4327C36376e473",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 18
+    },
+    {
+      "address": "0x33f0313382FD4A734b110cB6c708b45f7DdE1AC2",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 15
+    },
+    {
+      "address": "0x2812C6A9A333a32D6e9fE039470131C0137a6501",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 31
+    },
+    {
+      "address": "0x52A8524426A369E60be22D6E40397F021B95d71a",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 64
+    },
+    {
+      "address": "0xAAFa0a9C98E93Bd8c82ade09aE89df7AEA815aEe",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 12
+    },
+    {
+      "address": "0x77bcb09292204D642aC1dCA08E6CD57d1095686d",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 29
+    },
+    {
+      "address": "0xbf8759D0fF5831fD520FdA8bABB70C4E2FFA9B5B",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 64
+    },
+    {
+      "address": "0xE8b108236a0f698e494cB7dfEa403C618EeA3015",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 76
+    },
+    {
+      "address": "0x247e70098fFBaA2b834b0910e779B2B3644DBB1a",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 0
+    },
+    {
+      "address": "0x46cb862b2fB81eb6dFBBF5C4730dc5460853A9A0",
+      "cls": "other",
+      "casinoScore": 0,
+      "marketScore": 0,
+      "hits": [],
+      "functions": 68
+    }
+  ]
+}
