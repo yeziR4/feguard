@@ -1,0 +1,323 @@
+// FairDice: provably-fair commit-reveal dice casino in Fe 26.7.0.
+// Reference implementation only — NOT audited and NOT production-ready.
+//
+// Invariants enforced by this contract:
+//   I1  A bet settles at most once (`bet.settled` is checked and flipped before
+//       any ETH transfer or external interaction).
+//   I2  Payout equals `compute_payout(wager, target, roll(server_seed, client_seed, bet_id))`
+//       from `src/outcome.fe` — the exact same Fe source compiled to WASM.
+//   I3  The contract never pays more than `ctx.balance(ctx.address())` at settle time.
+//   I4  `wager > 0` and `target` in `1..=95`.
+//   I5  Two-party commit-reveal: both `client_commitment = keccak256(client_seed)`
+//       and `server_commitment = keccak256(server_seed)` are locked at bet time,
+//       so neither player nor house knows or can grind the outcome after betting.
+
+#[cfg(target = "evm")]
+use std::evm::{Call, Log, StorageMap, revert_error, wei}
+use ingot::outcome::{commit_seed, compute_payout, is_valid_target, max_payout, roll}
+
+pub const REFUND_DELAY_BLOCKS: u256 = 256
+
+#[abi]
+pub struct Bet {
+    pub player: Address,
+    pub wager: Wei,
+    pub target: u8,
+    pub client_commitment: u256,
+    pub server_commitment: u256,
+    pub block_number: u256,
+    pub settled: bool,
+    pub outcome: u256,
+    pub payout: Wei,
+}
+
+impl Copy for Bet {}
+impl Snapshot for Bet {}
+
+#[cfg(target = "evm")]
+#[error]
+pub struct ZeroWager {}
+
+#[cfg(target = "evm")]
+#[error]
+pub struct TargetOutOfRange { pub target: u8 }
+
+#[cfg(target = "evm")]
+#[error]
+pub struct ExceedsHouseCap { pub wager: Wei, pub cap: Wei }
+
+#[cfg(target = "evm")]
+#[error]
+pub struct InsufficientBankroll { pub max_payout: Wei, pub available: Wei }
+
+#[cfg(target = "evm")]
+#[error]
+pub struct InvalidCommitment {}
+
+#[cfg(target = "evm")]
+#[error]
+pub struct BetNotFound { pub bet_id: u256 }
+
+#[cfg(target = "evm")]
+#[error]
+pub struct AlreadySettled { pub bet_id: u256 }
+
+#[cfg(target = "evm")]
+#[error]
+pub struct SeedMismatch { pub bet_id: u256 }
+
+#[cfg(target = "evm")]
+#[error]
+pub struct NotExpired { pub bet_id: u256 }
+
+#[cfg(target = "evm")]
+#[error]
+pub struct TransferFailed {}
+
+#[cfg(target = "evm")]
+#[error]
+pub struct Unauthorized {}
+
+#[cfg(target = "evm")]
+#[event]
+pub struct BetPlaced {
+    #[indexed]
+    pub bet_id: u256,
+    #[indexed]
+    pub player: Address,
+    pub wager: Wei,
+    pub target: u8,
+    pub commitment: u256,
+}
+
+#[cfg(target = "evm")]
+#[event]
+pub struct BetRevealed {
+    #[indexed]
+    pub bet_id: u256,
+    pub server_seed: u256,
+    pub client_seed: u256,
+    pub outcome: u256,
+    pub payout: Wei,
+}
+
+#[cfg(target = "evm")]
+#[event]
+pub struct BetRefunded {
+    #[indexed]
+    pub bet_id: u256,
+    #[indexed]
+    pub player: Address,
+    pub wager: Wei,
+}
+
+#[cfg(target = "evm")]
+pub msg FairDiceMsg {
+    #[selector = sol("placeBet(uint8,uint256)")]
+    PlaceBet { target: u8, client_commitment: u256 } -> u256,
+    #[selector = sol("reveal(uint256,uint256,uint256)")]
+    Reveal { bet_id: u256, server_seed: u256, client_seed: u256 },
+    #[selector = sol("refundExpired(uint256)")]
+    RefundExpired { bet_id: u256 },
+    #[selector = sol("commitServerSeed(uint256)")]
+    CommitServerSeed { commitment: u256 },
+    #[selector = sol("fund()")]
+    Fund,
+    #[selector = sol("getBet(uint256)")]
+    GetBet { bet_id: u256 } -> Bet,
+    #[selector = sol("bankroll()")]
+    Bankroll -> Wei,
+    #[selector = sol("houseCap()")]
+    HouseCap -> Wei,
+    #[selector = sol("totalBets()")]
+    TotalBets -> u256,
+}
+
+#[cfg(target = "evm")]
+pub contract FairDice uses (ctx: Ctx, log: mut Log, call: mut Call) {
+    house: Address,
+    house_cap: Wei,
+    mut server_commitment: u256,
+    mut bet_count: u256,
+    mut bets: StorageMap<u256, Bet>,
+
+    init(cap: Wei, initial_server_commitment: u256)
+    uses (ctx, mut house, mut house_cap, mut server_commitment, mut bet_count)
+    {
+        if initial_server_commitment == 0 {
+            revert_error(InvalidCommitment {})
+        }
+        house = ctx.caller()
+        house_cap = cap
+        server_commitment = initial_server_commitment
+        bet_count = 0
+    }
+
+    recv FairDiceMsg {
+        #[payable]
+        Fund {}
+
+        CommitServerSeed { commitment } uses (ctx, house, mut server_commitment) {
+            if ctx.caller() != house {
+                revert_error(Unauthorized {})
+            }
+            if commitment == 0 {
+                revert_error(InvalidCommitment {})
+            }
+            server_commitment = commitment
+        }
+
+        #[payable]
+        PlaceBet { target, client_commitment } -> u256
+        uses (ctx, mut log, house_cap, server_commitment, mut bet_count, mut bets)
+        {
+            let wager = ctx.value()
+            // Invariant I4: wager > 0 and target in range (1..=95)
+            if wager == Wei::zero() {
+                revert_error(ZeroWager {})
+            }
+            if !is_valid_target(target) {
+                revert_error(TargetOutOfRange { target })
+            }
+            if wager > house_cap {
+                revert_error(ExceedsHouseCap { wager, cap: house_cap })
+            }
+            // Invariant I5: both commitments must be non-zero at bet time
+            if client_commitment == 0 || server_commitment == 0 {
+                revert_error(InvalidCommitment {})
+            }
+            // Invariant I3 pre-check: bankroll must cover max payout
+            let max_pay = wei(max_payout(wager: wager.as_wei(), target))
+            let available = ctx.balance(ctx.address())
+            if max_pay > available {
+                revert_error(InsufficientBankroll { max_payout: max_pay, available })
+            }
+
+            let bet_id = bet_count + 1
+            bet_count = bet_id
+            bets[bet_id] = Bet {
+                player: ctx.caller(),
+                wager,
+                target,
+                client_commitment,
+                server_commitment,
+                block_number: ctx.block_number(),
+                settled: false,
+                outcome: 0,
+                payout: Wei::zero(),
+            }
+            log.emit(
+                BetPlaced {
+                    bet_id,
+                    player: ctx.caller(),
+                    wager,
+                    target,
+                    commitment: client_commitment,
+                },
+            )
+            bet_id
+        }
+
+        // Permissionless reveal/settlement path: once both preimages are known,
+        // anyone (player, house, or third-party relayer) can settle the bet.
+        // Because both `client_commitment` and `server_commitment` were locked
+        // at bet time (I5), neither party can grind or alter the outcome.
+        Reveal { bet_id, server_seed, client_seed }
+        uses (ctx, mut log, mut call, bet_count, mut bets)
+        {
+            if bet_id == 0 || bet_id > bet_count {
+                revert_error(BetNotFound { bet_id })
+            }
+            var bet = bets[bet_id]
+            // Invariant I1: a bet settles at most once.
+            if bet.settled {
+                revert_error(AlreadySettled { bet_id })
+            }
+            // Invariant I5: verify both commit-reveal preimages.
+            if commit_seed(client_seed) != bet.client_commitment {
+                revert_error(SeedMismatch { bet_id })
+            }
+            if commit_seed(server_seed) != bet.server_commitment {
+                revert_error(SeedMismatch { bet_id })
+            }
+
+            // Invariant I2: deterministic outcome and payout from shared `src/outcome.fe`.
+            let outcome = roll(server_seed, client_seed, bet_id)
+            let payout = wei(
+                compute_payout(wager: bet.wager.as_wei(), target: bet.target, outcome),
+            )
+
+            // Invariant I3: never pay more than the contract balance at settle time.
+            let available = ctx.balance(ctx.address())
+            if payout > available {
+                revert_error(InsufficientBankroll { max_payout: payout, available })
+            }
+
+            // Effects before external call (CEI + I1).
+            bet.settled = true
+            bet.outcome = outcome
+            bet.payout = payout
+            bets[bet_id] = bet
+
+            if payout > Wei::zero() {
+                let outcome_call = call.send_value(addr: bet.player, gas: 100000, value: payout)
+                if !outcome_call.success() {
+                    revert_error(TransferFailed {})
+                }
+            }
+
+            log.emit(
+                BetRevealed { bet_id, server_seed, client_seed, outcome, payout },
+            )
+        }
+
+        // Permissionless anti-stranding path: if a bet is not revealed within
+        // `REFUND_DELAY_BLOCKS` blocks, anyone may trigger a full wager refund
+        // back to `bet.player` so funds can never be stranded by a silent house.
+        RefundExpired { bet_id } uses (ctx, mut log, mut call, bet_count, mut bets) {
+            if bet_id == 0 || bet_id > bet_count {
+                revert_error(BetNotFound { bet_id })
+            }
+            var bet = bets[bet_id]
+            if bet.settled {
+                revert_error(AlreadySettled { bet_id })
+            }
+            if ctx.block_number() < bet.block_number + REFUND_DELAY_BLOCKS {
+                revert_error(NotExpired { bet_id })
+            }
+            let available = ctx.balance(ctx.address())
+            if bet.wager > available {
+                revert_error(InsufficientBankroll { max_payout: bet.wager, available })
+            }
+
+            bet.settled = true
+            bet.payout = bet.wager
+            bets[bet_id] = bet
+
+            let outcome_call = call.send_value(addr: bet.player, gas: 100000, value: bet.wager)
+            if !outcome_call.success() {
+                revert_error(TransferFailed {})
+            }
+
+            log.emit(
+                BetRefunded { bet_id, player: bet.player, wager: bet.wager },
+            )
+        }
+
+        GetBet { bet_id } -> Bet uses (bets) {
+            bets[bet_id]
+        }
+
+        Bankroll -> Wei uses (ctx) {
+            ctx.balance(ctx.address())
+        }
+
+        HouseCap -> Wei uses (house_cap) {
+            house_cap
+        }
+
+        TotalBets -> u256 uses (bet_count) {
+            bet_count
+        }
+    }
+}

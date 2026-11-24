@@ -254,3 +254,64 @@ Both are encoded as executable regressions in `src/findings.fe` (`fe test --filt
 - **Registration:** the organizer's registration confirmation email was located on 23 November. Keep the project ID/private submission credentials outside this repository. Final submission is still outstanding.
 
 See [SUBMISSION.md](SUBMISSION.md). Final submission for judging has not been performed.
+
+---
+
+## FairDice — Single-Source EVM + WASM Provably-Fair Dice
+
+> **Reference Implementation Notice:** FairDice is an educational reference implementation written in Fe 26.7.0. It is **not audited** and **not production-ready**. Do not deploy it with real funds without an independent security audit.
+
+### Why this is impossible in Solidity
+
+Solidity compiles only to EVM bytecode, forcing every off-chain verifier to re-implement the house's dice math in a second language (JavaScript/Rust/Python) that can silently drift from on-chain behavior — whereas Fe compiles the **exact same `src/outcome.fe` source** to both EVM bytecode (`FairDice.bin`) and a standalone WASM verifier (`out/feguard.wasm`).
+
+### Architecture & Files
+
+- `src/outcome.fe` — Pure, storage-free, context-free `roll(server_seed, client_seed, bet_id)`, `commit_seed(seed)`, `max_payout(wager, target)`, and `compute_payout(wager, target, outcome)` using `core::hash::keccak_words`. Compiled verbatim into both targets.
+- `src/dice.fe` — On-chain `FairDice` EVM contract (`#[cfg(target = "evm")]`) holding ETH, enforcing typed `#[error]` reverts, emitting `#[event]` logs (`BetPlaced`, `BetRevealed`, `BetRefunded`), and supporting permissionless `reveal` and `refundExpired` settlement.
+- `src/wasm_api.fe` — Exports `fg_roll`, `fg_verify_commit`, and `fg_verify_bet` (`#[unsafe(export)]`, `#[cfg(target = "wasm")]`).
+- `src/dice_tests.fe` — Unit and EVM contract integration tests covering Invariants I1–I5 plus cross-target EVM/WASM equivalence (`roll(0x1111222233334444, 0x5555666677778888, 1) == 25`).
+- `verify.mjs` — Zero-dependency Node CLI verifier that loads `out/feguard.wasm`, reads bet state + `BetRevealed` logs via JSON-RPC (or built-in EVM-verified test vector), recomputes the outcome in WASM, and prints `MATCH` or `MISMATCH` (with `--tamper` to prove cheat detection).
+- `index.html` — Self-contained vanilla JS web UI (no build step) that reads bets via `window.ethereum` or JSON-RPC, runs the compiled Fe WASM verifier per row, and includes a live `TAMPER` toggle.
+
+### House Edge & Invariants
+
+- **House edge (explicit 2%):** Valid targets are `1..=95`. A bet wins when `roll(server_seed, client_seed, bet_id) < target` (`outcome in 0..99`). Payout on win is `floor(wager * 98 / target)` (e.g., `target = 49` gives 49% win probability at exact 2.00x payout = 98% RTP, 2% house edge).
+- **I1 (Single settlement):** `bet.settled` is checked and set to `true` before any ETH transfer (`AlreadySettled` revert on replay).
+- **I2 (Deterministic payout):** `outcome` and `payout` are computed solely by `roll` and `compute_payout` in `src/outcome.fe`.
+- **I3 (Solvency):** `placeBet` checks `max_payout <= ctx.balance(ctx.address())`, and `reveal` checks `payout <= ctx.balance(ctx.address())` before transferring ETH.
+- **I4 (Input bounds):** `wager > 0` (`ZeroWager`) and `1 <= target <= 95` (`TargetOutOfRange`).
+- **I5 (Two-party commit-reveal):** Both `client_commitment = keccak256(client_seed)` and `server_commitment = keccak256(server_seed)` are locked at bet time, so neither player nor house can know or grind the outcome after betting. `reveal` is permissionless once both seeds are published, and `refundExpired` (permissionless after `REFUND_DELAY_BLOCKS = 256` blocks) guarantees no bet can ever be stranded.
+
+### Build, Test, Verify & Deploy
+
+```powershell
+# 1. Format check, typecheck, and run all Fe unit + EVM contract tests
+..\tools\fe.exe fmt --check .
+..\tools\fe.exe check .
+..\tools\fe.exe test .
+
+# 2. Build EVM bytecode + ABI (`out/FairDice.bin`, `out/FairDice.abi.json`)
+..\tools\fe.exe build . --emit bytecode,runtime-bytecode,abi,metadata --backend sonatina -O 1 --out-dir out
+
+# 3. Build WASM verifier (`out/feguard.wasm`) from the exact same `src/outcome.fe`
+..\tools\fe.exe build . --backend wasm --emit wasm --out-dir out
+
+# 4. Run off-chain WASM verifier (honest -> MATCH; tampered -> MISMATCH)
+node verify.mjs
+node verify.mjs --tamper
+
+# 5. Verify a live deployed bet from any JSON-RPC endpoint
+node verify.mjs --rpc https://ethereum-sepolia-rpc.publicnode.com --contract 0xYOUR_CONTRACT --bet-id 1
+
+# 6. Open the web UI (serve locally so fetch() can load out/feguard.wasm)
+python -m http.server 8080
+# Then open http://localhost:8080/index.html
+```
+
+**Deploying `FairDice` (e.g. with Foundry `cast`):**
+1. Compute `initial_server_commitment = keccak256(abi.encode(serverSeed))`.
+2. Deploy `out/FairDice.bin` with ABI-encoded constructor args `(uint256 cap, uint256 initial_server_commitment)`.
+3. Deposit house bankroll by calling payable `fund()` with ETH.
+4. Players call payable `placeBet(uint8 target, uint256 client_commitment)` with `msg.value > 0`.
+5. Anyone calls `reveal(uint256 bet_id, uint256 server_seed, uint256 client_seed)` to settle, or `refundExpired(uint256 bet_id)` after 256 blocks if unrevealed.

@@ -1,0 +1,56 @@
+// FairDice pure outcome and payout logic.
+//
+// This module has no storage and no EVM context (`ctx`). It is compiled twice
+// from the exact same Fe source:
+//   1. Into the on-chain EVM `FairDice` contract (`--backend sonatina`).
+//   2. Into the off-chain WASM verifier (`--backend wasm`).
+//
+// House edge: explicit 2% (98% theoretical RTP, before integer wei truncation).
+// Valid targets: 1..=95 (player wins when `roll(...) < target`).
+// Payout on win: `wager * HOUSE_RTP_NUM / target`, where `HOUSE_RTP_NUM = 98`.
+// Example: target = 49 -> 49% win chance, 2.00x payout -> 98% RTP (2% edge).
+
+use core::hash::keccak_words
+
+pub const MIN_TARGET: u8 = 1
+pub const MAX_TARGET: u8 = 95
+pub const DICE_SIDES: u256 = 100
+pub const HOUSE_RTP_NUM: u256 = 98
+
+pub fn is_valid_target(_ target: u8) -> bool {
+    target >= MIN_TARGET && target <= MAX_TARGET
+}
+
+/// Pure, deterministic commit hash for a 256-bit seed:
+/// `keccak256(abi.encode(seed))`.
+pub fn commit_seed(_ seed: u256) -> u256 {
+    keccak_words([seed])
+}
+
+/// Pure, deterministic dice roll in `0..100` (`0..=99`).
+/// Shared verbatim between the EVM contract and the WASM verifier.
+pub fn roll(server_seed: u256, client_seed: u256, bet_id: u256) -> u256 {
+    keccak_words([server_seed, client_seed, bet_id]) % DICE_SIDES
+}
+
+/// Maximum payout for a winning bet with the given wager and target.
+/// Returns 0 if `target` is out of range.
+pub fn max_payout(wager: u256, target: u8) -> u256 {
+    if !is_valid_target(target) {
+        return 0
+    }
+    (wager * HOUSE_RTP_NUM) / (target as u256)
+}
+
+/// Deterministic payout function (Invariant I2).
+/// Wins when `outcome < target`; otherwise returns 0.
+pub fn compute_payout(wager: u256, target: u8, outcome: u256) -> u256 {
+    if !is_valid_target(target) {
+        return 0
+    }
+    if outcome < (target as u256) {
+        max_payout(wager, target)
+    } else {
+        0
+    }
+}

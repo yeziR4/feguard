@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FairDice — Provably-Fair Fe Verifier</title>
+  <style>
+    :root {
+      --bg: #0b0e14;
+      --surface: #131822;
+      --border: #232b3a;
+      --text: #e6edf7;
+      --muted: #8b98b1;
+      --accent: #4f8cff;
+      --green: #22c55e;
+      --green-bg: rgba(34, 197, 94, 0.14);
+      --red: #ef4444;
+      --red-bg: rgba(239, 68, 68, 0.14);
+      --amber: #f59e0b;
+      --amber-bg: rgba(245, 158, 11, 0.14);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      --sans: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 2rem 1.25rem 3rem;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.5;
+    }
+    .wrap { max-width: 1040px; margin: 0 auto; }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 1rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    h1 { margin: 0; font-size: 1.75rem; letter-spacing: -0.02em; }
+    .tagline {
+      margin: 0.35rem 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .tagline strong { color: var(--text); font-weight: 600; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.45rem 0.85rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      font-size: 0.85rem;
+      cursor: pointer;
+      user-select: none;
+    }
+    .pill.tamper-on {
+      border-color: var(--red);
+      background: var(--red-bg);
+      color: #fecaca;
+    }
+    .pill input { accent-color: var(--red); cursor: pointer; }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: 1.5fr 1.5fr auto;
+      gap: 0.75rem;
+      align-items: end;
+    }
+    @media (max-width: 760px) {
+      .controls { grid-template-columns: 1fr; }
+    }
+    label {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 0.3rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 0.55rem 0.7rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+    }
+    button {
+      padding: 0.55rem 0.95rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--accent);
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    button:hover { filter: brightness(1.08); }
+    button.secondary {
+      background: transparent;
+      color: var(--text);
+    }
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+      margin-top: 0.85rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .stats span strong { color: var(--text); font-family: var(--mono); }
+    .status-bar {
+      margin-top: 0.65rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.7rem 0.65rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    th {
+      color: var(--muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    td.mono { font-family: var(--mono); font-size: 0.82rem; }
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.55rem;
+      border-radius: 5px;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+    .badge.match { background: var(--green-bg); color: var(--green); border: 1px solid var(--green); }
+    .badge.mismatch { background: var(--red-bg); color: var(--red); border: 1px solid var(--red); }
+    .badge.pending { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber); }
+    .verify-detail {
+      display: block;
+      margin-top: 0.25rem;
+      font-family: var(--mono);
+      font-size: 0.74rem;
+      color: var(--muted);
+    }
+    footer {
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>FairDice Verifier</h1>
+        <p class="tagline">
+          <strong>The verifier runs the same Fe source that produced the on-chain result.</strong>
+        </p>
+      </div>
+      <label class="pill" id="tamperPill" title="Corrupts serverSeed (XOR 1) before WASM verification to prove cheat detection">
+        <input type="checkbox" id="tamperToggle" />
+        <span><strong>TAMPER</strong> (corrupt seed before verify)</span>
+      </label>
+    </header>
+
+    <section class="panel">
+      <div class="controls">
+        <div>
+          <label for="rpcInput">JSON-RPC Endpoint (fallback when window.ethereum absent)</label>
+          <input id="rpcInput" type="text" value="https://ethereum-sepolia-rpc.publicnode.com" />
+        </div>
+        <div>
+          <label for="contractInput">Deployed FairDice Contract Address</label>
+          <input id="contractInput" type="text" placeholder="0x... (leave blank for built-in EVM test vectors)" />
+        </div>
+        <div style="display:flex; gap:0.5rem;">
+          <button id="loadChainBtn">Load On-Chain Bets</button>
+          <button id="loadDemoBtn" class="secondary">Demo Vectors</button>
+        </div>
+      </div>
+      <div class="stats">
+        <span>Provider: <strong id="providerStat">Demo Vectors</strong></span>
+        <span>Bankroll: <strong id="bankrollStat">—</strong></span>
+        <span>House Cap: <strong id="capStat">—</strong></span>
+        <span>Total Bets: <strong id="totalStat">—</strong></span>
+        <span>WASM Module: <strong id="wasmStat">loading…</strong></span>
+      </div>
+      <div class="status-bar" id="statusBar">Ready.</div>
+    </section>
+
+    <section class="panel" style="padding: 0.25rem 0.75rem 0.75rem; overflow-x: auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Player</th>
+            <th>Wager (wei)</th>
+            <th>Target</th>
+            <th>Outcome</th>
+            <th>Payout (wei)</th>
+            <th>Verify in Fe WASM</th>
+          </tr>
+        </thead>
+        <tbody id="betsBody"></tbody>
+      </table>
+    </section>
+
+    <footer>
+      <strong>Reference Implementation Notice:</strong> FairDice is an educational reference
+      implementation written in Fe 26.7.0. It is <strong>not audited</strong> and
+      <strong>not production-ready</strong>. House edge is explicitly 2% (98% theoretical RTP:
+      <code>payout = floor(wager * 98 / target)</code> for winning rolls where
+      <code>outcome &lt; target</code>, <code>target in 1..=95</code>).
+    </footer>
+  </div>
+
+  <script>
+    const DEFAULT_RPC_URL = 'https://ethereum-sepolia-rpc.publicnode.com';
+    const WASM_CANDIDATES = ['./out/feguard.wasm', './out/dice.wasm', './dice.wasm'];
+
+    // Verified Solidity ABI selectors / topics for FairDice (from out/FairDice.abi.json)
+    const SEL_GET_BET    = '0x061e494f'; // getBet(uint256)
+    const SEL_TOTAL_BETS = '0xbefa1e2f'; // totalBets()
+    const SEL_BANKROLL   = '0x0c657eb0'; // bankroll()
+    const SEL_HOUSE_CAP  = '0x56f54594'; // houseCap()
+    const TOPIC_REVEALED = '0xb23d00b847ca5b09b5092b3610ad3525d33e24cfcf3558d093ab4b264a690084';
+
+    // Built-in bet vectors verified against FairDice EVM execution (`src/dice_tests.fe`)
+    const DEMO_BETS = [
+      {
+        id: 1n,
+        player: '0x00000000000000000000000000000000000a11ce',
+        wager: 1000n,
+        target: 26n,
+        outcome: 25n,
+        payout: 3769n,
+        settled: true,
+        serverSeed: 0x1111222233334444n,
+        clientSeed: 0x5555666677778888n,
+      },
+      {
+        id: 2n,
+        player: '0x0000000000000000000000000000000000000b0b',
+        wager: 5000n,
+        target: 49n,
+        outcome: 41n,
+        payout: 10000n,
+        settled: true,
+        serverSeed: 0xcafebabe12345678n,
+        clientSeed: 0xdeadbeef99990001n,
+      },
+    ];
+
+    const MASK64 = 0xffffffffffffffffn;
+    const splitU256 = (x) => {
+      const v = BigInt.asUintN(256, x);
+      return [(v >> 192n) & MASK64, (v >> 128n) & MASK64, (v >> 64n) & MASK64, v & MASK64];
+    };
+    const splitU128 = (x) => {
+      const v = BigInt.asUintN(128, x);
+      return [(v >> 64n) & MASK64, v & MASK64];
+    };
+    const padHex32 = (x) => BigInt(x).toString(16).padStart(64, '0');
+    const hexWord = (hex, i) => {
+      const clean = hex.startsWith('0x') ? hex.slice(2) : hex;
+      return BigInt('0x' + clean.slice(i * 64, (i + 1) * 64));
+    };
+    const shortAddr = (a) => a.length > 14 ? `${a.slice(0, 8)}…${a.slice(-6)}` : a;
+
+    let wasmExports = null;
+    let currentBets = [];
+
+    const statusBar = document.getElementById('statusBar');
+    const wasmStat = document.getElementById('wasmStat');
+    const tamperToggle = document.getElementById('tamperToggle');
+    const tamperPill = document.getElementById('tamperPill');
+    const betsBody = document.getElementById('betsBody');
+
+    tamperToggle.addEventListener('change', () => {
+      tamperPill.classList.toggle('tamper-on', tamperToggle.checked);
+    });
+
+    async function loadWasm() {
+      if (wasmExports) return wasmExports;
+      let lastErr;
+      for (const path of WASM_CANDIDATES) {
+        try {
+          const resp = await fetch(path);
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          const bytes = await resp.arrayBuffer();
+          const { instance } = await WebAssembly.instantiate(bytes, {
+            env: { __fe_revert: () => { throw new Error('Fe WASM reverted'); } },
+          });
+          wasmExports = instance.exports;
+          wasmStat.textContent = path;
+          // Sync demo row #2's honest outcome/payout directly from the compiled Fe WASM if needed
+          const demo2 = DEMO_BETS[1];
+          const r2 = BigInt.asUintN(64, wasmExports.fg_roll(...splitU256(demo2.serverSeed), ...splitU256(demo2.clientSeed), demo2.id));
+          demo2.outcome = r2;
+          demo2.payout = r2 < demo2.target ? (demo2.wager * 98n) / demo2.target : 0n;
+          return wasmExports;
+        } catch (err) {
+          lastErr = err;
+        }
+      }
+      wasmStat.textContent = 'failed (serve over HTTP)';
+      throw new Error(`Could not load Fe WASM (${lastErr?.message}). Run a local HTTP server in this directory.`);
+    }
+
+    async function rpcRequest(method, params) {
+      if (window.ethereum) {
+        return window.ethereum.request({ method, params });
+      }
+      const rpcUrl = document.getElementById('rpcInput').value.trim() || DEFAULT_RPC_URL;
+      const resp = await fetch(rpcUrl, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+      });
+      if (!resp.ok) throw new Error(`RPC HTTP ${resp.status}`);
+      const json = await resp.json();
+      if (json.error) throw new Error(json.error.message || JSON.stringify(json.error));
+      return json.result;
+    }
+
+    async function loadOnChainBets() {
+      const contract = document.getElementById('contractInput').value.trim();
+      if (!/^0x[0-9a-fA-F]{40}$/.test(contract)) {
+        statusBar.textContent = 'Enter a valid 0x contract address, or click "Demo Vectors".';
+        return;
+      }
+      statusBar.textContent = 'Querying contract state…';
+      document.getElementById('providerStat').textContent = window.ethereum ? 'window.ethereum' : 'JSON-RPC';
+      try {
+        const [rawBankroll, rawCap, rawTotal] = await Promise.all([
+          rpcRequest('eth_call', [{ to: contract, data: SEL_BANKROLL }, 'latest']),
+          rpcRequest('eth_call', [{ to: contract, data: SEL_HOUSE_CAP }, 'latest']),
+          rpcRequest('eth_call', [{ to: contract, data: SEL_TOTAL_BETS }, 'latest']),
+        ]);
+        const bankroll = BigInt(rawBankroll || '0x0');
+        const cap = BigInt(rawCap || '0x0');
+        const total = BigInt(rawTotal || '0x0');
+
+        document.getElementById('bankrollStat').textContent = `${bankroll} wei`;
+        document.getElementById('capStat').textContent = `${cap} wei`;
+        document.getElementById('totalStat').textContent = total.toString();
+
+        const logs = await rpcRequest('eth_getLogs', [{
+          address: contract,
+          fromBlock: '0x0',
+          toBlock: 'latest',
+          topics: [TOPIC_REVEALED],
+        }]);
+        const seedByBetId = new Map();
+        for (const log of logs || []) {
+          const betId = BigInt(log.topics[1]);
+          seedByBetId.set(betId, {
+            serverSeed: hexWord(log.data, 0),
+            clientSeed: hexWord(log.data, 1),
+          });
+        }
+
+        const count = total > 20n ? 20n : total;
+        const bets = [];
+        for (let i = total; i > total - count; i -= 1n) {
+          const raw = await rpcRequest('eth_call', [{ to: contract, data: SEL_GET_BET + padHex32(i) }, 'latest']);
+          const player = '0x' + hexWord(raw, 0).toString(16).padStart(40, '0');
+          const seeds = seedByBetId.get(i);
+          bets.push({
+            id: i,
+            player,
+            wager: hexWord(raw, 1),
+            target: hexWord(raw, 2),
+            settled: hexWord(raw, 6) !== 0n,
+            outcome: hexWord(raw, 7),
+            payout: hexWord(raw, 8),
+            serverSeed: seeds?.serverSeed,
+            clientSeed: seeds?.clientSeed,
+          });
+        }
+        currentBets = bets;
+        renderBets();
+        statusBar.textContent = `Loaded ${bets.length} recent bet(s) from ${shortAddr(contract)}.`;
+      } catch (err) {
+        statusBar.textContent = `Chain read failed: ${err.message}`;
+      }
+    }
+
+    function verifyBetRow(bet, resultCell) {
+      if (!wasmExports) {
+        resultCell.innerHTML = '<span class="badge pending">WASM NOT LOADED</span>';
+        return;
+      }
+      if (!bet.settled || bet.serverSeed === undefined || bet.clientSeed === undefined) {
+        resultCell.innerHTML = '<span class="badge pending">UNREVEALED</span>';
+        return;
+      }
+      const tampered = tamperToggle.checked;
+      const usedServerSeed = tampered ? (bet.serverSeed ^ 1n) : bet.serverSeed;
+      const packed = BigInt.asUintN(
+        64,
+        wasmExports.fg_verify_bet(
+          ...splitU256(usedServerSeed),
+          ...splitU256(bet.clientSeed),
+          bet.id,
+          bet.target,
+          ...splitU128(bet.wager),
+          bet.outcome,
+          ...splitU128(bet.payout)
+        )
+      );
+      const outcomeOk = (packed & 1n) === 1n;
+      const payoutOk = (packed & 2n) === 2n;
+      const recomputedOutcome = (packed >> 8n) & 0xffn;
+      const ok = outcomeOk && payoutOk;
+      resultCell.innerHTML = `
+        <span class="badge ${ok ? 'match' : 'mismatch'}">${ok ? 'MATCH' : 'MISMATCH'}</span>
+        <span class="verify-detail">WASM roll=${recomputedOutcome} (on-chain=${bet.outcome})${tampered ? ' · TAMPERED' : ''}</span>
+      `;
+    }
+
+    function renderBets() {
+      betsBody.innerHTML = '';
+      if (currentBets.length === 0) {
+        betsBody.innerHTML = '<tr><td colspan="7" style="color:var(--muted);text-align:center;">No bets found.</td></tr>';
+        return;
+      }
+      for (const bet of currentBets) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="mono">#${bet.id}</td>
+          <td class="mono" title="${bet.player}">${shortAddr(bet.player)}</td>
+          <td class="mono">${bet.wager}</td>
+          <td class="mono">&lt; ${bet.target}</td>
+          <td class="mono">${bet.settled ? bet.outcome : '—'}</td>
+          <td class="mono">${bet.settled ? bet.payout : '—'}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
+              <button class="verify-btn">VERIFY</button>
+              <span class="verify-out"></span>
+            </div>
+          </td>
+        `;
+        const btn = tr.querySelector('.verify-btn');
+        const out = tr.querySelector('.verify-out');
+        btn.addEventListener('click', async () => {
+          try {
+            await loadWasm();
+            verifyBetRow(bet, out);
+          } catch (err) {
+            out.innerHTML = `<span class="badge mismatch">ERR</span><span class="verify-detail">${err.message}</span>`;
+          }
+        });
+        betsBody.appendChild(tr);
+      }
+    }
+
+    function loadDemoBets() {
+      document.getElementById('providerStat').textContent = 'Demo Vectors (EVM-verified)';
+      document.getElementById('bankrollStat').textContent = '50000 wei';
+      document.getElementById('capStat').textContent = '10000 wei';
+      document.getElementById('totalStat').textContent = String(DEMO_BETS.length);
+      currentBets = DEMO_BETS;
+      renderBets();
+      statusBar.textContent = 'Loaded built-in EVM-verified demo bets. Click VERIFY on any row (toggle TAMPER to test cheat detection).';
+    }
+
+    document.getElementById('loadChainBtn').addEventListener('click', loadOnChainBets);
+    document.getElementById('loadDemoBtn').addEventListener('click', loadDemoBets);
+
+    loadWasm()
+      .then(() => loadDemoBets())
+      .catch((err) => {
+        loadDemoBets();
+        statusBar.textContent = err.message;
+      });
+  </script>
+</body>
+</html>

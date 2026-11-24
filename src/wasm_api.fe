@@ -2,6 +2,7 @@
 // state replay remain in Fe. JavaScript only marshals inputs and presents data.
 use ingot::fuzz::{Trace, Machine, generate, replay, search, reduce, one_minimal}
 use ingot::guard_machine::guard
+use ingot::outcome::{roll, commit_seed, compute_payout}
 
 fn steps(_ value: u64) -> usize {
     if value > 64 {
@@ -130,4 +131,108 @@ pub fn fg_validate(_ target: u64, _ seed: u64, _ count: u64) -> u64 {
         0
     }
     minimal | passes
+}
+
+// =====================================================================
+// FairDice WASM verifier exports — compiled from the exact same
+// `src/outcome.fe` source as the on-chain EVM `FairDice` contract.
+// =====================================================================
+
+fn u256_from_limbs(_ w3: u64, _ w2: u64, _ w1: u64, _ w0: u64) -> u256 {
+    ((w3 as u256) << 192) | ((w2 as u256) << 128) | ((w1 as u256) << 64) | (w0 as u256)
+}
+
+fn u256_from_u128(_ hi: u64, _ lo: u64) -> u256 {
+    ((hi as u256) << 64) | (lo as u256)
+}
+
+/// Recompute the FairDice roll in `0..100` from 256-bit server and client seeds
+/// (each passed as four big-endian 64-bit limbs `w3..w0`) and a 64-bit bet id.
+#[unsafe(export)]
+#[cfg(target = "wasm")]
+pub fn fg_roll(
+    _ s3: u64,
+    _ s2: u64,
+    _ s1: u64,
+    _ s0: u64,
+    _ c3: u64,
+    _ c2: u64,
+    _ c1: u64,
+    _ c0: u64,
+    _ bet_id: u64,
+) -> u64 {
+    let server_seed = u256_from_limbs(s3, s2, s1, s0)
+    let client_seed = u256_from_limbs(c3, c2, c1, c0)
+    roll(server_seed, client_seed, bet_id: bet_id as u256).downcast().unwrap()
+}
+
+/// Verify that `commit_seed(client_seed) == commitment`. Returns 1 on match, 0 otherwise.
+#[unsafe(export)]
+#[cfg(target = "wasm")]
+pub fn fg_verify_commit(
+    _ c3: u64,
+    _ c2: u64,
+    _ c1: u64,
+    _ c0: u64,
+    _ h3: u64,
+    _ h2: u64,
+    _ h1: u64,
+    _ h0: u64,
+) -> u64 {
+    let client_seed = u256_from_limbs(c3, c2, c1, c0)
+    let commitment = u256_from_limbs(h3, h2, h1, h0)
+    if commit_seed(client_seed) == commitment {
+        1
+    } else {
+        0
+    }
+}
+
+/// Verify both the dice outcome and payout for a settled bet.
+/// Returns a packed u64:
+///   bit 0 (1): outcome matches claimed_outcome
+///   bit 1 (2): payout matches claimed_payout
+///   bits 8..15: recomputed outcome (0..99)
+#[unsafe(export)]
+#[cfg(target = "wasm")]
+pub fn fg_verify_bet(
+    _ s3: u64,
+    _ s2: u64,
+    _ s1: u64,
+    _ s0: u64,
+    _ c3: u64,
+    _ c2: u64,
+    _ c1: u64,
+    _ c0: u64,
+    _ bet_id: u64,
+    _ target: u64,
+    _ wager_hi: u64,
+    _ wager_lo: u64,
+    _ claimed_outcome: u64,
+    _ claimed_payout_hi: u64,
+    _ claimed_payout_lo: u64,
+) -> u64 {
+    let server_seed = u256_from_limbs(s3, s2, s1, s0)
+    let client_seed = u256_from_limbs(c3, c2, c1, c0)
+    let wager = u256_from_u128(wager_hi, wager_lo)
+    let claimed_payout = u256_from_u128(claimed_payout_hi, claimed_payout_lo)
+    let actual_outcome = roll(server_seed, client_seed, bet_id: bet_id as u256)
+    let target_u8: u8 = if target > 255 {
+        255
+    } else {
+        target.downcast().unwrap()
+    }
+    let actual_payout = compute_payout(wager, target: target_u8, outcome: actual_outcome)
+    let outcome_ok: u64 = if actual_outcome == (claimed_outcome as u256) {
+        1
+    } else {
+        0
+    }
+    let payout_ok: u64 = if actual_payout == claimed_payout {
+        2
+    } else {
+        0
+    }
+    let out_byte: u64 = actual_outcome.downcast().unwrap()
+    outcome_ok | payout_ok | (out_byte << 8)
 }

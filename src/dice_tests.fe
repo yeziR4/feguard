@@ -1,0 +1,434 @@
+use std::evm::wei
+#[cfg(target = "evm")]
+use std::evm::Call
+use ingot::outcome::{
+    MIN_TARGET,
+    MAX_TARGET,
+    DICE_SIDES,
+    commit_seed,
+    compute_payout,
+    is_valid_target,
+    max_payout,
+    roll,
+}
+#[cfg(target = "evm")]
+use ingot::dice::{Bet, FairDice, FairDiceMsg}
+
+// Helper player contract for EVM tests: places bets on FairDice and accepts
+// plain ETH payouts via its payable fallback arm.
+#[cfg(target = "evm")]
+pub msg TestPlayerMsg {
+    #[selector = sol("bet(address,uint8,uint256)")]
+    Bet { dice: Address, target: u8, client_commitment: u256 } -> u256,
+}
+
+#[cfg(target = "evm")]
+pub contract TestPlayer uses (ctx: Ctx, call: mut Call) {
+    init() {}
+
+    recv TestPlayerMsg {
+        #[payable]
+        Bet { dice, target, client_commitment } -> u256
+        uses (ctx, mut call)
+        {
+            call.call(
+                addr: dice,
+                gas: 1500000,
+                value: ctx.value(),
+                message: FairDiceMsg::PlaceBet { target, client_commitment },
+            )
+        }
+    }
+
+    recv {
+        #[payable]
+        _ {}
+    }
+}
+
+#[test]
+fn roll_is_deterministic_and_in_range() {
+    let server_seed: u256 = 0x11112222333344445555666677778888
+    let client_seed: u256 = 0xAAAABBBBCCCCDDDDEEEEFFFF00001111
+    let a = roll(server_seed, client_seed, bet_id: 1)
+    let b = roll(server_seed, client_seed, bet_id: 1)
+    assert!(a == b)
+    assert!(a < DICE_SIDES)
+}
+
+#[test]
+fn tampered_seed_changes_outcome() {
+    let server_seed: u256 = 0xCAFEBABE12345678
+    let client_seed: u256 = 0xDEADBEEF99990001
+    let honest = roll(server_seed, client_seed, bet_id: 1)
+    let tampered_server = roll(server_seed: server_seed ^ 1, client_seed, bet_id: 1)
+    let tampered_client = roll(server_seed, client_seed: client_seed ^ 1, bet_id: 1)
+    assert!(honest != tampered_server || honest != tampered_client)
+}
+
+#[test]
+fn commit_seed_is_binding() {
+    let seed: u256 = 0x123456789ABCDEF
+    let h1 = commit_seed(seed)
+    let h2 = commit_seed(seed)
+    let h3 = commit_seed(seed ^ 1)
+    assert!(h1 == h2)
+    assert!(h1 != h3)
+    assert!(h1 != 0)
+}
+
+#[test]
+fn payout_enforces_house_edge_and_target_bounds() {
+    // Invariant I4: target bounds
+    assert!(!is_valid_target(0))
+    assert!(is_valid_target(MIN_TARGET))
+    assert!(is_valid_target(MAX_TARGET))
+    assert!(!is_valid_target(96))
+    assert!(max_payout(wager: 1000, target: 0) == 0)
+    assert!(max_payout(wager: 1000, target: 96) == 0)
+
+    // Explicit 2% house edge: target 49 -> 49% win chance, exact 2.00x payout
+    assert!(max_payout(wager: 1000, target: 49) == 2000)
+    assert!(
+        compute_payout(wager: 1000, target: 49, outcome: 0) == 2000,
+    )
+    assert!(
+        compute_payout(wager: 1000, target: 49, outcome: 48) == 2000,
+    )
+    // Losing roll (outcome >= target) pays 0 (Invariant I2)
+    assert!(compute_payout(wager: 1000, target: 49, outcome: 49) == 0)
+    assert!(compute_payout(wager: 1000, target: 49, outcome: 99) == 0)
+}
+
+// Invariants I2, I3, I5 + permissionless reveal:
+// A separate TestPlayer places a bet, and another caller settles it.
+#[test(balance = 1000000)]
+#[cfg(target = "evm")]
+fn contract_place_and_reveal_matches_shared_roll() uses (evm: mut Evm) {
+    let server_seed: u256 = 0x1111222233334444
+    let client_seed: u256 = 0x5555666677778888
+    let server_commit = commit_seed(server_seed)
+    let client_commit = commit_seed(client_seed)
+
+    let dice = evm.create2<FairDice>(
+            value: Wei::zero(),
+            args: (wei(10000), server_commit),
+            salt: 0,
+        )
+    let player = evm.create2<TestPlayer>(value: Wei::zero(), args: (), salt: 1)
+
+    // Fund bankroll with 50,000 wei
+    evm.call(
+        addr: dice,
+        gas: 2000000,
+        value: wei(50000),
+        message: FairDiceMsg::Fund {},
+    )
+
+    let bankroll_before: Wei = evm
+        .call(
+            addr: dice,
+            gas: 1000000,
+            value: Wei::zero(),
+            message: FairDiceMsg::Bankroll {},
+        )
+    assert!(bankroll_before == wei(50000))
+
+    let cap: Wei = evm
+        .call(
+            addr: dice,
+            gas: 1000000,
+            value: Wei::zero(),
+            message: FairDiceMsg::HouseCap {},
+        )
+    assert!(cap == wei(10000))
+
+    // Pick a target guaranteed to win so we exercise real ETH payout via send_value
+    let expected_outcome = roll(server_seed, client_seed, bet_id: 1)
+    // Cross-target equivalence vector: WASM `fg_roll` returns 25 for these exact inputs.
+    assert!(expected_outcome == 25)
+    let target: u8 = if expected_outcome < 95 {
+        (expected_outcome + 1).downcast().unwrap()
+    } else {
+        49
+    }
+    let expected_payout = compute_payout(wager: 1000, target, outcome: expected_outcome)
+
+    let bet_id: u256 = evm
+        .call(
+            addr: player,
+            gas: 2000000,
+            value: wei(1000),
+            message: TestPlayerMsg::Bet { dice, target, client_commitment: client_commit },
+        )
+    assert!(bet_id == 1)
+
+    let total: u256 = evm
+        .call(
+            addr: dice,
+            gas: 1000000,
+            value: Wei::zero(),
+            message: FairDiceMsg::TotalBets {},
+        )
+    assert!(total == 1)
+
+    // Permissionless reveal (called by evm.address(), not player)
+    evm.call(
+        addr: dice,
+        gas: 2000000,
+        value: Wei::zero(),
+        message: FairDiceMsg::Reveal { bet_id: 1, server_seed, client_seed },
+    )
+
+    let bet: Bet = evm
+        .call(
+            addr: dice,
+            gas: 1000000,
+            value: Wei::zero(),
+            message: FairDiceMsg::GetBet { bet_id: 1 },
+        )
+    assert!(bet.settled)
+    assert!(bet.player == player)
+    assert!(bet.outcome == expected_outcome)
+    assert!(bet.payout == wei(expected_payout))
+
+    // Verify player actually received the ETH payout and bankroll matches
+    assert!(evm.balance(player) == wei(expected_payout))
+    let bankroll_after: Wei = evm
+        .call(
+            addr: dice,
+            gas: 1000000,
+            value: Wei::zero(),
+            message: FairDiceMsg::Bankroll {},
+        )
+    assert!(bankroll_after == wei(50000 + 1000 - expected_payout))
+}
+
+// Invariant I1: a bet settles at most once
+#[test(should_revert, balance = 1000000)]
+#[cfg(target = "evm")]
+fn contract_rejects_double_settle() uses (evm: mut Evm) {
+    let server_seed: u256 = 0x1111222233334444
+    let client_seed: u256 = 0x5555666677778888
+    let dice = evm
+        .create2<FairDice>(
+            value: Wei::zero(),
+            args: (wei(10000), commit_seed(server_seed)),
+            salt: 0,
+        )
+    let player = evm.create2<TestPlayer>(value: Wei::zero(), args: (), salt: 1)
+    evm.call(
+        addr: dice,
+        gas: 2000000,
+        value: wei(50000),
+        message: FairDiceMsg::Fund {},
+    )
+    let _: u256 = evm
+        .call(
+            addr: player,
+            gas: 2000000,
+            value: wei(1000),
+            message: TestPlayerMsg::Bet {
+                dice,
+                target: 49,
+                client_commitment: commit_seed(client_seed),
+            },
+        )
+    evm.call(
+        addr: dice,
+        gas: 2000000,
+        value: Wei::zero(),
+        message: FairDiceMsg::Reveal { bet_id: 1, server_seed, client_seed },
+    )
+    // Second reveal must revert with AlreadySettled
+    evm.call(
+        addr: dice,
+        gas: 2000000,
+        value: Wei::zero(),
+        message: FairDiceMsg::Reveal { bet_id: 1, server_seed, client_seed },
+    )
+}
+
+// Invariant I4: wager must be > 0
+#[test(should_revert, balance = 1000000)]
+#[cfg(target = "evm")]
+fn contract_rejects_zero_wager() uses (evm: mut Evm) {
+    let dice = evm
+        .create2<FairDice>(
+            value: Wei::zero(),
+            args: (wei(10000), commit_seed(1)),
+            salt: 0,
+        )
+    evm.call(
+        addr: dice,
+        gas: 2000000,
+        value: wei(50000),
+        message: FairDiceMsg::Fund {},
+    )
+    let _: u256 = evm
+        .call(
+            addr: dice,
+            gas: 2000000,
+            value: Wei::zero(),
+            message: FairDiceMsg::PlaceBet { target: 49, client_commitment: commit_seed(2) },
+        )
+}
+
+// Invariant I4: target must be in 1..=95
+#[test(should_revert, balance = 1000000)]
+#[cfg(target = "evm")]
+fn contract_rejects_target_out_of_range() uses (evm: mut Evm) {
+    let dice = evm
+        .create2<FairDice>(
+            value: Wei::zero(),
+            args: (wei(10000), commit_seed(1)),
+            salt: 0,
+        )
+    evm.call(
+        addr: dice,
+        gas: 2000000,
+        value: wei(50000),
+        message: FairDiceMsg::Fund {},
+    )
+    let _: u256 = evm
+        .call(
+            addr: dice,
+            gas: 2000000,
+            value: wei(100),
+            message: FairDiceMsg::PlaceBet { target: 96, client_commitment: commit_seed(2) },
+        )
+}
+
+// Invariant I3: contract rejects bets whose max payout exceeds bankroll
+#[test(should_revert, balance = 1000000)]
+#[cfg(target = "evm")]
+fn contract_rejects_insufficient_bankroll() uses (evm: mut Evm) {
+    let dice = evm
+        .create2<FairDice>(
+            value: Wei::zero(),
+            args: (wei(10000), commit_seed(1)),
+            salt: 0,
+        )
+    // No bankroll funded; target=10 -> max payout = 1000 * 98 / 10 = 9800 > 1000
+    let _: u256 = evm
+        .call(
+            addr: dice,
+            gas: 2000000,
+            value: wei(1000),
+            message: FairDiceMsg::PlaceBet { target: 10, client_commitment: commit_seed(2) },
+        )
+}
+
+// Invariant I5: tampered client seed is rejected by commit-reveal check
+#[test(should_revert, balance = 1000000)]
+#[cfg(target = "evm")]
+fn contract_rejects_tampered_client_seed() uses (evm: mut Evm) {
+    let server_seed: u256 = 0x1111
+    let client_seed: u256 = 0x2222
+    let dice = evm
+        .create2<FairDice>(
+            value: Wei::zero(),
+            args: (wei(10000), commit_seed(server_seed)),
+            salt: 0,
+        )
+    let player = evm.create2<TestPlayer>(value: Wei::zero(), args: (), salt: 1)
+    evm.call(
+        addr: dice,
+        gas: 2000000,
+        value: wei(50000),
+        message: FairDiceMsg::Fund {},
+    )
+    let _: u256 = evm
+        .call(
+            addr: player,
+            gas: 2000000,
+            value: wei(1000),
+            message: TestPlayerMsg::Bet {
+                dice,
+                target: 49,
+                client_commitment: commit_seed(client_seed),
+            },
+        )
+    evm.call(
+        addr: dice,
+        gas: 2000000,
+        value: Wei::zero(),
+        message: FairDiceMsg::Reveal { bet_id: 1, server_seed, client_seed: client_seed ^ 1 },
+    )
+}
+
+// Invariant I5: tampered server seed is rejected by commit-reveal check
+#[test(should_revert, balance = 1000000)]
+#[cfg(target = "evm")]
+fn contract_rejects_tampered_server_seed() uses (evm: mut Evm) {
+    let server_seed: u256 = 0x1111
+    let client_seed: u256 = 0x2222
+    let dice = evm
+        .create2<FairDice>(
+            value: Wei::zero(),
+            args: (wei(10000), commit_seed(server_seed)),
+            salt: 0,
+        )
+    let player = evm.create2<TestPlayer>(value: Wei::zero(), args: (), salt: 1)
+    evm.call(
+        addr: dice,
+        gas: 2000000,
+        value: wei(50000),
+        message: FairDiceMsg::Fund {},
+    )
+    let _: u256 = evm
+        .call(
+            addr: player,
+            gas: 2000000,
+            value: wei(1000),
+            message: TestPlayerMsg::Bet {
+                dice,
+                target: 49,
+                client_commitment: commit_seed(client_seed),
+            },
+        )
+    evm.call(
+        addr: dice,
+        gas: 2000000,
+        value: Wei::zero(),
+        message: FairDiceMsg::Reveal { bet_id: 1, server_seed: server_seed ^ 1, client_seed },
+    )
+}
+
+// Anti-stranding refund cannot be triggered before REFUND_DELAY_BLOCKS
+#[test(should_revert, balance = 1000000)]
+#[cfg(target = "evm")]
+fn contract_rejects_early_refund() uses (evm: mut Evm) {
+    let server_seed: u256 = 0x1111
+    let client_seed: u256 = 0x2222
+    let dice = evm
+        .create2<FairDice>(
+            value: Wei::zero(),
+            args: (wei(10000), commit_seed(server_seed)),
+            salt: 0,
+        )
+    let player = evm.create2<TestPlayer>(value: Wei::zero(), args: (), salt: 1)
+    evm.call(
+        addr: dice,
+        gas: 2000000,
+        value: wei(50000),
+        message: FairDiceMsg::Fund {},
+    )
+    let _: u256 = evm
+        .call(
+            addr: player,
+            gas: 2000000,
+            value: wei(1000),
+            message: TestPlayerMsg::Bet {
+                dice,
+                target: 49,
+                client_commitment: commit_seed(client_seed),
+            },
+        )
+    evm.call(
+        addr: dice,
+        gas: 2000000,
+        value: Wei::zero(),
+        message: FairDiceMsg::RefundExpired { bet_id: 1 },
+    )
+}
