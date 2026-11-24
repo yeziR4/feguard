@@ -1,4 +1,10 @@
-out/
+# Build output. Everything is derived, except the two artifacts the demo page
+# loads at runtime: the WASM verifier and the contract ABI. Those are committed
+# deliberately so the hosted demo works from a bare clone, without a Fe toolchain.
+out/*
+!out/feguard.wasm
+!out/FairDice.abi.json
+!out/FairDice.bin
 *.exe
 *.tar.gz
 reports/cohort*-evidence.json
