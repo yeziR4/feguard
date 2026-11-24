@@ -257,9 +257,9 @@ See [SUBMISSION.md](SUBMISSION.md). Final submission for judging has not been pe
 
 ---
 
-## FairDice — Single-Source EVM + WASM Provably-Fair Dice
+## FairDice — Single-Source EVM + WASM Dice Verifier
 
-> **Reference Implementation Notice:** FairDice is an educational reference implementation written in Fe 26.7.0. It is **not audited** and **not production-ready**. Do not deploy it with real funds without an independent security audit.
+> **Reference Implementation & Fairness Scope:** FairDice is an educational reference implementation written in Fe 26.7.0. It is **not audited** and **not production-ready**. In the commit–reveal variant, **the outcome is independently verifiable; whether a bet settles is not yet enforced** (see [reports/finding-fairdice-withholding.md](reports/finding-fairdice-withholding.md) and [reports/fairdice-deployment.md](reports/fairdice-deployment.md)). Do not deploy with real funds.
 
 ### Why this is impossible in Solidity
 

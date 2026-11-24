@@ -102,7 +102,7 @@ async function rpcCall(rpcUrl, method, params) {
   return json.result;
 }
 
-async function fetchBetFromChain(rpcUrl, contract, betId, fromBlock = '0x0') {
+async function fetchBetFromChain(rpcUrl, contract, betId, fromBlock = null) {
   const callData = SELECTOR_GET_BET + padHex32(betId);
   const rawBet = await rpcCall(rpcUrl, 'eth_call', [{ to: contract, data: callData }, 'latest']);
   if (!rawBet || rawBet === '0x') throw new Error('getBet returned empty data');
@@ -114,6 +114,7 @@ async function fetchBetFromChain(rpcUrl, contract, betId, fromBlock = '0x0') {
   const target = hexWord(rawBet, 2);
   const clientCommitment = hexWord(rawBet, 3);
   const serverCommitment = hexWord(rawBet, 4);
+  const placedBlock = hexWord(rawBet, 5);
   const settled = hexWord(rawBet, 6) !== 0n;
   const claimedOutcome = hexWord(rawBet, 7);
   const claimedPayout = hexWord(rawBet, 8);
@@ -122,21 +123,28 @@ async function fetchBetFromChain(rpcUrl, contract, betId, fromBlock = '0x0') {
     throw new Error(`Bet #${betId} is not settled yet on-chain.`);
   }
 
-  const fromHex =
-    typeof fromBlock === 'string' && fromBlock.startsWith('0x')
-      ? fromBlock
-      : '0x' + BigInt(fromBlock).toString(16);
+  const head = BigInt(await rpcCall(rpcUrl, 'eth_blockNumber', []));
+  const startBlock = fromBlock !== null ? BigInt(fromBlock) : placedBlock;
+  const CHUNK = 199n; // Base Sepolia public RPC limits eth_getLogs to a 200-block window
+  let logs = [];
 
-  const logs = await rpcCall(rpcUrl, 'eth_getLogs', [
-    {
-      address: contract,
-      fromBlock: fromHex,
-      toBlock: 'latest',
-      topics: [TOPIC_BET_REVEALED, '0x' + padHex32(betId)],
-    },
-  ]);
+  for (let cursor = startBlock; cursor <= head; cursor += CHUNK + 1n) {
+    const end = cursor + CHUNK > head ? head : cursor + CHUNK;
+    const chunkLogs = await rpcCall(rpcUrl, 'eth_getLogs', [
+      {
+        address: contract,
+        fromBlock: '0x' + cursor.toString(16),
+        toBlock: '0x' + end.toString(16),
+        topics: [TOPIC_BET_REVEALED, '0x' + padHex32(betId)],
+      },
+    ]);
+    if (Array.isArray(chunkLogs) && chunkLogs.length > 0) {
+      logs = chunkLogs;
+      break;
+    }
+  }
 
-  if (!Array.isArray(logs) || logs.length === 0) {
+  if (logs.length === 0) {
     throw new Error(`No BetRevealed log found for bet #${betId} (bet may have been refunded).`);
   }
 
@@ -195,7 +203,7 @@ async function main() {
     if (!opts.contract || !opts['bet-id']) {
       throw new Error('--rpc requires --contract and --bet-id');
     }
-    bet = await fetchBetFromChain(opts.rpc, opts.contract, BigInt(opts['bet-id']), opts['from-block'] ?? '0x0');
+    bet = await fetchBetFromChain(opts.rpc, opts.contract, BigInt(opts['bet-id']), opts['from-block'] ?? null);
   } else {
     bet = {
       betId: opts['bet-id'] ? BigInt(opts['bet-id']) : DEFAULT_BET.betId,

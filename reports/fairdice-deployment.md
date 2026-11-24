@@ -1,0 +1,53 @@
+# FairDice — Base Sepolia Deployment & Live Verification (Task A)
+
+> **Honesty / Status Notice:** This deployment exercises the commit–reveal reference implementation (`src/dice.fe`) live on Base Sepolia (`chainId 84532`). As documented in `reports/finding-fairdice-withholding.md`, the outcome is independently verifiable from the exact same Fe source (`src/outcome.fe` -> EVM + WASM), **but whether a bet settles at all is not yet enforced** in the commit–reveal variant — which is why Bet #2 below was deliberately left unrevealed to test `scripts/watch-abandoned-bets.mjs` live. Not audited; not production-ready.
+
+## Network & Deployed Contract
+
+| Field | Value |
+| --- | --- |
+| Network | Base Sepolia (`chainId 84532`) |
+| RPC | `https://sepolia.base.org` |
+| Compiler | `fe 26.7.0 (e6e6342)` (`--backend sonatina -O 1` / `--backend wasm`) |
+| Deployer (burner) | `0x52Ed5E00bB32786D5c498e390B12DBd0172D0d15` |
+| Contract (`FairDice`) | `0xed5d38e135d7e63ebc6f7dc6ef8d9e2f21ce326b` |
+| Deploy tx | `0xa09faa10d78d01bc1eae547e808a1ca93e3dc8970d4c5e583374be9313c3a4ac` (block `63018025` / `0x3c19429`) |
+| Constructor args | `cap = 1000000000000000` wei (`0.001 ETH`), `initial_server_commitment = 0x14d8edf59db15309b09abfa2969f074885fcf5e05fd221b3cf4c910cccc34297` (`keccak256(uint256(0x1111222233334444))`) |
+| Runtime code size | `11644` hex chars (`5821` bytes) |
+
+## Live Transactions
+
+| Step | Action | Tx Hash | Notes |
+| --- | --- | --- | --- |
+| 1 | Deploy `FairDice` | `0xa09faa10d78d01bc1eae547e808a1ca93e3dc8970d4c5e583374be9313c3a4ac` | `totalBets() == 0` confirmed |
+| 2 | `fund()` (`0.005 ether`) | `0xa0d4c7842c272ba40b5f02a838474263a37473ee862f57e4aefbaba58a82e199` | Funded `0.005 ETH` (preserving balance on the `0.01175 ETH` burner for bets + Task B); `bankroll() == 5000000000000000` |
+| 3 | `placeBet(26, c1Commit)` (`0.0001 ether`) | `0x09fbcf65ee65ec42859d29b761bcd347d07a88ce61cb541b74c8d47a1ba06e52` | Bet #1, `client_seed = 0x5555666677778888`, `c1Commit = 0x9ef60505bf0a8b206036c43400b5dc8b6c964d09e1d61b1a311a7954fd700568` |
+| 4 | `placeBet(49, c2Commit)` (`0.0001 ether`) | `0x942530bae516b542e6212f321c7c793c3650ca459b21039f8646adb825c06af1` | Bet #2 (placed block `63018221`), `client_seed = 0x9999aaaabbbbcccc`, `c2Commit = 0x95a23e2fc01e9367ce534791107f468e8ee7a1a9bee8261459a6d0ebdc15d317` — **deliberately left unrevealed** |
+| 5 | `reveal(1, serverSeed, c1Seed)` | `0x5c42a54fdead36ebb180727bc5e05a00aaf49d8732cc95b3ea490738844e2291` | Outcome `25 < 26` (WIN); paid `376923076923076` wei; `bankroll() == 4823076923076924` |
+
+## Live Tooling Findings & Results
+
+### 1. Live RPC bug caught & fixed in `verify.mjs`
+The first live run of `verify.mjs` against `https://sepolia.base.org` failed with `RPC HTTP 413` (`eth_getLogs is limited to a 200 range`). Fixed `verify.mjs` to start log scanning from `bet.blockNumber` (already stored on-chain in `getBet(betId)`) and paginate in 200-block chunks up to head.
+
+### 2. Reproducible live verification commands
+
+```cmd
+:: Verify Bet #1 against live Base Sepolia state + BetRevealed log using Fe-compiled WASM
+node verify.mjs --rpc https://sepolia.base.org --contract 0xed5d38e135d7e63ebc6f7dc6ef8d9e2f21ce326b --bet-id 1
+:: Output: Verdict: MATCH | Claimed outcome: 25 | Recomputed outcome: 25 (OK) | Claimed payout: 376923076923076 wei (OK) | Commitments valid: YES (exit 0)
+
+:: Deliberately tamper with serverSeed (^ 1) against the same live bet
+node verify.mjs --rpc https://sepolia.base.org --contract 0xed5d38e135d7e63ebc6f7dc6ef8d9e2f21ce326b --bet-id 1 --tamper
+:: Output: Verdict: MISMATCH | Recomputed outcome: 26 (DIFFERS) | Claimed payout: 376923076923076 wei (DIFFERS) | Commitments valid: NO (exit 1)
+
+:: Observer with default 256-block delay (immediately after placing Bet #2, age < 256)
+node scripts/watch-abandoned-bets.mjs --contract 0xed5d38e135d7e63ebc6f7dc6ef8d9e2f21ce326b --rpc https://sepolia.base.org
+:: Output: settled 1, pending (in time) 1 (exit 0)
+
+:: Observer with --delay 2 to test flagging of deliberately unrevealed Bet #2 without waiting 256 blocks
+node scripts/watch-abandoned-bets.mjs --contract 0xed5d38e135d7e63ebc6f7dc6ef8d9e2f21ce326b --rpc https://sepolia.base.org --delay 2
+:: Output: ABANDONED BETS: 1 -> bet 2 placed block 63018221 age 142 (deadline 2) (exit 1)
+```
+
+> Note: The observer truthfully reports that Bet #2 passed the deadline without settling; from on-chain state alone it cannot distinguish which party withheld their preimage.
