@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How It Works — FairDice</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0c0e12;
+      --surface: #13161d;
+      --border: #232836;
+      --text: #eef1f6;
+      --muted: #98a2b3;
+      --dim: #667085;
+      --green: #22c55e;
+      --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 14.5px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: #93c5fd; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    header { border-bottom: 1px solid var(--border); }
+    .nav {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-left { display: flex; align-items: center; gap: 2rem; }
+    .wordmark { font-weight: 700; font-size: 15px; letter-spacing: -0.02em; color: var(--text); }
+    .tabs { display: flex; gap: 1.25rem; }
+    .tabs a {
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--muted);
+      padding: 18px 0;
+      border-bottom: 2px solid transparent;
+    }
+    .tabs a.active { color: var(--text); border-bottom-color: var(--text); }
+    .tabs a:hover { text-decoration: none; color: var(--text); }
+
+    article {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 4.5rem;
+    }
+    h1 {
+      font-size: 28px;
+      letter-spacing: -0.025em;
+      line-height: 1.2;
+      margin: 0 0 0.75rem;
+    }
+    .lead {
+      font-size: 15.5px;
+      color: var(--muted);
+      margin: 0 0 2.5rem;
+    }
+    h2 {
+      font-size: 17px;
+      letter-spacing: -0.01em;
+      margin: 2.5rem 0 0.75rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+    p { margin: 0 0 1rem; color: var(--muted); }
+    p strong { color: var(--text); font-weight: 600; }
+    code {
+      font-family: var(--mono);
+      font-size: 12.5px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 1px 5px;
+      border-radius: 4px;
+      color: var(--text);
+    }
+    pre {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.15rem;
+      overflow-x: auto;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: #d1d9e6;
+      margin: 1rem 0 1.25rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0 1.5rem;
+      font-size: 13px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 9px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    th {
+      background: var(--surface);
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--dim);
+      font-weight: 600;
+    }
+    tr:last-child td { border-bottom: none; }
+    td.mono { font-family: var(--mono); font-size: 12px; }
+    .callout {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--green);
+      border-radius: 6px;
+      padding: 0.9rem 1.1rem;
+      margin: 1.25rem 0;
+      font-size: 13.5px;
+      color: var(--muted);
+    }
+    .callout strong { color: var(--text); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav">
+      <div class="nav-left">
+        <a href="index.html" class="wordmark">FairDice</a>
+        <nav class="tabs">
+          <a href="index.html">Play</a>
+          <a href="about.html" class="active">How It Works</a>
+        </nav>
+      </div>
+      <a href="index.html" style="font-size:13px; color:var(--muted);">← Back to Table</a>
+    </div>
+  </header>
+
+  <article>
+    <h1>Single-Source Provable Fairness in Fe</h1>
+    <p class="lead">
+      FairDice compiles one pure Fe function (<code>src/outcome.fe</code>) to both EVM bytecode on Base Sepolia and a WebAssembly verifier running in your browser.
+    </p>
+
+    <h2>1. Why This Is Impossible in Solidity</h2>
+    <p>
+      Solidity compiles only to EVM bytecode. Every off-chain verifier for a Solidity contract has to re-implement the contract's math in a second language (JavaScript, Python, or Rust), creating a permanent drift risk between what runs on-chain and what the verifier checks.
+    </p>
+    <p>
+      Fe <code>26.7.0</code> compiles the exact same storage-free, context-free module to both targets:
+    </p>
+<pre>src/outcome.fe  (pure Fe: roll, compute_payout, max_payout)
+  ├── fe build --backend sonatina  ──▶  out/FairDice.bin   (Base Sepolia EVM)
+  └── fe build --backend wasm      ──▶  out/feguard.wasm   (Browser + CLI verifier)</pre>
+    <p>
+      When you click <strong>Verify</strong> on the <a href="index.html">Play</a> page, your browser executes the house's own compiled <code>roll()</code> and <code>compute_payout()</code> functions directly in WebAssembly — zero JavaScript re-implementation.
+    </p>
+
+    <h2>2. Payout Formula &amp; House Edge</h2>
+    <p>
+      Players pick a roll-under target between <code>1</code> and <code>95</code>. Outcomes lie uniformly in <code>0..99</code> via <code>keccak_words([entropy_value, client_commitment, bet_id]) % 100</code>. A bet wins when <code>outcome &lt; target</code>, paying <code>floor(wager * 98 / target)</code>. At <code>target = 49</code>, win probability is 49% and payout is an exact <code>2.00x</code>, giving an explicit <strong>2% house edge</strong> (98% RTP before integer wei truncation).
+    </p>
+
+    <h2>3. Why We Replaced Commit–Reveal With Pyth Entropy V2</h2>
+    <p>
+      Our initial commit–reveal deployment (<code>0xed5d38e1…326b</code>) had a structural flaw that we documented against ourselves in <code>reports/finding-fairdice-withholding.md</code>: because only the house held <code>server_seed</code>, the house could decline winning outcomes by staying silent until the 256-block refund window returned only the player's wager. No penalty constant fixes this — a small penalty is cheaper than paying a 98x win, and a max-payout penalty is farmable by the player withholding their own <code>client_seed</code>.
+    </p>
+    <p>
+      The current contract (<code>0xd48ed9b0…c774</code>) eliminates secret server seeds completely by requesting randomness from <strong>Pyth Entropy V2</strong> (<code>0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c</code>). Neither player nor house can withhold the callback, and <code>refundExpired</code> (256 blocks) serves strictly as a provider-failure escape hatch.
+    </p>
+
+    <h2>4. Enforced Invariants</h2>
+    <table>
+      <thead>
+        <tr><th style="width:72px;">ID</th><th>Property</th><th>Enforcement</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="mono">I1</td><td>Single settlement</td><td><code>bet.settled</code> is checked and set before any ETH transfer; replay reverts <code>AlreadySettled</code>.</td></tr>
+        <tr><td class="mono">I2</td><td>Deterministic payout</td><td>Outcome and payout are computed exclusively by shared <code>src/outcome.fe</code>.</td></tr>
+        <tr><td class="mono">I3</td><td>Bankroll solvency</td><td>Both <code>placeBet</code> and <code>_entropyCallback</code> enforce payout ≤ contract ETH balance.</td></tr>
+        <tr><td class="mono">I4</td><td>Bounded inputs</td><td>Wager &gt; 0 (net of Entropy fee) and <code>1 &lt;= target &lt;= 95</code>.</td></tr>
+        <tr><td class="mono">I5</td><td>Caller-gated randomness</td><td>Only the configured Pyth Entropy contract may invoke <code>_entropyCallback</code> (<code>0x52a5f1f8</code>).</td></tr>
+      </tbody>
+    </table>
+
+    <h2>5. Live Base Sepolia Evidence</h2>
+    <table>
+      <thead>
+        <tr><th>Proof</th><th>Details</th><th>BaseScan</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Winning Entropy callback</td>
+          <td>Bet #2 (target &lt; 95) rolled 89; <code>send_value</code> paid exact <code>+103,157,894,736,842 wei</code>. WASM verifier: <code>MATCH</code>.</td>
+          <td class="mono"><a href="https://sepolia.basescan.org/tx/0x67cf64e9758ff50875d897e6cf7f6def998647dba3838ee68da05e26a894ecdb" target="_blank" rel="noopener">0x67cf64…ecdb</a></td>
+        </tr>
+        <tr>
+          <td>Losing Entropy callback</td>
+          <td>Bet #1 (target &lt; 49) rolled 74; settled with <code>payout = 0</code> 10 blocks after <code>placeBet</code>. WASM verifier: <code>MATCH</code>.</td>
+          <td class="mono"><a href="https://sepolia.basescan.org/tx/0xb5bab940a80e54e36f1a6823406d079e3f2457f381e6195a8e3230360a400ac7" target="_blank" rel="noopener">0xb5bab9…0ac7</a></td>
+        </tr>
+        <tr>
+          <td>Post-expiry <code>refundExpired</code></td>
+          <td>Refunded abandoned Bet #2 on legacy contract after 256+ blocks; observer returned 0 abandoned bets.</td>
+          <td class="mono"><a href="https://sepolia.basescan.org/tx/0xf09e098957422672858701649c1c3ace133d69a00473222b325ec62026e66240" target="_blank" rel="noopener">0xf09e09…6240</a></td>
+        </tr>
+        <tr>
+          <td>Pre-expiry <code>NotExpired</code></td>
+          <td>Immediate <code>refundExpired(3)</code> on fresh Bet #3 reverted with exact selector <code>0x7e61955c</code>.</td>
+          <td class="mono"><a href="https://sepolia.basescan.org/tx/0xaa826ab2988c4875c1ced81a96522dba9108d395b4bfb05bf8c4de44bcba9bc7" target="_blank" rel="noopener">0xaa826a…9bc7</a></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <strong>Disclosure &amp; Trust Assumptions:</strong> FairDice is a reference implementation in Fe 26.7.0 — <strong>not audited</strong> and <strong>not production-ready</strong>. Fairness under Pyth Entropy V2 assumes provider liveness and non-collusion with the house or player.
+    </div>
+  </article>
+</body>
+</html>

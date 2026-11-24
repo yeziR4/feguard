@@ -3,1128 +3,599 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FairDice — Provably-Fair Casino Powered by Single-Source Fe (EVM + WASM)</title>
+  <title>FairDice</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #070a0f;
-      --bg-elev: #0e131c;
-      --bg-card: #121925;
-      --bg-inset: #0a0e15;
-      --border: rgba(255, 255, 255, 0.08);
-      --border-hi: rgba(255, 255, 255, 0.16);
-      --text: #f1f5f9;
-      --muted: #8b9bb4;
-      --dim: #5d6c85;
-      --emerald: #10b981;
-      --emerald-glow: rgba(16, 185, 129, 0.25);
-      --emerald-soft: rgba(16, 185, 129, 0.12);
-      --gold: #f59e0b;
-      --gold-soft: rgba(245, 158, 11, 0.14);
-      --crimson: #ef4444;
-      --crimson-soft: rgba(239, 68, 68, 0.14);
-      --blue: #3b82f6;
-      --blue-soft: rgba(59, 130, 246, 0.14);
-      --sans: 'Inter', system-ui, -apple-system, sans-serif;
-      --display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+      --bg: #0c0e12;
+      --surface: #13161d;
+      --surface-2: #191d26;
+      --border: #232836;
+      --border-hi: #32394c;
+      --text: #eef1f6;
+      --muted: #8a94a6;
+      --dim: #5c6578;
+      --green: #16a34a;
+      --green-hi: #22c55e;
+      --green-soft: rgba(34, 197, 94, 0.12);
+      --red: #dc2626;
+      --red-hi: #ef4444;
+      --red-soft: rgba(239, 68, 68, 0.12);
+      --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
     }
 
     * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
     body {
       margin: 0;
-      background:
-        radial-gradient(900px 520px at 15% -10%, rgba(16, 185, 129, 0.14), transparent 65%),
-        radial-gradient(800px 480px at 90% 0%, rgba(245, 158, 11, 0.09), transparent 60%),
-        var(--bg);
+      background: var(--bg);
       color: var(--text);
       font-family: var(--sans);
-      line-height: 1.55;
-      min-height: 100vh;
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
     }
+    a { color: var(--muted); text-decoration: none; }
+    a:hover { color: var(--text); }
 
-    a { color: #60a5fa; text-decoration: none; }
-    a:hover { text-decoration: underline; }
-
-    /* Top Navbar */
-    nav {
-      position: sticky;
-      top: 0;
-      z-index: 40;
-      backdrop-filter: blur(14px);
-      background: rgba(7, 10, 15, 0.82);
+    /* Top bar */
+    header {
       border-bottom: 1px solid var(--border);
+      background: var(--bg);
     }
-    .nav-inner {
-      max-width: 1220px;
+    .nav {
+      max-width: 1080px;
       margin: 0 auto;
-      padding: 0.85rem 1.5rem;
+      padding: 0 1.5rem;
+      height: 56px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
-      flex-wrap: wrap;
     }
-    .brand {
+    .nav-left {
       display: flex;
       align-items: center;
-      gap: 0.7rem;
-      font-family: var(--display);
+      gap: 2rem;
+    }
+    .wordmark {
       font-weight: 700;
-      font-size: 1.25rem;
+      font-size: 15px;
       letter-spacing: -0.02em;
       color: var(--text);
     }
-    .brand-icon {
-      width: 34px;
-      height: 34px;
-      border-radius: 9px;
-      background: linear-gradient(135deg, #10b981, #059669);
-      display: grid;
-      place-items: center;
-      box-shadow: 0 0 24px var(--emerald-glow);
-      font-size: 1.1rem;
-    }
-    .brand-tag {
-      font-family: var(--mono);
-      font-size: 0.7rem;
-      padding: 0.18rem 0.5rem;
-      border-radius: 999px;
-      background: var(--emerald-soft);
-      color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.35);
-      font-weight: 600;
-    }
-    .nav-links {
+    .tabs {
       display: flex;
       align-items: center;
       gap: 1.25rem;
-      font-size: 0.88rem;
+    }
+    .tabs a {
+      font-size: 13.5px;
+      font-weight: 500;
       color: var(--muted);
+      padding: 18px 0;
+      border-bottom: 2px solid transparent;
     }
-    .nav-links a { color: var(--muted); font-weight: 500; }
-    .nav-links a:hover { color: var(--text); text-decoration: none; }
-    .nav-right { display: flex; align-items: center; gap: 0.65rem; }
-
-    .live-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--emerald);
-      box-shadow: 0 0 10px var(--emerald);
-      display: inline-block;
+    .tabs a.active {
+      color: var(--text);
+      border-bottom-color: var(--text);
     }
-    .chip {
-      display: inline-flex; align-items: center; gap: 0.45rem;
-      padding: 0.4rem 0.75rem;
-      border-radius: 999px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      font-size: 0.78rem;
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .net-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       font-family: var(--mono);
+      font-size: 12px;
       color: var(--muted);
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green-hi);
     }
 
-    /* Buttons */
     button {
       font-family: var(--sans);
       font-weight: 600;
-      border: none;
+      font-size: 13px;
+      border-radius: 7px;
       cursor: pointer;
-      transition: all 0.15s ease;
+      transition: background 0.12s ease, border-color 0.12s ease;
     }
     .btn-primary {
-      background: linear-gradient(135deg, #10b981, #059669);
-      color: #03150e;
-      padding: 0.7rem 1.2rem;
-      border-radius: 10px;
-      font-size: 0.92rem;
-      box-shadow: 0 6px 22px rgba(16, 185, 129, 0.25);
+      background: var(--green);
+      color: #fff;
+      border: 1px solid transparent;
+      padding: 10px 14px;
     }
-    .btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-    .btn-gold {
-      background: linear-gradient(135deg, #f59e0b, #d97706);
-      color: #1c1002;
-      padding: 0.7rem 1.2rem;
-      border-radius: 10px;
-      font-size: 0.92rem;
-      box-shadow: 0 6px 22px rgba(245, 158, 11, 0.22);
-    }
-    .btn-gold:hover { filter: brightness(1.08); transform: translateY(-1px); }
-
-    .btn-ghost {
-      background: var(--bg-card);
+    .btn-primary:hover { background: #15803d; }
+    .btn-secondary {
+      background: var(--surface-2);
       color: var(--text);
       border: 1px solid var(--border-hi);
-      padding: 0.5rem 0.9rem;
-      border-radius: 9px;
-      font-size: 0.84rem;
+      padding: 10px 14px;
     }
-    .btn-ghost:hover { background: #192233; border-color: rgba(255,255,255,0.28); }
+    .btn-secondary:hover { background: #222734; }
+    .btn-quiet {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .btn-quiet:hover { border-color: var(--border-hi); background: var(--surface-2); }
 
-    .btn-sm { padding: 0.38rem 0.72rem; font-size: 0.78rem; border-radius: 7px; }
-
-    /* Main Container */
-    .container {
-      max-width: 1220px;
+    /* Main layout */
+    main {
+      max-width: 1080px;
       margin: 0 auto;
-      padding: 2rem 1.5rem 4rem;
+      padding: 1.75rem 1.5rem 2.5rem;
     }
 
-    /* Hero Banner */
-    .hero {
-      text-align: center;
-      max-width: 820px;
-      margin: 0.5rem auto 2.25rem;
-    }
-    .hero-eyebrow {
-      display: inline-flex; align-items: center; gap: 0.5rem;
-      font-family: var(--mono);
-      font-size: 0.76rem;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      color: #34d399;
-      background: var(--emerald-soft);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      padding: 0.3rem 0.8rem;
-      border-radius: 999px;
-      margin-bottom: 1rem;
-    }
-    .hero h1 {
-      font-family: var(--display);
-      font-size: clamp(2rem, 4.2vw, 3.1rem);
-      line-height: 1.1;
-      letter-spacing: -0.03em;
-      margin: 0 0 0.85rem;
-    }
-    .hero h1 span {
-      background: linear-gradient(90deg, #34d399, #fbbf24);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    .hero p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 1.03rem;
-    }
-    .hero p strong { color: var(--text); }
-
-    /* Casino Stage Grid */
-    .stage {
+    /* Casino Game Shell */
+    .game-shell {
       display: grid;
-      grid-template-columns: 1.35fr 0.95fr;
-      gap: 1.25rem;
-      align-items: start;
-      margin-bottom: 2.25rem;
-    }
-    @media (max-width: 960px) {
-      .stage { grid-template-columns: 1fr; }
-    }
-
-    .card {
-      background: linear-gradient(180deg, rgba(22, 31, 46, 0.92), rgba(14, 19, 28, 0.96));
+      grid-template-columns: 320px 1fr;
+      background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 1.4rem 1.5rem;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
-    }
-    .card-title {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.75rem;
-      margin: 0 0 1.1rem;
-    }
-    .card-title h2 {
-      margin: 0;
-      font-family: var(--display);
-      font-size: 1.1rem;
-      letter-spacing: -0.01em;
-    }
-
-    /* Dice Arena Visual */
-    .arena {
-      background: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.1), var(--bg-inset) 70%);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 1.5rem 1.35rem 1.35rem;
-      margin-bottom: 1.25rem;
-      position: relative;
+      border-radius: 12px;
       overflow: hidden;
     }
-    .roll-readout {
+    @media (max-width: 820px) {
+      .game-shell { grid-template-columns: 1fr; }
+    }
+
+    /* Left sidebar: Bet ticket */
+    .ticket {
+      padding: 1.25rem;
+      border-right: 1px solid var(--border);
       display: flex;
-      align-items: center;
-      justify-content: space-between;
+      flex-direction: column;
       gap: 1rem;
-      margin-bottom: 1.25rem;
     }
-    .roll-number-box {
-      display: flex;
-      align-items: baseline;
-      gap: 0.65rem;
-    }
-    .roll-number {
-      font-family: var(--display);
-      font-size: 3.4rem;
-      font-weight: 700;
-      line-height: 1;
-      letter-spacing: -0.04em;
-      min-width: 78px;
-      color: var(--text);
-      transition: color 0.2s ease, text-shadow 0.2s ease;
-    }
-    .roll-number.win { color: #34d399; text-shadow: 0 0 28px rgba(16, 185, 129, 0.55); }
-    .roll-number.loss { color: #f87171; text-shadow: 0 0 28px rgba(239, 68, 68, 0.45); }
-    .roll-caption {
-      font-size: 0.82rem;
-      color: var(--muted);
-    }
-    .roll-caption strong { display: block; color: var(--text); font-size: 0.92rem; }
-    .outcome-pill {
-      font-family: var(--mono);
-      font-size: 0.78rem;
-      font-weight: 700;
-      padding: 0.35rem 0.75rem;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      background: rgba(255,255,255,0.03);
-    }
-    .outcome-pill.win { color: #34d399; background: var(--emerald-soft); border-color: rgba(16, 185, 129, 0.45); }
-    .outcome-pill.loss { color: #f87171; background: var(--crimson-soft); border-color: rgba(239, 68, 68, 0.45); }
-
-    /* Slider Bar */
-    .meter-wrap {
-      position: relative;
-      padding: 1.4rem 0 0.5rem;
-    }
-    .meter-track {
-      height: 14px;
-      border-radius: 999px;
-      background: linear-gradient(90deg, #10b981 0%, #10b981 var(--pct, 49%), #ef4444 var(--pct, 49%), #ef4444 100%);
-      box-shadow: inset 0 1px 3px rgba(0,0,0,0.6);
-      position: relative;
-    }
-    .meter-needle {
-      position: absolute;
-      top: -24px;
-      left: var(--needle, 50%);
-      transform: translateX(-50%);
-      background: var(--text);
-      color: #070a0f;
-      font-family: var(--mono);
-      font-size: 0.72rem;
-      font-weight: 700;
-      padding: 0.12rem 0.42rem;
-      border-radius: 5px;
-      opacity: 0;
-      transition: left 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
-      pointer-events: none;
-    }
-    .meter-needle.visible { opacity: 1; }
-    .meter-needle::after {
-      content: '';
-      position: absolute;
-      left: 50%;
-      bottom: -4px;
-      transform: translateX(-50%);
-      border-left: 4px solid transparent;
-      border-right: 4px solid transparent;
-      border-top: 4px solid var(--text);
-    }
-    input[type="range"].dice-slider {
-      width: 100%;
-      margin-top: -16px;
-      position: relative;
-      z-index: 2;
-      appearance: none;
-      background: transparent;
-      cursor: pointer;
-      height: 20px;
-    }
-    input[type="range"].dice-slider::-webkit-slider-thumb {
-      appearance: none;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: #fff;
-      border: 3px solid #10b981;
-      box-shadow: 0 0 16px rgba(16, 185, 129, 0.65);
-    }
-    .meter-scale {
-      display: flex;
-      justify-content: space-between;
-      font-family: var(--mono);
-      font-size: 0.72rem;
-      color: var(--dim);
-      margin-top: 0.3rem;
+    @media (max-width: 820px) {
+      .ticket { border-right: none; border-bottom: 1px solid var(--border); }
     }
 
-    /* Odds Strip */
-    .odds-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0.65rem;
-      margin-bottom: 1.15rem;
-    }
-    @media (max-width: 600px) {
-      .odds-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-    .metric-box {
-      background: var(--bg-inset);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 0.65rem 0.8rem;
-    }
-    .metric-box label {
-      display: block;
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--muted);
-      margin-bottom: 0.2rem;
-    }
-    .metric-box .val {
-      font-family: var(--mono);
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: var(--text);
-    }
-    .metric-box .val.green { color: #34d399; }
-    .metric-box .val.gold { color: #fbbf24; }
-
-    /* Bet Form Inputs */
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1.35fr;
-      gap: 0.8rem;
-      margin-bottom: 1rem;
-    }
-    @media (max-width: 640px) {
-      .form-row { grid-template-columns: 1fr; }
-    }
     .field label {
       display: flex;
       justify-content: space-between;
-      font-size: 0.74rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      font-size: 12px;
+      font-weight: 500;
       color: var(--muted);
-      margin-bottom: 0.35rem;
+      margin-bottom: 6px;
     }
-    .input-group {
+    .field label span.mono { font-family: var(--mono); font-size: 11px; color: var(--dim); }
+
+    .input-row {
       display: flex;
-      align-items: center;
-      background: var(--bg-inset);
-      border: 1px solid var(--border-hi);
-      border-radius: 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 7px;
       overflow: hidden;
     }
-    .input-group input {
+    .input-row:focus-within { border-color: var(--border-hi); }
+    .input-row input {
       flex: 1;
       min-width: 0;
       background: transparent;
       border: none;
       color: var(--text);
-      padding: 0.62rem 0.75rem;
       font-family: var(--mono);
-      font-size: 0.86rem;
+      font-size: 13px;
+      padding: 9px 10px;
       outline: none;
     }
-    .input-group button {
-      background: rgba(255,255,255,0.05);
-      color: var(--muted);
-      padding: 0.62rem 0.65rem;
-      font-family: var(--mono);
-      font-size: 0.74rem;
+    .input-row button {
+      border: none;
       border-left: 1px solid var(--border);
-    }
-    .input-group button:hover { color: var(--text); background: rgba(255,255,255,0.1); }
-
-    .cta-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
-    }
-    @media (max-width: 560px) {
-      .cta-row { grid-template-columns: 1fr; }
-    }
-    .play-status {
-      margin-top: 0.85rem;
-      padding: 0.6rem 0.8rem;
-      border-radius: 9px;
-      background: var(--bg-inset);
-      border: 1px solid var(--border);
+      border-radius: 0;
+      background: transparent;
+      color: var(--muted);
       font-family: var(--mono);
-      font-size: 0.78rem;
-      color: var(--muted);
-      min-height: 2.3rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.5rem;
-      flex-wrap: wrap;
+      font-size: 11px;
+      padding: 0 9px;
     }
+    .input-row button:hover { background: var(--surface-2); color: var(--text); }
 
-    /* Right Panel: Telemetry & Tamper Lab */
-    .telemetry-list {
+    .actions {
       display: grid;
-      gap: 0.6rem;
-      margin-bottom: 1.15rem;
+      gap: 8px;
+      margin-top: 2px;
     }
-    .telemetry-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.55rem 0.8rem;
-      background: var(--bg-inset);
-      border: 1px solid var(--border);
-      border-radius: 9px;
-      font-size: 0.84rem;
+    .ticket-note {
+      font-size: 11.5px;
+      color: var(--dim);
+      font-family: var(--mono);
+      line-height: 1.45;
+      min-height: 32px;
     }
-    .telemetry-item span:first-child { color: var(--muted); }
-    .telemetry-item strong { font-family: var(--mono); font-size: 0.82rem; color: var(--text); }
 
-    .tamper-card {
-      border-radius: 12px;
-      padding: 1rem 1.1rem;
-      background: rgba(239, 68, 68, 0.06);
-      border: 1px solid rgba(239, 68, 68, 0.25);
-      transition: all 0.2s ease;
-    }
-    .tamper-card.active {
-      background: rgba(239, 68, 68, 0.14);
-      border-color: rgba(239, 68, 68, 0.65);
-      box-shadow: 0 0 24px rgba(239, 68, 68, 0.16);
-    }
-    .tamper-head {
+    /* Right stage: Dice board */
+    .stage {
+      padding: 1.5rem 1.75rem;
       display: flex;
-      align-items: center;
+      flex-direction: column;
       justify-content: space-between;
-      gap: 0.75rem;
-      margin-bottom: 0.4rem;
+      gap: 1.5rem;
+      background: var(--bg);
     }
-    .tamper-head strong {
-      font-size: 0.9rem;
-      color: #fca5a5;
-    }
-    .tamper-card p {
-      margin: 0;
-      font-size: 0.8rem;
+    .stage-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
       color: var(--muted);
+      font-family: var(--mono);
     }
 
-    /* Toggle Switch */
-    .switch {
+    .readout {
+      text-align: center;
+      padding: 1.25rem 0 0.5rem;
+    }
+    .roll-num {
+      font-family: var(--mono);
+      font-size: 64px;
+      font-weight: 600;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      color: var(--text);
+    }
+    .roll-num.win { color: var(--green-hi); }
+    .roll-num.loss { color: var(--red-hi); }
+    .roll-sub {
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+
+    /* Clean slider track */
+    .slider-area {
+      padding: 22px 4px 4px;
       position: relative;
-      display: inline-block;
-      width: 46px;
-      height: 25px;
-      flex-shrink: 0;
     }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .slider-sw {
-      position: absolute; inset: 0;
-      background: #273244;
+    .track {
+      height: 10px;
       border-radius: 999px;
-      cursor: pointer;
-      transition: 0.2s;
+      background: linear-gradient(90deg, var(--green) 0%, var(--green) var(--pct, 49%), #3a1f24 var(--pct, 49%), #3a1f24 100%);
+      position: relative;
     }
-    .slider-sw::before {
-      content: '';
+    .needle {
       position: absolute;
-      width: 19px; height: 19px;
-      left: 3px; top: 3px;
-      background: #fff;
-      border-radius: 50%;
-      transition: 0.2s;
+      top: -26px;
+      left: var(--needle, 49%);
+      transform: translateX(-50%);
+      background: var(--text);
+      color: var(--bg);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      opacity: 0;
+      transition: left 0.3s ease, opacity 0.15s ease;
     }
-    .switch input:checked + .slider-sw { background: var(--crimson); }
-    .switch input:checked + .slider-sw::before { transform: translateX(21px); }
-
-    /* Live Bet History Table */
-    .section-head {
+    .needle.show { opacity: 1; }
+    input[type="range"].range {
+      width: 100%;
+      margin-top: -13px;
+      position: relative;
+      z-index: 2;
+      appearance: none;
+      background: transparent;
+      cursor: pointer;
+    }
+    input[type="range"].range::-webkit-slider-thumb {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      border: 2px solid var(--bg);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.6);
+    }
+    .scale {
       display: flex;
-      align-items: flex-end;
+      justify-content: space-between;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--dim);
+      margin-top: 6px;
+    }
+
+    /* Odds strip */
+    .odds {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      overflow: hidden;
+    }
+    .odds-cell {
+      padding: 10px 14px;
+      border-right: 1px solid var(--border);
+    }
+    .odds-cell:last-child { border-right: none; }
+    .odds-cell .k {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+    .odds-cell .v {
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* Recent bets table */
+    .bets-section {
+      margin-top: 1.75rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .bets-header {
+      padding: 0.9rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
       justify-content: space-between;
       gap: 1rem;
       flex-wrap: wrap;
-      margin: 2.5rem 0 1rem;
     }
-    .section-head h2 {
-      font-family: var(--display);
-      font-size: 1.5rem;
+    .bets-header h2 {
       margin: 0;
-      letter-spacing: -0.02em;
+      font-size: 14px;
+      font-weight: 600;
     }
-    .section-head p { margin: 0.2rem 0 0; color: var(--muted); font-size: 0.9rem; }
+    .bets-tools {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .tamper-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      color: var(--muted);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+    }
+    .tamper-toggle.on {
+      border-color: rgba(239, 68, 68, 0.55);
+      background: var(--red-soft);
+      color: #fca5a5;
+    }
+    .tamper-toggle input { accent-color: var(--red-hi); margin: 0; cursor: pointer; }
 
     .table-wrap { overflow-x: auto; }
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.87rem;
+      font-size: 13px;
     }
     th, td {
-      padding: 0.8rem 0.75rem;
+      padding: 10px 16px;
       text-align: left;
       border-bottom: 1px solid var(--border);
-      vertical-align: middle;
     }
     th {
-      font-size: 0.72rem;
+      font-size: 11px;
+      font-weight: 500;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--muted);
-      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--dim);
+      background: rgba(255,255,255,0.01);
     }
     tr:last-child td { border-bottom: none; }
-    td.mono { font-family: var(--mono); font-size: 0.81rem; }
+    td.mono { font-family: var(--mono); font-size: 12.5px; }
 
-    .badge {
-      display: inline-flex; align-items: center; gap: 0.3rem;
-      padding: 0.22rem 0.58rem;
-      border-radius: 6px;
+    .tag {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 5px;
       font-family: var(--mono);
-      font-size: 0.74rem;
-      font-weight: 700;
+      font-size: 11.5px;
+      font-weight: 600;
     }
-    .badge.win { background: var(--emerald-soft); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); }
-    .badge.loss { background: rgba(148, 163, 184, 0.1); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.22); }
-    .badge.match { background: var(--emerald-soft); color: #34d399; border: 1px solid #10b981; }
-    .badge.mismatch { background: var(--crimson-soft); color: #f87171; border: 1px solid #ef4444; }
-    .badge.pending { background: var(--gold-soft); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
-    .verify-detail {
-      display: block;
-      margin-top: 0.25rem;
+    .tag.win { background: var(--green-soft); color: var(--green-hi); }
+    .tag.loss { background: rgba(255,255,255,0.05); color: var(--muted); }
+    .tag.match { background: var(--green-soft); color: var(--green-hi); }
+    .tag.mismatch { background: var(--red-soft); color: var(--red-hi); }
+    .tag.pending { background: rgba(245,158,11,0.12); color: #fbbf24; }
+    .sub-proof {
+      margin-left: 8px;
       font-family: var(--mono);
-      font-size: 0.73rem;
-      color: var(--muted);
+      font-size: 11.5px;
+      color: var(--dim);
     }
 
-    /* Custom RPC Collapsible */
-    details.rpc-drawer {
-      margin-top: 0.9rem;
-      border-top: 1px solid var(--border);
-      padding-top: 0.85rem;
-    }
-    details.rpc-drawer summary {
-      cursor: pointer;
-      font-size: 0.82rem;
-      color: var(--muted);
-      font-weight: 500;
-      user-select: none;
-    }
-    .rpc-controls {
-      display: grid;
-      grid-template-columns: 1.4fr 1.6fr auto;
-      gap: 0.65rem;
-      margin-top: 0.75rem;
-      align-items: end;
-    }
-    @media (max-width: 760px) {
-      .rpc-controls { grid-template-columns: 1fr; }
-    }
-    .rpc-controls input {
-      width: 100%;
-      background: var(--bg-inset);
-      border: 1px solid var(--border-hi);
-      color: var(--text);
-      padding: 0.52rem 0.7rem;
-      border-radius: 8px;
-      font-family: var(--mono);
-      font-size: 0.8rem;
-    }
-
-    /* Explainer / Architecture Section */
-    .arch-diagram {
-      display: grid;
-      grid-template-columns: 1fr auto 1.25fr;
-      gap: 1rem;
-      align-items: center;
-      margin: 1.25rem 0 1.5rem;
-    }
-    @media (max-width: 820px) {
-      .arch-diagram { grid-template-columns: 1fr; }
-      .arch-arrow { transform: rotate(90deg); justify-self: center; }
-    }
-    .arch-box {
-      background: var(--bg-inset);
-      border: 1px solid var(--border-hi);
-      border-radius: 12px;
-      padding: 1.1rem 1.2rem;
-    }
-    .arch-box.source {
-      border-color: rgba(16, 185, 129, 0.5);
-      box-shadow: 0 0 30px rgba(16, 185, 129, 0.1);
-    }
-    .arch-box h3 {
-      margin: 0 0 0.35rem;
-      font-family: var(--display);
-      font-size: 1rem;
-    }
-    .arch-box code {
-      font-family: var(--mono);
-      font-size: 0.78rem;
-      color: #34d399;
-    }
-    .arch-box p { margin: 0.4rem 0 0; font-size: 0.84rem; color: var(--muted); }
-    .arch-arrow {
-      font-family: var(--mono);
-      font-size: 1.4rem;
-      color: var(--emerald);
-      font-weight: 700;
-    }
-    .arch-targets { display: grid; gap: 0.85rem; }
-
-    .compare-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-    @media (max-width: 760px) {
-      .compare-grid { grid-template-columns: 1fr; }
-    }
-    .compare-card {
-      border-radius: 12px;
-      padding: 1.15rem 1.25rem;
-      border: 1px solid var(--border);
-      background: var(--bg-inset);
-    }
-    .compare-card.bad { border-color: rgba(239, 68, 68, 0.3); }
-    .compare-card.good { border-color: rgba(16, 185, 129, 0.4); }
-    .compare-card h3 { margin: 0 0 0.5rem; font-family: var(--display); font-size: 1rem; }
-    .compare-card ul { margin: 0; padding-left: 1.15rem; color: var(--muted); font-size: 0.86rem; }
-    .compare-card li { margin-bottom: 0.35rem; }
-
-    .inv-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 0.75rem;
-      margin-top: 1rem;
-    }
-    @media (max-width: 960px) {
-      .inv-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-    @media (max-width: 520px) {
-      .inv-grid { grid-template-columns: 1fr; }
-    }
-    .inv-card {
-      background: var(--bg-inset);
-      border: 1px solid var(--border);
-      border-radius: 11px;
-      padding: 0.9rem;
-    }
-    .inv-tag {
-      font-family: var(--mono);
-      font-size: 0.72rem;
-      font-weight: 700;
-      color: #34d399;
-      margin-bottom: 0.3rem;
-    }
-    .inv-card strong { display: block; font-size: 0.86rem; margin-bottom: 0.25rem; }
-    .inv-card p { margin: 0; font-size: 0.78rem; color: var(--muted); }
-
-    .proof-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0.85rem;
-      margin-top: 1rem;
-    }
-    @media (max-width: 760px) {
-      .proof-grid { grid-template-columns: 1fr; }
-    }
-    .proof-item {
-      background: var(--bg-inset);
-      border: 1px solid var(--border);
-      border-radius: 11px;
-      padding: 0.9rem 1rem;
-      font-size: 0.83rem;
-    }
-    .proof-item strong { display: block; margin-bottom: 0.25rem; color: var(--text); }
-    .proof-item p { margin: 0 0 0.45rem; color: var(--muted); }
-    .proof-item code { font-family: var(--mono); font-size: 0.75rem; color: #93c5fd; word-break: break-all; }
-
+    /* Minimal footer */
     footer {
-      margin-top: 3rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid var(--border);
-      color: var(--muted);
-      font-size: 0.82rem;
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 1.5rem 2.5rem;
       display: flex;
       justify-content: space-between;
-      gap: 1.25rem;
+      align-items: center;
+      gap: 1rem;
       flex-wrap: wrap;
+      font-size: 12px;
+      color: var(--dim);
     }
+    footer .mono { font-family: var(--mono); }
   </style>
 </head>
 <body>
-  <nav>
-    <div class="nav-inner">
-      <div class="brand">
-        <div class="brand-icon">🎲</div>
-        <span>FairDice</span>
-        <span class="brand-tag">Fe 26.7.0 · EVM + WASM</span>
-      </div>
-      <div class="nav-links">
-        <a href="#play">Play</a>
-        <a href="#bets">Live Bets</a>
-        <a href="#how-it-works">Why Not Solidity</a>
-        <a href="#evidence">On-Chain Proofs</a>
+  <header>
+    <div class="nav">
+      <div class="nav-left">
+        <a href="index.html" class="wordmark">FairDice</a>
+        <nav class="tabs">
+          <a href="index.html" class="active">Play</a>
+          <a href="about.html">How It Works</a>
+        </nav>
       </div>
       <div class="nav-right">
-        <span class="chip"><span class="live-dot"></span> Base Sepolia</span>
-        <button id="connectBtn" class="btn-ghost btn-sm">Connect Wallet</button>
+        <span class="net-pill"><span class="dot"></span>Base Sepolia</span>
+        <button id="connectBtn" class="btn-quiet">Connect Wallet</button>
       </div>
     </div>
-  </nav>
+  </header>
 
-  <main class="container">
-    <!-- Hero -->
-    <section class="hero">
-      <div class="hero-eyebrow">One Fe Source · Two Compiled Targets · Zero Drift</div>
-      <h1>The Casino Whose Own Code <span>Proves Every Roll</span></h1>
-      <p>
-        <strong>The verifier runs the exact same Fe source that produced the on-chain result.</strong>
-        <code>src/outcome.fe</code> compiles verbatim into Base Sepolia EVM bytecode and into the browser WASM module running on this page — backed by Pyth Entropy V2 so neither house nor player can withhold randomness.
-      </p>
-    </section>
-
-    <!-- Playable Casino Stage -->
-    <section id="play" class="stage">
-      <!-- Left: Dice Table -->
-      <div class="card">
-        <div class="card-title">
-          <h2>High-Stakes Dice Table</h2>
-          <span class="chip" id="wasmChip">WASM: loading…</span>
-        </div>
-
-        <div class="arena">
-          <div class="roll-readout">
-            <div class="roll-number-box">
-              <div class="roll-number" id="rollDisplay">--</div>
-              <div class="roll-caption">
-                <strong id="rollSubtitle">Roll Under 49 to Win</strong>
-                <span id="rollSubDetail">Outcome range 00–99 · Explicit 2% house edge</span>
-              </div>
-            </div>
-            <div class="outcome-pill" id="outcomePill">READY</div>
-          </div>
-
-          <div class="meter-wrap">
-            <div class="meter-needle" id="meterNeedle">49</div>
-            <div class="meter-track" id="meterTrack" style="--pct: 49%;"></div>
-            <input type="range" min="1" max="95" value="49" id="targetSlider" class="dice-slider" />
-            <div class="meter-scale">
-              <span>0</span><span>25</span><span>50</span><span>75</span><span>99</span>
-            </div>
+  <main>
+    <section class="game-shell">
+      <!-- Bet Ticket -->
+      <div class="ticket">
+        <div class="field">
+          <label><span>Wager (ETH)</span><span class="mono" id="capHint">Max 0.001</span></label>
+          <div class="input-row">
+            <input id="wagerInput" type="text" value="0.0001" />
+            <button type="button" id="halfBtn">½</button>
+            <button type="button" id="doubleBtn">2×</button>
+            <button type="button" id="maxBtn">Max</button>
           </div>
         </div>
 
-        <div class="odds-grid">
-          <div class="metric-box">
-            <label>Roll Under</label>
-            <div class="val" id="metricTarget">&lt; 49</div>
-          </div>
-          <div class="metric-box">
-            <label>Win Chance</label>
-            <div class="val green" id="metricChance">49%</div>
-          </div>
-          <div class="metric-box">
-            <label>Multiplier</label>
-            <div class="val gold" id="metricMult">2.000x</div>
-          </div>
-          <div class="metric-box">
-            <label>Payout on Win</label>
-            <div class="val green" id="metricPayout">0.000200 ETH</div>
+        <div class="field">
+          <label><span>Roll Under</span><span class="mono">1 – 95</span></label>
+          <div class="input-row">
+            <input id="targetInput" type="number" min="1" max="95" value="49" />
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="field">
-            <label><span>Wager (ETH)</span><span id="capHint">Cap: 0.001 ETH</span></label>
-            <div class="input-group">
-              <input id="wagerInput" type="text" value="0.0001" />
-              <button type="button" id="halfBtn">½</button>
-              <button type="button" id="doubleBtn">2×</button>
-              <button type="button" id="maxBtn">MAX</button>
-            </div>
-          </div>
-          <div class="field">
-            <label><span>Client Seed (u256)</span><span>Used in roll()</span></label>
-            <div class="input-group">
-              <input id="seedInput" type="text" value="0x5833d3efef98dbf3b2d7f042391407718a2b9dc1a47375ded677d612736e604a" />
-              <button type="button" id="randSeedBtn">🎲 New</button>
-            </div>
+        <div class="field">
+          <label><span>Client Seed</span><span class="mono">u256</span></label>
+          <div class="input-row">
+            <input id="seedInput" type="text" value="0x5833d3efef98dbf3b2d7f042391407718a2b9dc1a47375ded677d612736e604a" />
+            <button type="button" id="randSeedBtn">Rotate</button>
           </div>
         </div>
 
-        <div class="cta-row">
-          <button id="playChainBtn" class="btn-primary">Place Live Bet on Base Sepolia</button>
-          <button id="playWasmBtn" class="btn-gold">Instant Roll in Fe WASM (Free)</button>
+        <div class="actions">
+          <button id="playChainBtn" class="btn-primary">Place Bet on Base Sepolia</button>
+          <button id="playWasmBtn" class="btn-secondary">Simulate Roll in Fe WASM</button>
         </div>
 
-        <div class="play-status" id="playStatus">
-          <span>Tip: Try <strong>Instant Roll in Fe WASM</strong> right now, or connect MetaMask on Base Sepolia to roll with live Pyth Entropy V2.</span>
+        <div class="ticket-note" id="playStatus">
+          Pyth Entropy V2 fee: <span id="feeStat">0.000015 ETH</span> · 2% house edge.
         </div>
       </div>
 
-      <!-- Right: Live Contract Telemetry + Tamper Lab -->
-      <div class="card">
-        <div class="card-title">
-          <h2>Live On-Chain Telemetry</h2>
-          <a id="basescanLink" href="https://sepolia.basescan.org/address/0xd48ed9b0ad9660dd1c21964aab5468081968c774" target="_blank" rel="noopener" class="btn-ghost btn-sm">BaseScan ↗</a>
+      <!-- Dice Board -->
+      <div class="stage">
+        <div class="stage-top">
+          <span>Bankroll: <strong id="bankrollStat" style="color:var(--text);">loading…</strong></span>
+          <span id="wasmStat">WASM: loading…</span>
         </div>
 
-        <div class="telemetry-list">
-          <div class="telemetry-item">
-            <span>Contract (Entropy V2)</span>
-            <strong id="contractShort">0xd48ed9…68c774</strong>
-          </div>
-          <div class="telemetry-item">
-            <span>Pyth Entropy Proxy</span>
-            <strong><a href="https://sepolia.basescan.org/address/0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c" target="_blank" rel="noopener">0x41c9e3…830d4c ↗</a></strong>
-          </div>
-          <div class="telemetry-item">
-            <span>House Bankroll</span>
-            <strong id="bankrollStat">loading…</strong>
-          </div>
-          <div class="telemetry-item">
-            <span>House Max Wager Cap</span>
-            <strong id="capStat">loading…</strong>
-          </div>
-          <div class="telemetry-item">
-            <span>Total On-Chain Bets</span>
-            <strong id="totalStat">loading…</strong>
-          </div>
-          <div class="telemetry-item">
-            <span>Pyth Entropy V2 Fee</span>
-            <strong id="feeStat">0.000015 ETH</strong>
+        <div class="readout">
+          <div class="roll-num" id="rollDisplay">--</div>
+          <div class="roll-sub" id="rollSub">Roll under 49 to win</div>
+        </div>
+
+        <div class="slider-area">
+          <div class="needle" id="needle">49</div>
+          <div class="track" id="track" style="--pct: 49%;"></div>
+          <input id="targetSlider" class="range" type="range" min="1" max="95" value="49" />
+          <div class="scale">
+            <span>0</span><span>25</span><span>50</span><span>75</span><span>99</span>
           </div>
         </div>
 
-        <div class="tamper-card" id="tamperCard">
-          <div class="tamper-head">
-            <strong>⚠ TAMPER LAB — Corrupt Seed Before Verify</strong>
-            <label class="switch" title="Flips bit 0 of the entropy seed (XOR 1) before calling Fe WASM">
-              <input type="checkbox" id="tamperToggle" />
-              <span class="slider-sw"></span>
-            </label>
+        <div class="odds">
+          <div class="odds-cell">
+            <div class="k">Multiplier</div>
+            <div class="v" id="metricMult">2.000x</div>
           </div>
-          <p>
-            Flip this switch ON, then click <strong>VERIFY</strong> on any bet below. It mutates the randomness by 1 bit (<code>seed ^ 1</code>) so you can watch the Fe WASM verifier catch a rigged result in real time.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Live On-Chain Bet Feed -->
-    <section id="bets">
-      <div class="section-head">
-        <div>
-          <h2>Live Base Sepolia Bets &amp; Client-Side WASM Verifier</h2>
-          <p>Every row below is read directly from Base Sepolia and recomputed locally in your browser using <code>out/feguard.wasm</code>.</p>
-        </div>
-        <div style="display:flex; gap:0.55rem; flex-wrap:wrap;">
-          <button id="verifyAllBtn" class="btn-primary btn-sm">Verify All Rows in WASM</button>
-          <button id="refreshBtn" class="btn-ghost btn-sm">↻ Refresh Chain</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Bet</th>
-                <th>Player</th>
-                <th>Wager</th>
-                <th>Target</th>
-                <th>Result</th>
-                <th>Payout</th>
-                <th>Fe WASM Proof</th>
-              </tr>
-            </thead>
-            <tbody id="betsBody">
-              <tr><td colspan="7" style="text-align:center; color:var(--muted); padding:2rem;">Loading live Base Sepolia bets…</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <details class="rpc-drawer">
-          <summary>Advanced: Switch Contract / RPC Endpoint (e.g., inspect legacy commit–reveal deployment)</summary>
-          <div class="rpc-controls">
-            <div>
-              <label style="display:block;font-size:0.72rem;color:var(--muted);margin-bottom:0.25rem;">JSON-RPC URL</label>
-              <input id="rpcInput" type="text" value="https://sepolia.base.org" />
-            </div>
-            <div>
-              <label style="display:block;font-size:0.72rem;color:var(--muted);margin-bottom:0.25rem;">Contract Address</label>
-              <input id="contractInput" type="text" value="0xd48ed9b0ad9660dd1c21964aab5468081968c774" />
-            </div>
-            <div style="display:flex;gap:0.45rem;">
-              <button id="loadChainBtn" class="btn-primary btn-sm">Load</button>
-              <button id="loadLegacyBtn" class="btn-ghost btn-sm" title="Load Task A commit-reveal contract">Legacy CR</button>
-            </div>
+          <div class="odds-cell">
+            <div class="k">Win Chance</div>
+            <div class="v" id="metricChance">49%</div>
           </div>
-          <div style="margin-top:0.55rem; font-family:var(--mono); font-size:0.76rem; color:var(--muted);" id="statusBar">Connected to Base Sepolia.</div>
-        </details>
-      </div>
-    </section>
-
-    <!-- How It Works & Why Impossible in Solidity -->
-    <section id="how-it-works">
-      <div class="section-head">
-        <div>
-          <h2>Why This Is Impossible in Solidity</h2>
-          <p>Solidity only targets EVM bytecode. Fe 26.7.0 compiles the same pure function to EVM and WebAssembly.</p>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="arch-diagram">
-          <div class="arch-box source">
-            <h3>Single Source of Truth</h3>
-            <code>src/outcome.fe</code>
-            <p>
-              Pure, storage-free, context-free <code>roll(server_seed, client_seed, bet_id)</code> and <code>compute_payout(wager, target, outcome)</code> using <code>core::hash::keccak_words</code>.
-            </p>
-          </div>
-          <div class="arch-arrow">──▶</div>
-          <div class="arch-targets">
-            <div class="arch-box">
-              <h3>Target A: On-Chain EVM (<code>--backend sonatina</code>)</h3>
-              <code>out/FairDice.bin</code> → Base Sepolia <code>0xd48ed9…c774</code>
-              <p>Holds ETH bankroll, requests Pyth Entropy V2, and pays winners inside <code>_entropyCallback</code>.</p>
-            </div>
-            <div class="arch-box">
-              <h3>Target B: Browser &amp; CLI WASM (<code>--backend wasm</code>)</h3>
-              <code>out/feguard.wasm</code> → Loaded in this page &amp; <code>verify.mjs</code>
-              <p>Players independently recompute the exact house code off-chain — zero JS re-implementation, zero drift.</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="compare-grid">
-          <div class="compare-card bad">
-            <h3 style="color:#f87171;">✕ Traditional Solidity Casino</h3>
-            <ul>
-              <li>Solidity compiles <strong>only</strong> to EVM bytecode.</li>
-              <li>Off-chain verifier must be rewritten in JavaScript, Python, or Rust.</li>
-              <li>Subtle packing, overflow, or rounding differences can silently diverge from on-chain execution.</li>
-              <li>Players trust that the website's JS matches the contract's Solidity.</li>
-            </ul>
-          </div>
-          <div class="compare-card good">
-            <h3 style="color:#34d399;">✓ FairDice in Fe 26.7.0</h3>
-            <ul>
-              <li><code>src/outcome.fe</code> compiles directly to <strong>both</strong> EVM bytecode and WebAssembly.</li>
-              <li>The browser runs the house's own compiled code via <code>fg_verify_bet</code>.</li>
-              <li>Cross-target equivalence is tested in CI (<code>roll(0x1111..., 0x5555..., 1) == 25</code> on both EVM &amp; WASM).</li>
-              <li>Pyth Entropy V2 eliminates selective-abort withholding by either party.</li>
-            </ul>
-          </div>
-        </div>
-
-        <h3 style="font-family:var(--display); margin:0.25rem 0 0.25rem; font-size:1.05rem;">5 Enforced On-Chain Invariants</h3>
-        <div class="inv-grid">
-          <div class="inv-card">
-            <div class="inv-tag">INVARIANT I1</div>
-            <strong>Single Settlement</strong>
-            <p><code>bet.settled</code> is flipped before any ETH transfer; replay reverts <code>AlreadySettled</code>.</p>
-          </div>
-          <div class="inv-card">
-            <div class="inv-tag">INVARIANT I2</div>
-            <strong>Deterministic Payout</strong>
-            <p>Outcome &amp; payout come solely from shared <code>src/outcome.fe</code> (explicit 2% house edge).</p>
-          </div>
-          <div class="inv-card">
-            <div class="inv-tag">INVARIANT I3</div>
-            <strong>Strict Solvency</strong>
-            <p>Both <code>placeBet</code> and settlement assert payout ≤ contract ETH balance.</p>
-          </div>
-          <div class="inv-card">
-            <div class="inv-tag">INVARIANT I4</div>
-            <strong>Bounded Inputs</strong>
-            <p>Wager &gt; 0 (after Entropy fee) and target ∈ <code>1..=95</code>.</p>
-          </div>
-          <div class="inv-card">
-            <div class="inv-tag">INVARIANT I5</div>
-            <strong>No Withholding</strong>
-            <p>Pyth Entropy V2 callback is caller-gated; 256-block <code>refundExpired</code> protects against provider failure.</p>
+          <div class="odds-cell">
+            <div class="k">Payout on Win</div>
+            <div class="v" id="metricPayout">0.000200 ETH</div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Evidence-Gated Engineering Story -->
-    <section id="evidence">
-      <div class="section-head">
-        <div>
-          <h2>Evidence-Gated Engineering: Live Base Sepolia Proofs</h2>
-          <p>We didn't just ship v1 — we proved a selective-abort flaw in our own commit–reveal design, built an observer to catch it live, and fixed it with Pyth Entropy V2.</p>
+    <!-- Live On-Chain Bets -->
+    <section class="bets-section">
+      <div class="bets-header">
+        <h2>Recent Bets <span style="color:var(--dim); font-weight:400; font-family:var(--mono); font-size:12px;" id="totalStat"></span></h2>
+        <div class="bets-tools">
+          <label class="tamper-toggle" id="tamperLabel" title="Corrupts entropy seed (XOR 1) before WASM verification">
+            <input type="checkbox" id="tamperToggle" />
+            <span>Tamper seed</span>
+          </label>
+          <button id="verifyAllBtn" class="btn-quiet">Verify All</button>
+          <button id="refreshBtn" class="btn-quiet">Refresh</button>
         </div>
       </div>
 
-      <div class="card">
-        <div class="proof-grid">
-          <div class="proof-item">
-            <strong>1. Live Winning Payout Inside <code>_entropyCallback</code></strong>
-            <p>Bet #2 (target &lt; 95) rolled <strong>89</strong> via Pyth keeper; player balance increased by exact <code>+103,157,894,736,842 wei</code> (0.00010316 ETH) in one block. WASM verifier: <code>MATCH</code>.</p>
-            <code><a href="https://sepolia.basescan.org/tx/0x67cf64e9758ff50875d897e6cf7f6def998647dba3838ee68da05e26a894ecdb" target="_blank" rel="noopener">tx 0x67cf64e9…4ecdb ↗</a></code>
-          </div>
-          <div class="proof-item">
-            <strong>2. Live Losing Callback Settlement</strong>
-            <p>Bet #1 (target &lt; 49) rolled <strong>74</strong> via Pyth keeper 10 blocks after <code>placeBet</code>; settled with <code>payout = 0</code>. WASM verifier: <code>MATCH</code> (<code>--tamper</code> → <code>MISMATCH</code>).</p>
-            <code><a href="https://sepolia.basescan.org/tx/0xb5bab940a80e54e36f1a6823406d079e3f2457f381e6195a8e3230360a400ac7" target="_blank" rel="noopener">tx 0xb5bab940…0ac7 ↗</a></code>
-          </div>
-          <div class="proof-item">
-            <strong>3. Self-Reported Withholding Flaw + Live Observer</strong>
-            <p>In commit–reveal, a house can silently withhold winning preimages. Our observer (<code>watch-abandoned-bets.mjs</code>) caught deliberately unrevealed Bet #2 live on <code>0xed5d38e1…</code>.</p>
-            <code><a href="https://sepolia.basescan.org/address/0xed5d38e135d7e63ebc6f7dc6ef8d9e2f21ce326b" target="_blank" rel="noopener">legacy 0xed5d38e1…326b ↗</a></code>
-          </div>
-          <div class="proof-item">
-            <strong>4. Live Anti-Stranding <code>refundExpired</code> + <code>NotExpired</code></strong>
-            <p>After 256+ blocks, permissionless <code>refundExpired(2)</code> returned the exact wager to the player and cleared the observer; calling it immediately on Bet #3 reverted <code>NotExpired(3)</code>.</p>
-            <code><a href="https://sepolia.basescan.org/tx/0xf09e098957422672858701649c1c3ace133d69a00473222b325ec62026e66240" target="_blank" rel="noopener">tx 0xf09e0989…6240 ↗</a></code>
-          </div>
-        </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Bet</th>
+              <th>Player</th>
+              <th>Wager</th>
+              <th>Target</th>
+              <th>Outcome</th>
+              <th>Payout</th>
+              <th>WASM Verification</th>
+            </tr>
+          </thead>
+          <tbody id="betsBody">
+            <tr><td colspan="7" style="text-align:center; color:var(--dim); padding:1.5rem;">Loading live Base Sepolia bets…</td></tr>
+          </tbody>
+        </table>
       </div>
     </section>
-
-    <footer>
-      <div>
-        <strong>Reference Implementation Disclaimer:</strong> FairDice is written in Fe <code>26.7.0 (e6e6342)</code> as a reference implementation. It is <strong>not audited</strong> and <strong>not production-ready</strong>. Do not use with real mainnet funds.
-      </div>
-      <div>
-        <strong>Trust Assumption:</strong> Fairness under Pyth Entropy V2 assumes provider liveness and non-collusion with the house or player (<code>refundExpired</code> is a 256-block provider-failure escape hatch).
-      </div>
-    </footer>
   </main>
 
-  <script>
-    const DEFAULT_RPC_URL = 'https://sepolia.base.org';
-    const ENTROPY_CONTRACT = '0xd48ed9b0ad9660dd1c21964aab5468081968c774';
-    const LEGACY_CR_CONTRACT = '0xed5d38e135d7e63ebc6f7dc6ef8d9e2f21ce326b';
-    const PYTH_ENTROPY_PROXY = '0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c';
-    const BASE_SEPOLIA_CHAIN_ID = '0x14a34'; // 84532
-    const WASM_CANDIDATES = ['./out/feguard.wasm', './out/dice.wasm'];
+  <footer>
+    <span>The verifier runs the same Fe source (<code>src/outcome.fe</code>) that settled the bet on-chain. <a href="about.html" style="text-decoration:underline;">How it works →</a></span>
+    <span class="mono">
+      <a href="https://sepolia.basescan.org/address/0xd48ed9b0ad9660dd1c21964aab5468081968c774" target="_blank" rel="noopener">0xd48ed9…68c774</a>
+      · Reference implementation (unaudited)
+    </span>
+  </footer>
 
-    // Verified Solidity ABI selectors / topics
-    const SEL_GET_BET    = '0x061e494f'; // getBet(uint256)
-    const SEL_TOTAL_BETS = '0xbefa1e2f'; // totalBets()
-    const SEL_BANKROLL   = '0x0c657eb0'; // bankroll()
-    const SEL_HOUSE_CAP  = '0x56f54594'; // houseCap()
-    const SEL_PLACE_BET  = '0xdcb3b30e'; // placeBet(uint8,uint256) (verified via cast sig)
-    const SEL_GET_FEE_V2 = '0x8204b67a'; // getFeeV2()
-    const TOPIC_REVEALED = '0xb23d00b847ca5b09b5092b3610ad3525d33e24cfcf3558d093ab4b264a690084';
+  <script>
+    const RPC_URL = 'https://sepolia.base.org';
+    const CONTRACT = '0xd48ed9b0ad9660dd1c21964aab5468081968c774';
+    const PYTH_PROXY = '0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c';
+    const BASE_SEPOLIA_CHAIN_ID = '0x14a34';
+
+    const SEL_GET_BET    = '0x061e494f';
+    const SEL_TOTAL_BETS = '0xbefa1e2f';
+    const SEL_BANKROLL   = '0x0c657eb0';
+    const SEL_HOUSE_CAP  = '0x56f54594';
+    const SEL_PLACE_BET  = '0xdcb3b30e';
+    const SEL_GET_FEE_V2 = '0x8204b67a';
 
     const MASK64 = 0xffffffffffffffffn;
     const splitU256 = (x) => {
@@ -1136,392 +607,264 @@
       return [(v >> 64n) & MASK64, v & MASK64];
     };
     const padHex32 = (x) => BigInt(x).toString(16).padStart(64, '0');
-    const hexWord = (hex, i) => {
-      const clean = hex.startsWith('0x') ? hex.slice(2) : hex;
-      return BigInt('0x' + clean.slice(i * 64, (i + 1) * 64));
-    };
-    const shortAddr = (a) => a && a.length > 14 ? `${a.slice(0, 8)}…${a.slice(-6)}` : (a || '—');
-    const fmtEth = (weiBig) => {
-      const s = weiBig.toString().padStart(19, '0');
+    const hexWord = (hex, i) => BigInt('0x' + (hex.startsWith('0x') ? hex.slice(2) : hex).slice(i * 64, (i + 1) * 64));
+    const shortAddr = (a) => a && a.length > 14 ? `${a.slice(0, 6)}…${a.slice(-4)}` : (a || '—');
+    const fmtEth = (wei) => {
+      const s = wei.toString().padStart(19, '0');
       const whole = s.slice(0, -18).replace(/^0+/, '') || '0';
-      const frac = s.slice(-18, -12);
-      return `${whole}.${frac} ETH`;
+      return `${whole}.${s.slice(-18, -12)} ETH`;
     };
-    const parseEthToWei = (str) => {
-      const cleaned = str.trim();
-      if (!/^\d+(\.\d+)?$/.test(cleaned)) throw new Error('Invalid ETH amount');
-      const [w, f = ''] = cleaned.split('.');
-      const frac = (f + '000000000000000000').slice(0, 18);
-      return BigInt(w) * 1000000000000000000n + BigInt(frac);
+    const parseEth = (str) => {
+      const c = str.trim();
+      if (!/^\d+(\.\d+)?$/.test(c)) throw new Error('Invalid ETH');
+      const [w, f = ''] = c.split('.');
+      return BigInt(w) * 1000000000000000000n + BigInt((f + '000000000000000000').slice(0, 18));
     };
 
-    let wasmExports = null;
-    let currentBets = [];
-    let liveCapWei = 1000000000000000n;
-    let liveFeeWei = 15000000000001n;
-    let connectedAccount = null;
-    let placeBetSelector = null;
-    let demoNonce = 100n;
+    let wasm = null;
+    let bets = [];
+    let capWei = 1000000000000000n;
+    let feeWei = 15000000000001n;
+    let account = null;
+    let simNonce = 100n;
 
-    // DOM refs
-    const targetSlider = document.getElementById('targetSlider');
-    const meterTrack = document.getElementById('meterTrack');
-    const meterNeedle = document.getElementById('meterNeedle');
-    const rollDisplay = document.getElementById('rollDisplay');
-    const rollSubtitle = document.getElementById('rollSubtitle');
-    const rollSubDetail = document.getElementById('rollSubDetail');
-    const outcomePill = document.getElementById('outcomePill');
+    const slider = document.getElementById('targetSlider');
+    const targetInput = document.getElementById('targetInput');
     const wagerInput = document.getElementById('wagerInput');
     const seedInput = document.getElementById('seedInput');
+    const track = document.getElementById('track');
+    const needle = document.getElementById('needle');
+    const rollDisplay = document.getElementById('rollDisplay');
+    const rollSub = document.getElementById('rollSub');
     const playStatus = document.getElementById('playStatus');
     const tamperToggle = document.getElementById('tamperToggle');
-    const tamperCard = document.getElementById('tamperCard');
+    const tamperLabel = document.getElementById('tamperLabel');
     const betsBody = document.getElementById('betsBody');
-    const statusBar = document.getElementById('statusBar');
-    const wasmChip = document.getElementById('wasmChip');
 
-    function updateOddsUI() {
-      const target = Number(targetSlider.value);
-      meterTrack.style.setProperty('--pct', `${target}%`);
-      document.getElementById('metricTarget').textContent = `< ${target}`;
-      document.getElementById('metricChance').textContent = `${target}%`;
-      const mult = 98 / target;
-      document.getElementById('metricMult').textContent = `${mult.toFixed(3)}x`;
-      rollSubtitle.textContent = `Roll Under ${target} to Win`;
+    function syncTarget(val) {
+      const t = Math.max(1, Math.min(95, Number(val) || 49));
+      slider.value = t;
+      targetInput.value = t;
+      track.style.setProperty('--pct', `${t}%`);
+      document.getElementById('metricChance').textContent = `${t}%`;
+      document.getElementById('metricMult').textContent = `${(98 / t).toFixed(3)}x`;
+      rollSub.textContent = `Roll under ${t} to win`;
       try {
-        const w = parseEthToWei(wagerInput.value);
-        const pay = (w * 98n) / BigInt(target);
-        document.getElementById('metricPayout').textContent = fmtEth(pay);
+        const w = parseEth(wagerInput.value);
+        document.getElementById('metricPayout').textContent = fmtEth((w * 98n) / BigInt(t));
       } catch {
         document.getElementById('metricPayout').textContent = '—';
       }
     }
 
-    targetSlider.addEventListener('input', updateOddsUI);
-    wagerInput.addEventListener('input', updateOddsUI);
+    slider.addEventListener('input', () => syncTarget(slider.value));
+    targetInput.addEventListener('input', () => syncTarget(targetInput.value));
+    wagerInput.addEventListener('input', () => syncTarget(slider.value));
 
     document.getElementById('halfBtn').addEventListener('click', () => {
       try {
-        const w = parseEthToWei(wagerInput.value) / 2n;
-        wagerInput.value = (Number(w) / 1e18).toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
-        updateOddsUI();
+        wagerInput.value = (Number(parseEth(wagerInput.value) / 2n) / 1e18).toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
+        syncTarget(slider.value);
       } catch {}
     });
     document.getElementById('doubleBtn').addEventListener('click', () => {
       try {
-        let w = parseEthToWei(wagerInput.value) * 2n;
-        if (w > liveCapWei) w = liveCapWei;
+        let w = parseEth(wagerInput.value) * 2n;
+        if (w > capWei) w = capWei;
         wagerInput.value = (Number(w) / 1e18).toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
-        updateOddsUI();
+        syncTarget(slider.value);
       } catch {}
     });
     document.getElementById('maxBtn').addEventListener('click', () => {
-      wagerInput.value = (Number(liveCapWei) / 1e18).toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
-      updateOddsUI();
+      wagerInput.value = (Number(capWei) / 1e18).toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
+      syncTarget(slider.value);
     });
     document.getElementById('randSeedBtn').addEventListener('click', () => {
-      const bytes = new Uint8Array(32);
-      crypto.getRandomValues(bytes);
-      seedInput.value = '0x' + Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+      const b = new Uint8Array(32);
+      crypto.getRandomValues(b);
+      seedInput.value = '0x' + Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('');
     });
-
     tamperToggle.addEventListener('change', () => {
-      tamperCard.classList.toggle('active', tamperToggle.checked);
+      tamperLabel.classList.toggle('on', tamperToggle.checked);
     });
 
     async function loadWasm() {
-      if (wasmExports) return wasmExports;
-      let lastErr;
-      for (const path of WASM_CANDIDATES) {
-        try {
-          const resp = await fetch(path);
-          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-          const bytes = await resp.arrayBuffer();
-          const { instance } = await WebAssembly.instantiate(bytes, {
-            env: { __fe_revert: () => { throw new Error('Fe WASM reverted'); } },
-          });
-          wasmExports = instance.exports;
-          wasmChip.innerHTML = `<span class="live-dot"></span> Fe WASM Ready`;
-          return wasmExports;
-        } catch (err) {
-          lastErr = err;
-        }
-      }
-      wasmChip.textContent = 'WASM load error';
-      throw new Error(`Could not load Fe WASM (${lastErr?.message})`);
+      if (wasm) return wasm;
+      const resp = await fetch('./out/feguard.wasm');
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const { instance } = await WebAssembly.instantiate(await resp.arrayBuffer(), {
+        env: { __fe_revert: () => { throw new Error('Fe WASM reverted'); } },
+      });
+      wasm = instance.exports;
+      document.getElementById('wasmStat').textContent = 'WASM: out/feguard.wasm';
+      return wasm;
     }
 
-    async function rpcCall(method, params, urlOverride = null) {
-      const rpcUrl = urlOverride || document.getElementById('rpcInput').value.trim() || DEFAULT_RPC_URL;
-      const resp = await fetch(rpcUrl, {
+    async function rpc(method, params) {
+      const r = await fetch(RPC_URL, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
       });
-      if (!resp.ok) throw new Error(`RPC HTTP ${resp.status}`);
-      const json = await resp.json();
-      if (json.error) throw new Error(json.error.message || JSON.stringify(json.error));
-      return json.result;
+      const j = await r.json();
+      if (j.error) throw new Error(j.error.message || JSON.stringify(j.error));
+      return j.result;
     }
 
-    // Read exact placeBet(uint8,uint256) selector from FairDice ABI or known value
-    async function getPlaceBetSelector() {
-      return SEL_PLACE_BET;
-    }
-
-    // Animate dice roll on the arena meter
-    function animateRollResult(outcomeNum, targetNum, payoutWei, label) {
-      let ticks = 0;
-      rollDisplay.className = 'roll-number';
-      outcomePill.className = 'outcome-pill';
-      outcomePill.textContent = 'ROLLING…';
-
-      const timer = setInterval(() => {
-        ticks++;
-        const preview = Math.floor(Math.random() * 100);
-        rollDisplay.textContent = String(preview).padStart(2, '0');
-        if (ticks >= 10) {
-          clearInterval(timer);
-          const won = outcomeNum < targetNum;
-          rollDisplay.textContent = String(outcomeNum).padStart(2, '0');
-          rollDisplay.className = `roll-number ${won ? 'win' : 'loss'}`;
-          meterNeedle.textContent = String(outcomeNum).padStart(2, '0');
-          meterNeedle.style.setProperty('--needle', `${Math.max(2, Math.min(98, outcomeNum))}%`);
-          meterNeedle.classList.add('visible');
-          outcomePill.className = `outcome-pill ${won ? 'win' : 'loss'}`;
-          outcomePill.textContent = won ? `WIN · +${fmtEth(payoutWei)}` : 'LOSS · 0 ETH';
-          rollSubDetail.textContent = label;
+    function animateRoll(outcome, target, payout) {
+      let n = 0;
+      rollDisplay.className = 'roll-num';
+      const id = setInterval(() => {
+        n++;
+        rollDisplay.textContent = String(Math.floor(Math.random() * 100)).padStart(2, '0');
+        if (n >= 9) {
+          clearInterval(id);
+          const win = outcome < target;
+          rollDisplay.textContent = String(outcome).padStart(2, '0');
+          rollDisplay.className = `roll-num ${win ? 'win' : 'loss'}`;
+          needle.textContent = String(outcome).padStart(2, '0');
+          needle.style.setProperty('--needle', `${Math.max(2, Math.min(98, outcome))}%`);
+          needle.classList.add('show');
+          rollSub.textContent = win ? `Won ${fmtEth(payout)} (rolled ${outcome} < ${target})` : `Lost (rolled ${outcome} >= ${target})`;
         }
-      }, 32);
+      }, 28);
     }
 
-    // Instant Free WASM Roll (runs the exact compiled Fe `fg_roll`!)
     document.getElementById('playWasmBtn').addEventListener('click', async () => {
       try {
-        const wasm = await loadWasm();
-        const target = Number(targetSlider.value);
-        const wagerWei = parseEthToWei(wagerInput.value);
-        const clientSeed = BigInt(seedInput.value.trim());
-
-        const entropyBytes = new Uint8Array(32);
-        crypto.getRandomValues(entropyBytes);
-        const simEntropy = BigInt('0x' + Array.from(entropyBytes, (b) => b.toString(16).padStart(2, '0')).join(''));
-        demoNonce += 1n;
-
-        const outcome = BigInt.asUintN(
-          64,
-          wasm.fg_roll(...splitU256(simEntropy), ...splitU256(clientSeed), demoNonce)
-        );
-        const payout = outcome < BigInt(target) ? (wagerWei * 98n) / BigInt(target) : 0n;
-
-        animateRollResult(
-          Number(outcome),
-          target,
-          payout,
-          `Computed locally by Fe WASM fg_roll() · nonce #${demoNonce}`
-        );
-        playStatus.innerHTML = `<span><strong>Fe WASM Roll #${demoNonce}:</strong> outcome <strong>${outcome}</strong> (${outcome < BigInt(target) ? 'WIN' : 'LOSS'}) · entropy <code>${shortAddr('0x' + simEntropy.toString(16).padStart(64, '0'))}</code></span>`;
-      } catch (err) {
-        playStatus.textContent = `WASM roll failed: ${err.message}`;
+        const w = await loadWasm();
+        const target = Number(slider.value);
+        const wager = parseEth(wagerInput.value);
+        const seed = BigInt(seedInput.value.trim());
+        const b = new Uint8Array(32);
+        crypto.getRandomValues(b);
+        const ent = BigInt('0x' + Array.from(b, (x) => x.toString(16).padStart(2, '0')).join(''));
+        simNonce += 1n;
+        const out = BigInt.asUintN(64, w.fg_roll(...splitU256(ent), ...splitU256(seed), simNonce));
+        const pay = out < BigInt(target) ? (wager * 98n) / BigInt(target) : 0n;
+        animateRoll(Number(out), target, pay);
+        playStatus.textContent = `Simulated locally via Fe fg_roll() · nonce #${simNonce} · outcome ${out}`;
+      } catch (e) {
+        playStatus.textContent = `Error: ${e.message}`;
       }
     });
 
-    // Wallet Connection (MetaMask / EIP-1193)
     async function connectWallet() {
       if (!window.ethereum) {
-        playStatus.textContent = 'No injected wallet detected. Use "Instant Roll in Fe WASM" or install MetaMask.';
+        playStatus.textContent = 'No wallet detected. Use "Simulate Roll in Fe WASM" or install MetaMask.';
         return null;
       }
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      connectedAccount = accounts[0];
-      document.getElementById('connectBtn').textContent = shortAddr(connectedAccount);
-      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-      if (chainId.toLowerCase() !== BASE_SEPOLIA_CHAIN_ID) {
-        try {
-          await window.ethereum.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: BASE_SEPOLIA_CHAIN_ID }],
-          });
-        } catch (err) {
-          playStatus.textContent = 'Please switch your wallet to Base Sepolia (chainId 84532).';
-        }
+      const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      account = accs[0];
+      document.getElementById('connectBtn').textContent = shortAddr(account);
+      const cid = await window.ethereum.request({ method: 'eth_chainId' });
+      if (cid.toLowerCase() !== BASE_SEPOLIA_CHAIN_ID) {
+        await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: BASE_SEPOLIA_CHAIN_ID }] });
       }
-      return connectedAccount;
+      return account;
     }
 
     document.getElementById('connectBtn').addEventListener('click', connectWallet);
 
-    // Live On-Chain Bet via MetaMask -> Base Sepolia FairDice + Pyth Entropy V2
     document.getElementById('playChainBtn').addEventListener('click', async () => {
       try {
-        const account = connectedAccount || (await connectWallet());
-        if (!account) return;
-        const contract = document.getElementById('contractInput').value.trim() || ENTROPY_CONTRACT;
-        const target = Number(targetSlider.value);
-        const wagerWei = parseEthToWei(wagerInput.value);
-        if (wagerWei <= 0n || wagerWei > liveCapWei) {
-          playStatus.textContent = `Wager must be > 0 and <= ${fmtEth(liveCapWei)}.`;
+        const acc = account || (await connectWallet());
+        if (!acc) return;
+        const target = Number(slider.value);
+        const wager = parseEth(wagerInput.value);
+        if (wager <= 0n || wager > capWei) {
+          playStatus.textContent = `Wager must be > 0 and <= ${fmtEth(capWei)}.`;
           return;
         }
-        const clientCommit = BigInt(seedInput.value.trim());
-        const totalValue = wagerWei + liveFeeWei;
-
-        // Compute exact placeBet(uint8,uint256) calldata
-        const sel = await getPlaceBetSelector();
-        const data = sel + padHex32(target) + padHex32(clientCommit);
-        playStatus.textContent = `Confirm in wallet: ${fmtEth(wagerWei)} wager + ${fmtEth(liveFeeWei)} Pyth Entropy V2 fee…`;
-
-        const txHash = await window.ethereum.request({
+        const commit = BigInt(seedInput.value.trim());
+        const data = SEL_PLACE_BET + padHex32(target) + padHex32(commit);
+        playStatus.textContent = `Sending ${fmtEth(wager)} + ${fmtEth(feeWei)} Pyth fee…`;
+        const hash = await window.ethereum.request({
           method: 'eth_sendTransaction',
-          params: [{
-            from: account,
-            to: contract,
-            value: '0x' + totalValue.toString(16),
-            data,
-          }],
+          params: [{ from: acc, to: CONTRACT, value: '0x' + (wager + feeWei).toString(16), data }],
         });
-        playStatus.innerHTML = `<span>Bet submitted: <a href="https://sepolia.basescan.org/tx/${txHash}" target="_blank" rel="noopener">${shortAddr(txHash)} ↗</a> — waiting ~15s for Pyth keeper callback…</span>`;
-
-        setTimeout(() => loadOnChainBets(), 12000);
-        setTimeout(() => loadOnChainBets(), 24000);
-      } catch (err) {
-        playStatus.textContent = `Transaction cancelled/failed: ${err.message}`;
+        playStatus.innerHTML = `Submitted <a href="https://sepolia.basescan.org/tx/${hash}" target="_blank" rel="noopener">${shortAddr(hash)}</a> — awaiting Pyth callback…`;
+        setTimeout(loadBets, 15000);
+      } catch (e) {
+        playStatus.textContent = `Tx error: ${e.message}`;
       }
     });
 
-    function verifyBetRow(bet, resultCell) {
-      if (!wasmExports) {
-        resultCell.innerHTML = '<span class="badge pending">WASM LOADING</span>';
-        return;
-      }
-      if (!bet.settled || bet.serverSeed === undefined || bet.clientSeed === undefined) {
-        resultCell.innerHTML = '<span class="badge pending">PENDING</span>';
+    function verifyRow(bet, cell) {
+      if (!wasm) return;
+      if (!bet.settled || bet.entropy === undefined) {
+        cell.innerHTML = '<span class="tag pending">PENDING</span>';
         return;
       }
       const tampered = tamperToggle.checked;
-      const usedServerSeed = tampered ? (bet.serverSeed ^ 1n) : bet.serverSeed;
-      const packed = BigInt.asUintN(
-        64,
-        wasmExports.fg_verify_bet(
-          ...splitU256(usedServerSeed),
-          ...splitU256(bet.clientSeed),
-          bet.id,
-          bet.target,
-          ...splitU128(bet.wager),
-          bet.outcome,
-          ...splitU128(bet.payout)
-        )
-      );
-      const outcomeOk = (packed & 1n) === 1n;
-      const payoutOk = (packed & 2n) === 2n;
-      const recomputedOutcome = (packed >> 8n) & 0xffn;
-      const ok = outcomeOk && payoutOk;
-      resultCell.innerHTML = `
-        <span class="badge ${ok ? 'match' : 'mismatch'}">${ok ? '✓ MATCH' : '✕ MISMATCH'}</span>
-        <span class="verify-detail">WASM=${recomputedOutcome} · Chain=${bet.outcome}${tampered ? ' · TAMPERED' : ''}</span>
-      `;
+      const seed = tampered ? (bet.entropy ^ 1n) : bet.entropy;
+      const packed = BigInt.asUintN(64, wasm.fg_verify_bet(
+        ...splitU256(seed), ...splitU256(bet.commit), bet.id, bet.target,
+        ...splitU128(bet.wager), bet.outcome, ...splitU128(bet.payout)
+      ));
+      const ok = (packed & 1n) === 1n && (packed & 2n) === 2n;
+      const got = (packed >> 8n) & 0xffn;
+      cell.innerHTML = `<span class="tag ${ok ? 'match' : 'mismatch'}">${ok ? 'MATCH' : 'MISMATCH'}</span><span class="sub-proof">wasm=${got}${tampered ? ' (tampered)' : ''}</span>`;
     }
 
     function renderBets() {
       betsBody.innerHTML = '';
-      if (currentBets.length === 0) {
-        betsBody.innerHTML = '<tr><td colspan="7" style="color:var(--muted);text-align:center;padding:1.5rem;">No bets found on this contract.</td></tr>';
-        return;
-      }
-      for (const bet of currentBets) {
-        const won = bet.settled && bet.payout > 0n;
+      for (const bet of bets) {
+        const win = bet.settled && bet.payout > 0n;
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td class="mono"><strong>#${bet.id}</strong></td>
+          <td class="mono">#${bet.id}</td>
           <td class="mono"><a href="https://sepolia.basescan.org/address/${bet.player}" target="_blank" rel="noopener">${shortAddr(bet.player)}</a></td>
           <td class="mono">${fmtEth(bet.wager)}</td>
           <td class="mono">&lt; ${bet.target}</td>
-          <td class="mono">
-            ${bet.settled
-              ? `<span class="badge ${won ? 'win' : 'loss'}">${String(bet.outcome).padStart(2, '0')} · ${won ? 'WIN' : 'LOSS'}</span>`
-              : '<span class="badge pending">PENDING</span>'}
-          </td>
-          <td class="mono" style="color:${won ? '#34d399' : 'var(--muted)'}; font-weight:${won ? '700' : '400'};">
-            ${bet.settled ? fmtEth(bet.payout) : '—'}
-          </td>
-          <td>
-            <div style="display:flex;align-items:center;gap:0.65rem;flex-wrap:wrap;">
-              <button class="btn-ghost btn-sm verify-btn">VERIFY</button>
-              <span class="verify-out"></span>
-            </div>
-          </td>
+          <td class="mono">${bet.settled ? `<span class="tag ${win ? 'win' : 'loss'}">${String(bet.outcome).padStart(2, '0')}</span>` : '<span class="tag pending">PENDING</span>'}</td>
+          <td class="mono" style="color:${win ? 'var(--green-hi)' : 'var(--muted)'};">${bet.settled ? fmtEth(bet.payout) : '—'}</td>
+          <td><button class="btn-quiet verify-btn" style="margin-right:8px;">Verify</button><span class="verify-out"></span></td>
         `;
         const btn = tr.querySelector('.verify-btn');
         const out = tr.querySelector('.verify-out');
-        btn.addEventListener('click', async () => {
-          try {
-            await loadWasm();
-            verifyBetRow(bet, out);
-          } catch (err) {
-            out.innerHTML = `<span class="badge mismatch">ERR</span><span class="verify-detail">${err.message}</span>`;
-          }
-        });
+        btn.addEventListener('click', async () => { await loadWasm(); verifyRow(bet, out); });
         betsBody.appendChild(tr);
       }
     }
 
-    async function loadOnChainBets() {
-      const contract = document.getElementById('contractInput').value.trim() || ENTROPY_CONTRACT;
-      document.getElementById('contractShort').textContent = shortAddr(contract);
-      document.getElementById('basescanLink').href = `https://sepolia.basescan.org/address/${contract}`;
-      statusBar.textContent = `Querying ${shortAddr(contract)} on Base Sepolia…`;
-
+    async function loadBets() {
       try {
-        const [rawBankroll, rawCap, rawTotal, rawFee] = await Promise.all([
-          rpcCall('eth_call', [{ to: contract, data: SEL_BANKROLL }, 'latest']),
-          rpcCall('eth_call', [{ to: contract, data: SEL_HOUSE_CAP }, 'latest']),
-          rpcCall('eth_call', [{ to: contract, data: SEL_TOTAL_BETS }, 'latest']),
-          rpcCall('eth_call', [{ to: PYTH_ENTROPY_PROXY, data: SEL_GET_FEE_V2 }, 'latest']).catch(() => null),
+        const [rawBank, rawCap, rawTotal, rawFee] = await Promise.all([
+          rpc('eth_call', [{ to: CONTRACT, data: SEL_BANKROLL }, 'latest']),
+          rpc('eth_call', [{ to: CONTRACT, data: SEL_HOUSE_CAP }, 'latest']),
+          rpc('eth_call', [{ to: CONTRACT, data: SEL_TOTAL_BETS }, 'latest']),
+          rpc('eth_call', [{ to: PYTH_PROXY, data: SEL_GET_FEE_V2 }, 'latest']).catch(() => null),
         ]);
-
-        const bankroll = BigInt(rawBankroll || '0x0');
-        liveCapWei = BigInt(rawCap || '0x0');
+        capWei = BigInt(rawCap || '0x0');
         const total = BigInt(rawTotal || '0x0');
-        if (rawFee && rawFee !== '0x') liveFeeWei = BigInt(rawFee);
-
-        document.getElementById('bankrollStat').textContent = fmtEth(bankroll);
-        document.getElementById('capStat').textContent = fmtEth(liveCapWei);
-        document.getElementById('capHint').textContent = `Cap: ${fmtEth(liveCapWei)}`;
-        document.getElementById('totalStat').textContent = total.toString();
-        document.getElementById('feeStat').textContent = `${liveFeeWei} wei`;
+        if (rawFee && rawFee !== '0x') feeWei = BigInt(rawFee);
+        document.getElementById('bankrollStat').textContent = fmtEth(BigInt(rawBank || '0x0'));
+        document.getElementById('capHint').textContent = `Max ${fmtEth(capWei)}`;
+        document.getElementById('feeStat').textContent = fmtEth(feeWei);
+        document.getElementById('totalStat').textContent = `(${total} on-chain)`;
 
         const count = total > 15n ? 15n : total;
-        const bets = [];
+        const rows = [];
         for (let i = total; i > total - count; i -= 1n) {
-          const raw = await rpcCall('eth_call', [{ to: contract, data: SEL_GET_BET + padHex32(i) }, 'latest']);
-          const clean = (raw || '').replace(/^0x/, '');
-          const words = Math.floor(clean.length / 64);
-          const player = '0x' + hexWord(raw, 0).toString(16).padStart(40, '0');
-          const isEntropy = words >= 10;
-          const entropyValue = isEntropy ? hexWord(raw, 9) : undefined;
-          const clientCommitment = hexWord(raw, 3);
-          bets.push({
+          const raw = await rpc('eth_call', [{ to: CONTRACT, data: SEL_GET_BET + padHex32(i) }, 'latest']);
+          rows.push({
             id: i,
-            player,
+            player: '0x' + hexWord(raw, 0).toString(16).padStart(40, '0'),
             wager: hexWord(raw, 1),
             target: hexWord(raw, 2),
+            commit: hexWord(raw, 3),
             settled: hexWord(raw, 6) !== 0n,
             outcome: hexWord(raw, 7),
             payout: hexWord(raw, 8),
-            serverSeed: isEntropy ? entropyValue : undefined,
-            clientSeed: isEntropy ? clientCommitment : undefined,
+            entropy: hexWord(raw, 9),
           });
         }
-        currentBets = bets;
+        bets = rows;
         renderBets();
-        statusBar.textContent = `Loaded ${bets.length} live bet(s) from ${shortAddr(contract)} on Base Sepolia.`;
-
-        // Automatically verify all rows once WASM is ready so judges immediately see live MATCH badges
-        if (wasmExports) {
-          document.querySelectorAll('.verify-btn').forEach((b) => b.click());
-        }
-      } catch (err) {
-        statusBar.textContent = `RPC load failed: ${err.message}`;
+        if (wasm) document.querySelectorAll('.verify-btn').forEach((b) => b.click());
+      } catch (e) {
+        betsBody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--red-hi);padding:1.5rem;">Failed to load Base Sepolia bets: ${e.message}</td></tr>`;
       }
     }
 
@@ -1529,15 +872,10 @@
       await loadWasm();
       document.querySelectorAll('.verify-btn').forEach((b) => b.click());
     });
-    document.getElementById('refreshBtn').addEventListener('click', loadOnChainBets);
-    document.getElementById('loadChainBtn').addEventListener('click', loadOnChainBets);
-    document.getElementById('loadLegacyBtn').addEventListener('click', () => {
-      document.getElementById('contractInput').value = LEGACY_CR_CONTRACT;
-      loadOnChainBets();
-    });
+    document.getElementById('refreshBtn').addEventListener('click', loadBets);
 
-    updateOddsUI();
-    Promise.all([loadWasm(), loadOnChainBets()]).then(() => {
+    syncTarget(49);
+    Promise.all([loadWasm(), loadBets()]).then(() => {
       document.querySelectorAll('.verify-btn').forEach((b) => b.click());
     });
   </script>
