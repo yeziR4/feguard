@@ -257,9 +257,11 @@ See [SUBMISSION.md](SUBMISSION.md). Final submission for judging has not been pe
 
 ---
 
-## FairDice — Single-Source EVM + WASM Dice Verifier
+## FairDice — Single-Source EVM + WASM Provably-Fair Dice (Pyth Entropy V2)
 
-> **Reference Implementation & Fairness Scope:** FairDice is an educational reference implementation written in Fe 26.7.0. It is **not audited** and **not production-ready**. In the commit–reveal variant, **the outcome is independently verifiable; whether a bet settles is not yet enforced** (see [reports/finding-fairdice-withholding.md](reports/finding-fairdice-withholding.md) and [reports/fairdice-deployment.md](reports/fairdice-deployment.md)). Do not deploy with real funds.
+> **Reference Implementation Notice:** FairDice is an educational reference implementation written in Fe 26.7.0. It is **not audited** and **not production-ready**. Do not deploy it with real funds without an independent security audit.
+>
+> **Fairness Evidence:** The initial commit–reveal variant had a structural selective-abort flaw (documented in [reports/finding-fairdice-withholding.md](reports/finding-fairdice-withholding.md) and demonstrated live on Base Sepolia at `0xed5d38e135d7e63ebc6f7dc6ef8d9e2f21ce326b`). `src/dice.fe` now replaces the secret server seed with **Pyth Entropy V2** (`0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c` on Base Sepolia) so neither player nor house can withhold randomness, and is verified live end-to-end on Base Sepolia at `0xd48ed9b0ad9660dd1c21964aab5468081968c774` (Pyth keeper fulfillment tx `0xb5bab940a80e54e36f1a6823406d079e3f2457f381e6195a8e3230360a400ac7`, WASM verifier `MATCH`; see [reports/fairdice-deployment.md](reports/fairdice-deployment.md)). Under Pyth Entropy V2's liveness assumption, FairDice is provably fair with `refundExpired` serving strictly as a provider-failure escape hatch after 256 blocks.
 
 ### Why this is impossible in Solidity
 

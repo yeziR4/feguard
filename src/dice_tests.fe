@@ -1,5 +1,7 @@
 use std::evm::wei
 #[cfg(target = "evm")]
+use std::abi::Bytes32
+#[cfg(target = "evm")]
 use std::evm::Call
 use ingot::outcome::{
     MIN_TARGET,
@@ -12,7 +14,7 @@ use ingot::outcome::{
     roll,
 }
 #[cfg(target = "evm")]
-use ingot::dice::{Bet, FairDice, FairDiceMsg}
+use ingot::dice::{Bet, EntropyV2Msg, FairDice, FairDiceMsg}
 
 // Helper player contract for EVM tests: places bets on FairDice and accepts
 // plain ETH payouts via its payable fallback arm.
@@ -43,6 +45,58 @@ pub contract TestPlayer uses (ctx: Ctx, call: mut Call) {
     recv {
         #[payable]
         _ {}
+    }
+}
+
+// Local mock of Pyth Entropy V2 for deterministic `fe test` coverage.
+#[cfg(target = "evm")]
+pub msg MockEntropyAdminMsg {
+    #[selector = sol("deliver(address,uint64,bytes32)")]
+    Deliver { consumer: Address, seq: u64, random_number: Bytes32 },
+}
+
+#[cfg(target = "evm")]
+pub contract MockEntropy uses (ctx: Ctx, call: mut Call) {
+    fee: u128,
+    mut next_seq: u64,
+
+    init(fee_wei: u128)
+    uses (mut fee, mut next_seq)
+    {
+        fee = fee_wei
+        next_seq = 1
+    }
+
+    recv EntropyV2Msg {
+        GetFeeV2 -> u128 uses (fee) {
+            fee
+        }
+
+        #[payable]
+        RequestV2 -> u64 uses (ctx, fee, mut next_seq) {
+            assert!(
+                ctx.value() >= wei(fee as u256),
+                "insufficient entropy fee",
+            )
+            let seq = next_seq
+            next_seq = seq + 1
+            seq
+        }
+    }
+
+    recv MockEntropyAdminMsg {
+        Deliver { consumer, seq, random_number } uses (ctx, mut call) {
+            call.call(
+                addr: consumer,
+                gas: 1500000,
+                value: Wei::zero(),
+                message: FairDiceMsg::EntropyCallback {
+                    sequence_number: seq,
+                    provider: ctx.address(),
+                    random_number,
+                },
+            )
+        }
     }
 }
 
@@ -100,21 +154,18 @@ fn payout_enforces_house_edge_and_target_bounds() {
     assert!(compute_payout(wager: 1000, target: 49, outcome: 99) == 0)
 }
 
-// Invariants I2, I3, I5 + permissionless reveal:
-// A separate TestPlayer places a bet, and another caller settles it.
+// Invariants I2, I3, I5 + Pyth Entropy V2 callback path:
+// TestPlayer places a bet (paying wager + entropy fee), MockEntropy delivers
+// randomness via `_entropyCallback`, and FairDice settles using shared `roll()`.
 #[test(balance = 1000000)]
 #[cfg(target = "evm")]
-fn contract_place_and_reveal_matches_shared_roll() uses (evm: mut Evm) {
-    let server_seed: u256 = 0x1111222233334444
-    let client_seed: u256 = 0x5555666677778888
-    let server_commit = commit_seed(server_seed)
-    let client_commit = commit_seed(client_seed)
+fn contract_entropy_callback_settles_with_shared_roll() uses (evm: mut Evm) {
+    let entropy_val: u256 = 0x1111222233334444
+    let client_commit: u256 = 0x5555666677778888
+    let fee: u128 = 100
 
-    let dice = evm.create2<FairDice>(
-            value: Wei::zero(),
-            args: (wei(10000), server_commit),
-            salt: 0,
-        )
+    let entropy = evm.create2<MockEntropy>(value: Wei::zero(), args: (fee,), salt: 10)
+    let dice = evm.create2<FairDice>(value: Wei::zero(), args: (wei(10000), entropy), salt: 0)
     let player = evm.create2<TestPlayer>(value: Wei::zero(), args: (), salt: 1)
 
     // Fund bankroll with 50,000 wei
@@ -125,59 +176,47 @@ fn contract_place_and_reveal_matches_shared_roll() uses (evm: mut Evm) {
         message: FairDiceMsg::Fund {},
     )
 
-    let bankroll_before: Wei = evm
+    let stored_entropy: Address = evm
         .call(
             addr: dice,
             gas: 1000000,
             value: Wei::zero(),
-            message: FairDiceMsg::Bankroll {},
+            message: FairDiceMsg::GetEntropy {},
         )
-    assert!(bankroll_before == wei(50000))
+    assert!(stored_entropy == entropy)
 
-    let cap: Wei = evm
-        .call(
-            addr: dice,
-            gas: 1000000,
-            value: Wei::zero(),
-            message: FairDiceMsg::HouseCap {},
-        )
-    assert!(cap == wei(10000))
-
-    // Pick a target guaranteed to win so we exercise real ETH payout via send_value
-    let expected_outcome = roll(server_seed, client_seed, bet_id: 1)
     // Cross-target equivalence vector: WASM `fg_roll` returns 25 for these exact inputs.
+    let expected_outcome = roll(
+        server_seed: entropy_val,
+        client_seed: client_commit,
+        bet_id: 1,
+    )
     assert!(expected_outcome == 25)
-    let target: u8 = if expected_outcome < 95 {
-        (expected_outcome + 1).downcast().unwrap()
-    } else {
-        49
-    }
-    let expected_payout = compute_payout(wager: 1000, target, outcome: expected_outcome)
+    let target: u8 = 26
+    let wager: u256 = 1000
+    let expected_payout = compute_payout(wager, target, outcome: expected_outcome)
+    assert!(expected_payout == 3769)
 
+    // Player sends wager + entropy fee
     let bet_id: u256 = evm
         .call(
             addr: player,
             gas: 2000000,
-            value: wei(1000),
+            value: wei(wager + (fee as u256)),
             message: TestPlayerMsg::Bet { dice, target, client_commitment: client_commit },
         )
     assert!(bet_id == 1)
 
-    let total: u256 = evm
-        .call(
-            addr: dice,
-            gas: 1000000,
-            value: Wei::zero(),
-            message: FairDiceMsg::TotalBets {},
-        )
-    assert!(total == 1)
-
-    // Permissionless reveal (called by evm.address(), not player)
+    // Entropy provider delivers randomness via `_entropyCallback`
     evm.call(
-        addr: dice,
+        addr: entropy,
         gas: 2000000,
         value: Wei::zero(),
-        message: FairDiceMsg::Reveal { bet_id: 1, server_seed, client_seed },
+        message: MockEntropyAdminMsg::Deliver {
+            consumer: dice,
+            seq: 1,
+            random_number: Bytes32 { val: entropy_val },
+        },
     )
 
     let bet: Bet = evm
@@ -189,11 +228,15 @@ fn contract_place_and_reveal_matches_shared_roll() uses (evm: mut Evm) {
         )
     assert!(bet.settled)
     assert!(bet.player == player)
+    assert!(bet.wager == wei(wager))
+    assert!(bet.sequence_number == 1)
+    assert!(bet.entropy_value == entropy_val)
     assert!(bet.outcome == expected_outcome)
     assert!(bet.payout == wei(expected_payout))
 
-    // Verify player actually received the ETH payout and bankroll matches
+    // Verify player received the exact ETH payout and bankroll accounting matches
     assert!(evm.balance(player) == wei(expected_payout))
+    assert!(evm.balance(entropy) == wei(fee as u256))
     let bankroll_after: Wei = evm
         .call(
             addr: dice,
@@ -201,21 +244,15 @@ fn contract_place_and_reveal_matches_shared_roll() uses (evm: mut Evm) {
             value: Wei::zero(),
             message: FairDiceMsg::Bankroll {},
         )
-    assert!(bankroll_after == wei(50000 + 1000 - expected_payout))
+    assert!(bankroll_after == wei(50000 + wager - expected_payout))
 }
 
-// Invariant I1: a bet settles at most once
+// Invariant I5: callback from any caller other than the configured Entropy contract MUST revert
 #[test(should_revert, balance = 1000000)]
 #[cfg(target = "evm")]
-fn contract_rejects_double_settle() uses (evm: mut Evm) {
-    let server_seed: u256 = 0x1111222233334444
-    let client_seed: u256 = 0x5555666677778888
-    let dice = evm
-        .create2<FairDice>(
-            value: Wei::zero(),
-            args: (wei(10000), commit_seed(server_seed)),
-            salt: 0,
-        )
+fn contract_rejects_wrong_caller_entropy_callback() uses (evm: mut Evm) {
+    let entropy = evm.create2<MockEntropy>(value: Wei::zero(), args: (100 as u128,), salt: 10)
+    let dice = evm.create2<FairDice>(value: Wei::zero(), args: (wei(10000), entropy), salt: 0)
     let player = evm.create2<TestPlayer>(value: Wei::zero(), args: (), salt: 1)
     evm.call(
         addr: dice,
@@ -227,38 +264,29 @@ fn contract_rejects_double_settle() uses (evm: mut Evm) {
         .call(
             addr: player,
             gas: 2000000,
-            value: wei(1000),
-            message: TestPlayerMsg::Bet {
-                dice,
-                target: 49,
-                client_commitment: commit_seed(client_seed),
-            },
+            value: wei(1100),
+            message: TestPlayerMsg::Bet { dice, target: 49, client_commitment: 0x5555 },
         )
+    // Calling EntropyCallback directly from evm.address() (not `entropy`) must revert Unauthorized
     evm.call(
         addr: dice,
         gas: 2000000,
         value: Wei::zero(),
-        message: FairDiceMsg::Reveal { bet_id: 1, server_seed, client_seed },
-    )
-    // Second reveal must revert with AlreadySettled
-    evm.call(
-        addr: dice,
-        gas: 2000000,
-        value: Wei::zero(),
-        message: FairDiceMsg::Reveal { bet_id: 1, server_seed, client_seed },
+        message: FairDiceMsg::EntropyCallback {
+            sequence_number: 1,
+            provider: evm.address(),
+            random_number: Bytes32 { val: 0x1111 },
+        },
     )
 }
 
-// Invariant I4: wager must be > 0
+// Invariant I1: a bet settles at most once (second callback reverts AlreadySettled)
 #[test(should_revert, balance = 1000000)]
 #[cfg(target = "evm")]
-fn contract_rejects_zero_wager() uses (evm: mut Evm) {
-    let dice = evm
-        .create2<FairDice>(
-            value: Wei::zero(),
-            args: (wei(10000), commit_seed(1)),
-            salt: 0,
-        )
+fn contract_rejects_double_settle() uses (evm: mut Evm) {
+    let entropy = evm.create2<MockEntropy>(value: Wei::zero(), args: (100 as u128,), salt: 10)
+    let dice = evm.create2<FairDice>(value: Wei::zero(), args: (wei(10000), entropy), salt: 0)
+    let player = evm.create2<TestPlayer>(value: Wei::zero(), args: (), salt: 1)
     evm.call(
         addr: dice,
         gas: 2000000,
@@ -267,23 +295,40 @@ fn contract_rejects_zero_wager() uses (evm: mut Evm) {
     )
     let _: u256 = evm
         .call(
-            addr: dice,
+            addr: player,
             gas: 2000000,
-            value: Wei::zero(),
-            message: FairDiceMsg::PlaceBet { target: 49, client_commitment: commit_seed(2) },
+            value: wei(1100),
+            message: TestPlayerMsg::Bet { dice, target: 49, client_commitment: 0x5555 },
         )
+    evm.call(
+        addr: entropy,
+        gas: 2000000,
+        value: Wei::zero(),
+        message: MockEntropyAdminMsg::Deliver {
+            consumer: dice,
+            seq: 1,
+            random_number: Bytes32 { val: 0x1111 },
+        },
+    )
+    // Second callback for same sequence must revert AlreadySettled
+    evm.call(
+        addr: entropy,
+        gas: 2000000,
+        value: Wei::zero(),
+        message: MockEntropyAdminMsg::Deliver {
+            consumer: dice,
+            seq: 1,
+            random_number: Bytes32 { val: 0x1111 },
+        },
+    )
 }
 
-// Invariant I4: target must be in 1..=95
+// Invariant I4: msg.value <= entropy fee leaves zero wager -> reverts ZeroWager
 #[test(should_revert, balance = 1000000)]
 #[cfg(target = "evm")]
-fn contract_rejects_target_out_of_range() uses (evm: mut Evm) {
-    let dice = evm
-        .create2<FairDice>(
-            value: Wei::zero(),
-            args: (wei(10000), commit_seed(1)),
-            salt: 0,
-        )
+fn contract_rejects_zero_wager() uses (evm: mut Evm) {
+    let entropy = evm.create2<MockEntropy>(value: Wei::zero(), args: (100 as u128,), salt: 10)
+    let dice = evm.create2<FairDice>(value: Wei::zero(), args: (wei(10000), entropy), salt: 0)
     evm.call(
         addr: dice,
         gas: 2000000,
@@ -295,7 +340,28 @@ fn contract_rejects_target_out_of_range() uses (evm: mut Evm) {
             addr: dice,
             gas: 2000000,
             value: wei(100),
-            message: FairDiceMsg::PlaceBet { target: 96, client_commitment: commit_seed(2) },
+            message: FairDiceMsg::PlaceBet { target: 49, client_commitment: 0x5555 },
+        )
+}
+
+// Invariant I4: target must be in 1..=95
+#[test(should_revert, balance = 1000000)]
+#[cfg(target = "evm")]
+fn contract_rejects_target_out_of_range() uses (evm: mut Evm) {
+    let entropy = evm.create2<MockEntropy>(value: Wei::zero(), args: (100 as u128,), salt: 10)
+    let dice = evm.create2<FairDice>(value: Wei::zero(), args: (wei(10000), entropy), salt: 0)
+    evm.call(
+        addr: dice,
+        gas: 2000000,
+        value: wei(50000),
+        message: FairDiceMsg::Fund {},
+    )
+    let _: u256 = evm
+        .call(
+            addr: dice,
+            gas: 2000000,
+            value: wei(200),
+            message: FairDiceMsg::PlaceBet { target: 96, client_commitment: 0x5555 },
         )
 }
 
@@ -303,35 +369,24 @@ fn contract_rejects_target_out_of_range() uses (evm: mut Evm) {
 #[test(should_revert, balance = 1000000)]
 #[cfg(target = "evm")]
 fn contract_rejects_insufficient_bankroll() uses (evm: mut Evm) {
-    let dice = evm
-        .create2<FairDice>(
-            value: Wei::zero(),
-            args: (wei(10000), commit_seed(1)),
-            salt: 0,
-        )
-    // No bankroll funded; target=10 -> max payout = 1000 * 98 / 10 = 9800 > 1000
+    let entropy = evm.create2<MockEntropy>(value: Wei::zero(), args: (100 as u128,), salt: 10)
+    let dice = evm.create2<FairDice>(value: Wei::zero(), args: (wei(10000), entropy), salt: 0)
+    // No bankroll funded; wager = 1000, target = 10 -> max payout = 9800 > 1000
     let _: u256 = evm
         .call(
             addr: dice,
             gas: 2000000,
-            value: wei(1000),
-            message: FairDiceMsg::PlaceBet { target: 10, client_commitment: commit_seed(2) },
+            value: wei(1100),
+            message: FairDiceMsg::PlaceBet { target: 10, client_commitment: 0x5555 },
         )
 }
 
-// Invariant I5: tampered client seed is rejected by commit-reveal check
+// Invariant I5: zero client commitment is rejected
 #[test(should_revert, balance = 1000000)]
 #[cfg(target = "evm")]
-fn contract_rejects_tampered_client_seed() uses (evm: mut Evm) {
-    let server_seed: u256 = 0x1111
-    let client_seed: u256 = 0x2222
-    let dice = evm
-        .create2<FairDice>(
-            value: Wei::zero(),
-            args: (wei(10000), commit_seed(server_seed)),
-            salt: 0,
-        )
-    let player = evm.create2<TestPlayer>(value: Wei::zero(), args: (), salt: 1)
+fn contract_rejects_zero_client_commitment() uses (evm: mut Evm) {
+    let entropy = evm.create2<MockEntropy>(value: Wei::zero(), args: (100 as u128,), salt: 10)
+    let dice = evm.create2<FairDice>(value: Wei::zero(), args: (wei(10000), entropy), salt: 0)
     evm.call(
         addr: dice,
         gas: 2000000,
@@ -340,73 +395,19 @@ fn contract_rejects_tampered_client_seed() uses (evm: mut Evm) {
     )
     let _: u256 = evm
         .call(
-            addr: player,
+            addr: dice,
             gas: 2000000,
-            value: wei(1000),
-            message: TestPlayerMsg::Bet {
-                dice,
-                target: 49,
-                client_commitment: commit_seed(client_seed),
-            },
+            value: wei(1100),
+            message: FairDiceMsg::PlaceBet { target: 49, client_commitment: 0 },
         )
-    evm.call(
-        addr: dice,
-        gas: 2000000,
-        value: Wei::zero(),
-        message: FairDiceMsg::Reveal { bet_id: 1, server_seed, client_seed: client_seed ^ 1 },
-    )
 }
 
-// Invariant I5: tampered server seed is rejected by commit-reveal check
-#[test(should_revert, balance = 1000000)]
-#[cfg(target = "evm")]
-fn contract_rejects_tampered_server_seed() uses (evm: mut Evm) {
-    let server_seed: u256 = 0x1111
-    let client_seed: u256 = 0x2222
-    let dice = evm
-        .create2<FairDice>(
-            value: Wei::zero(),
-            args: (wei(10000), commit_seed(server_seed)),
-            salt: 0,
-        )
-    let player = evm.create2<TestPlayer>(value: Wei::zero(), args: (), salt: 1)
-    evm.call(
-        addr: dice,
-        gas: 2000000,
-        value: wei(50000),
-        message: FairDiceMsg::Fund {},
-    )
-    let _: u256 = evm
-        .call(
-            addr: player,
-            gas: 2000000,
-            value: wei(1000),
-            message: TestPlayerMsg::Bet {
-                dice,
-                target: 49,
-                client_commitment: commit_seed(client_seed),
-            },
-        )
-    evm.call(
-        addr: dice,
-        gas: 2000000,
-        value: Wei::zero(),
-        message: FairDiceMsg::Reveal { bet_id: 1, server_seed: server_seed ^ 1, client_seed },
-    )
-}
-
-// Anti-stranding refund cannot be triggered before REFUND_DELAY_BLOCKS
+// Provider-failure refund cannot be triggered before REFUND_DELAY_BLOCKS
 #[test(should_revert, balance = 1000000)]
 #[cfg(target = "evm")]
 fn contract_rejects_early_refund() uses (evm: mut Evm) {
-    let server_seed: u256 = 0x1111
-    let client_seed: u256 = 0x2222
-    let dice = evm
-        .create2<FairDice>(
-            value: Wei::zero(),
-            args: (wei(10000), commit_seed(server_seed)),
-            salt: 0,
-        )
+    let entropy = evm.create2<MockEntropy>(value: Wei::zero(), args: (100 as u128,), salt: 10)
+    let dice = evm.create2<FairDice>(value: Wei::zero(), args: (wei(10000), entropy), salt: 0)
     let player = evm.create2<TestPlayer>(value: Wei::zero(), args: (), salt: 1)
     evm.call(
         addr: dice,
@@ -418,12 +419,8 @@ fn contract_rejects_early_refund() uses (evm: mut Evm) {
         .call(
             addr: player,
             gas: 2000000,
-            value: wei(1000),
-            message: TestPlayerMsg::Bet {
-                dice,
-                target: 49,
-                client_commitment: commit_seed(client_seed),
-            },
+            value: wei(1100),
+            message: TestPlayerMsg::Bet { dice, target: 49, client_commitment: 0x5555 },
         )
     evm.call(
         addr: dice,

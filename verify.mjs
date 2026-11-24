@@ -107,13 +107,16 @@ async function fetchBetFromChain(rpcUrl, contract, betId, fromBlock = null) {
   const rawBet = await rpcCall(rpcUrl, 'eth_call', [{ to: contract, data: callData }, 'latest']);
   if (!rawBet || rawBet === '0x') throw new Error('getBet returned empty data');
 
-  // Bet struct layout (9 static 32-byte words):
-  // 0: player, 1: wager, 2: target, 3: client_commitment, 4: server_commitment,
-  // 5: block_number, 6: settled, 7: outcome, 8: payout
+  const clean = rawBet.startsWith('0x') ? rawBet.slice(2) : rawBet;
+  const wordCount = Math.floor(clean.length / 64);
+
+  // Common Bet prefix (words 0..8):
+  // 0: player, 1: wager, 2: target, 3: client_commitment, 4: server_commitment|sequence_number,
+  // 5: block_number, 6: settled, 7: outcome, 8: payout, [9: entropy_value (Pyth Entropy V2)]
   const wager = hexWord(rawBet, 1);
   const target = hexWord(rawBet, 2);
   const clientCommitment = hexWord(rawBet, 3);
-  const serverCommitment = hexWord(rawBet, 4);
+  const word4 = hexWord(rawBet, 4);
   const placedBlock = hexWord(rawBet, 5);
   const settled = hexWord(rawBet, 6) !== 0n;
   const claimedOutcome = hexWord(rawBet, 7);
@@ -123,6 +126,27 @@ async function fetchBetFromChain(rpcUrl, contract, betId, fromBlock = null) {
     throw new Error(`Bet #${betId} is not settled yet on-chain.`);
   }
 
+  // Task B (Pyth Entropy V2) stores `entropy_value` directly in word 9 and computes
+  // `roll(entropy_value, client_commitment, bet_id)`.
+  if (wordCount >= 10) {
+    const entropyValue = hexWord(rawBet, 9);
+    if (entropyValue === 0n) {
+      throw new Error(`Bet #${betId} has zero entropy_value (likely refunded via refundExpired).`);
+    }
+    return {
+      mode: 'entropy',
+      betId: BigInt(betId),
+      sequenceNumber: word4,
+      serverSeed: entropyValue,
+      clientSeed: clientCommitment,
+      target,
+      wager,
+      claimedOutcome,
+      claimedPayout,
+    };
+  }
+
+  // Legacy Task A (commit-reveal) mode: 9 words, seeds emitted in BetRevealed log.
   const head = BigInt(await rpcCall(rpcUrl, 'eth_blockNumber', []));
   const startBlock = fromBlock !== null ? BigInt(fromBlock) : placedBlock;
   const CHUNK = 199n; // Base Sepolia public RPC limits eth_getLogs to a 200-block window
@@ -154,11 +178,12 @@ async function fetchBetFromChain(rpcUrl, contract, betId, fromBlock = null) {
   const clientSeed = hexWord(logData, 1);
 
   return {
+    mode: 'commit-reveal',
     betId: BigInt(betId),
     serverSeed,
     clientSeed,
     clientCommitment,
-    serverCommitment,
+    serverCommitment: word4,
     target,
     wager,
     claimedOutcome,
@@ -193,8 +218,10 @@ async function main() {
   // Sanity-check ABI presence
   const abi = JSON.parse(await readFile(abiPath, 'utf8'));
   const hasGetBet = abi.some((e) => e.type === 'function' && e.name === 'getBet');
-  const hasRevealed = abi.some((e) => e.type === 'event' && e.name === 'BetRevealed');
-  if (!hasGetBet || !hasRevealed) {
+  const hasEvent = abi.some(
+    (e) => e.type === 'event' && (e.name === 'BetRevealed' || e.name === 'BetSettled')
+  );
+  if (!hasGetBet || !hasEvent) {
     throw new Error(`ABI at ${abiPath} does not match FairDice.`);
   }
 

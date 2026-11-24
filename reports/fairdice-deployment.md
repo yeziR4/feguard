@@ -51,3 +51,44 @@ node scripts/watch-abandoned-bets.mjs --contract 0xed5d38e135d7e63ebc6f7dc6ef8d9
 ```
 
 > Note: The observer truthfully reports that Bet #2 passed the deadline without settling; from on-chain state alone it cannot distinguish which party withheld their preimage.
+
+---
+
+## Task B — Pyth Entropy V2 Deployment & Live Callback Verification
+
+Replacing the secret server seed with Pyth Entropy V2 eliminates selective-abort withholding by either party: `placeBet` pays `getFeeV2()` and invokes `requestV2()`, and Pyth's keeper fulfills randomness via `_entropyCallback(uint64,address,bytes32)`. `src/outcome.fe` (`roll` / `compute_payout`) is **unchanged** and still compiles verbatim to both EVM and WASM.
+
+### On-Chain Verification of Pyth Entropy V2 (Base Sepolia)
+
+- **Proxy:** `0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c` (`code len = 1418` hex chars)
+- **UUPS check:** `cast call 0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c "proxiableUUID()(bytes32)" --rpc-url https://sepolia.base.org` reverted with `"UUPSUpgradeable: must not be called through delegatecall"` (confirmed UUPS proxy).
+- **EIP-1967 implementation:** `0x8dedb2608d758eed1321b629e3737c95ad3cb733`
+- **Live bytecode selector check:** `_entropyCallback(uint64,address,bytes32)` (`0x52a5f1f8`) = **present**; `entropyCallback(uint64,address,bytes32)` (`0x24185135`) = absent; `requestV2()` (`0x7b43155d`) = **present**; `getFeeV2()` (`0x8204b67a`) = **present** (returned `15000000000001` wei).
+
+### Deployed Contract & Live Transactions
+
+| Field | Value |
+| --- | --- |
+| Contract (`FairDice` + Pyth Entropy V2) | `0xd48ed9b0ad9660dd1c21964aab5468081968c774` |
+| Constructor args | `cap = 1000000000000000` wei (`0.001 ETH`), `entropy_addr = 0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c` |
+| Deploy tx | `0xbe54098598a9d4dcdc4a56fd384479fa45c2218fe6100080a6245961fa5d2d2a` |
+| `fund()` tx (`0.003 ETH`) | `0x896a2d71be71e7808dfd17d63e425b0abd682afdec43cec69346ed2b9635e3c1` |
+| `placeBet(49, clientCommit)` tx | `0xeb1dbb0e178d31c46d7b487ac5eccc16a704d2c011e1347341067efa428ff130` (block `63021194`, `value = 115000000000001` wei = `100000000000000` wager + `15000000000001` Entropy fee, `sequence_number = 113865` / `0x1bcc9`) |
+| Pyth keeper `_entropyCallback` fulfillment tx | `0xb5bab940a80e54e36f1a6823406d079e3f2457f381e6195a8e3230360a400ac7` (block `63021204`, 10 blocks later; `randomNumber = 0x1e3cf5c8e560adc6f7bd9f27357ffefadb4157e06f8b6f845f736e059daa8b3c`, `outcome = 74`, `payout = 0 wei`) |
+
+### Reproducible Live Verification Commands (Task B)
+
+```cmd
+:: Verify Pyth-settled Bet #1 using Fe-compiled WASM (`out/feguard.wasm`)
+node verify.mjs --rpc https://sepolia.base.org --contract 0xd48ed9b0ad9660dd1c21964aab5468081968c774 --bet-id 1
+:: Output: Verdict: MATCH | Claimed outcome: 74 | Recomputed outcome: 74 (OK) | Claimed payout: 0 wei (OK) (exit 0)
+
+:: Deliberately tamper with the on-chain entropy value (^ 1)
+node verify.mjs --rpc https://sepolia.base.org --contract 0xd48ed9b0ad9660dd1c21964aab5468081968c774 --bet-id 1 --tamper
+:: Output: Verdict: MISMATCH | Recomputed outcome: 99 (DIFFERS) (exit 1)
+
+:: Confirm watcher reports 0 abandoned bets (Bet #1 settled automatically by Pyth keeper)
+node scripts/watch-abandoned-bets.mjs --contract 0xd48ed9b0ad9660dd1c21964aab5468081968c774 --rpc https://sepolia.base.org
+:: Output: settled 1, pending (in time) 0 (exit 0)
+```
+

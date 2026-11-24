@@ -194,7 +194,7 @@
       <div class="controls">
         <div>
           <label for="rpcInput">JSON-RPC Endpoint (fallback when window.ethereum absent)</label>
-          <input id="rpcInput" type="text" value="https://ethereum-sepolia-rpc.publicnode.com" />
+          <input id="rpcInput" type="text" value="https://sepolia.base.org" />
         </div>
         <div>
           <label for="contractInput">Deployed FairDice Contract Address</label>
@@ -242,7 +242,7 @@
   </div>
 
   <script>
-    const DEFAULT_RPC_URL = 'https://ethereum-sepolia-rpc.publicnode.com';
+    const DEFAULT_RPC_URL = 'https://sepolia.base.org';
     const WASM_CANDIDATES = ['./out/feguard.wasm', './out/dice.wasm', './dice.wasm'];
 
     // Verified Solidity ABI selectors / topics for FairDice (from out/FairDice.abi.json)
@@ -372,27 +372,16 @@
         document.getElementById('capStat').textContent = `${cap} wei`;
         document.getElementById('totalStat').textContent = total.toString();
 
-        const logs = await rpcRequest('eth_getLogs', [{
-          address: contract,
-          fromBlock: '0x0',
-          toBlock: 'latest',
-          topics: [TOPIC_REVEALED],
-        }]);
-        const seedByBetId = new Map();
-        for (const log of logs || []) {
-          const betId = BigInt(log.topics[1]);
-          seedByBetId.set(betId, {
-            serverSeed: hexWord(log.data, 0),
-            clientSeed: hexWord(log.data, 1),
-          });
-        }
-
         const count = total > 20n ? 20n : total;
         const bets = [];
         for (let i = total; i > total - count; i -= 1n) {
           const raw = await rpcRequest('eth_call', [{ to: contract, data: SEL_GET_BET + padHex32(i) }, 'latest']);
+          const clean = (raw || '').replace(/^0x/, '');
+          const words = Math.floor(clean.length / 64);
           const player = '0x' + hexWord(raw, 0).toString(16).padStart(40, '0');
-          const seeds = seedByBetId.get(i);
+          const isEntropy = words >= 10;
+          const entropyValue = isEntropy ? hexWord(raw, 9) : undefined;
+          const clientCommitment = hexWord(raw, 3);
           bets.push({
             id: i,
             player,
@@ -401,8 +390,8 @@
             settled: hexWord(raw, 6) !== 0n,
             outcome: hexWord(raw, 7),
             payout: hexWord(raw, 8),
-            serverSeed: seeds?.serverSeed,
-            clientSeed: seeds?.clientSeed,
+            serverSeed: isEntropy ? entropyValue : undefined,
+            clientSeed: isEntropy ? clientCommitment : undefined,
           });
         }
         currentBets = bets;

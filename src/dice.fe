@@ -1,20 +1,24 @@
-// FairDice: provably-fair commit-reveal dice casino in Fe 26.7.0.
+// FairDice: provably-fair dice casino powered by Pyth Entropy V2 in Fe 26.7.0.
 // Reference implementation only — NOT audited and NOT production-ready.
 //
 // Invariants enforced by this contract:
 //   I1  A bet settles at most once (`bet.settled` is checked and flipped before
 //       any ETH transfer or external interaction).
-//   I2  Payout equals `compute_payout(wager, target, roll(server_seed, client_seed, bet_id))`
-//       from `src/outcome.fe` — the exact same Fe source compiled to WASM.
+//   I2  Outcome and payout equal `roll(entropy_value, client_commitment, bet_id)`
+//       and `compute_payout(wager, target, outcome)` from `src/outcome.fe` — the
+//       exact same Fe source compiled to WASM.
 //   I3  The contract never pays more than `ctx.balance(ctx.address())` at settle time.
-//   I4  `wager > 0` and `target` in `1..=95`.
-//   I5  Two-party commit-reveal: both `client_commitment = keccak256(client_seed)`
-//       and `server_commitment = keccak256(server_seed)` are locked at bet time,
-//       so neither player nor house knows or can grind the outcome after betting.
+//   I4  `wager > 0` (after deducting the Pyth Entropy V2 fee) and `target` in `1..=95`.
+//   I5  Neither player nor house controls or can withhold the randomness: `placeBet`
+//       locks `client_commitment` and requests V2 randomness from Pyth Entropy;
+//       only the configured Entropy contract may invoke `_entropyCallback`.
+//       `refundExpired` is strictly a provider-failure escape hatch after 256 blocks.
 
 #[cfg(target = "evm")]
+use std::abi::Bytes32
+#[cfg(target = "evm")]
 use std::evm::{Call, Log, StorageMap, revert_error, wei}
-use ingot::outcome::{commit_seed, compute_payout, is_valid_target, max_payout, roll}
+use ingot::outcome::{compute_payout, is_valid_target, max_payout, roll}
 
 pub const REFUND_DELAY_BLOCKS: u256 = 256
 
@@ -24,11 +28,12 @@ pub struct Bet {
     pub wager: Wei,
     pub target: u8,
     pub client_commitment: u256,
-    pub server_commitment: u256,
+    pub sequence_number: u64,
     pub block_number: u256,
     pub settled: bool,
     pub outcome: u256,
     pub payout: Wei,
+    pub entropy_value: u256,
 }
 
 impl Copy for Bet {}
@@ -56,15 +61,15 @@ pub struct InvalidCommitment {}
 
 #[cfg(target = "evm")]
 #[error]
+pub struct InvalidEntropy {}
+
+#[cfg(target = "evm")]
+#[error]
 pub struct BetNotFound { pub bet_id: u256 }
 
 #[cfg(target = "evm")]
 #[error]
 pub struct AlreadySettled { pub bet_id: u256 }
-
-#[cfg(target = "evm")]
-#[error]
-pub struct SeedMismatch { pub bet_id: u256 }
 
 #[cfg(target = "evm")]
 #[error]
@@ -88,15 +93,18 @@ pub struct BetPlaced {
     pub wager: Wei,
     pub target: u8,
     pub commitment: u256,
+    pub sequence_number: u64,
 }
 
 #[cfg(target = "evm")]
 #[event]
-pub struct BetRevealed {
+pub struct BetSettled {
     #[indexed]
     pub bet_id: u256,
-    pub server_seed: u256,
-    pub client_seed: u256,
+    #[indexed]
+    pub sequence_number: u64,
+    pub entropy_value: u256,
+    pub client_commitment: u256,
     pub outcome: u256,
     pub payout: Wei,
 }
@@ -111,16 +119,25 @@ pub struct BetRefunded {
     pub wager: Wei,
 }
 
+// External ABI for Pyth Entropy V2 (`IEntropyV2`), verified against Base Sepolia
+// proxy `0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c` (impl `0x8dedb260...`).
+#[cfg(target = "evm")]
+pub msg EntropyV2Msg {
+    #[selector = sol("getFeeV2()")]
+    GetFeeV2 -> u128,
+    #[selector = sol("requestV2()")]
+    RequestV2 -> u64,
+}
+
 #[cfg(target = "evm")]
 pub msg FairDiceMsg {
     #[selector = sol("placeBet(uint8,uint256)")]
     PlaceBet { target: u8, client_commitment: u256 } -> u256,
-    #[selector = sol("reveal(uint256,uint256,uint256)")]
-    Reveal { bet_id: u256, server_seed: u256, client_seed: u256 },
+    // Verified on-chain selector 0x52a5f1f8 in Pyth Entropy V2 implementation bytecode.
+    #[selector = sol("_entropyCallback(uint64,address,bytes32)")]
+    EntropyCallback { sequence_number: u64, provider: Address, random_number: Bytes32 },
     #[selector = sol("refundExpired(uint256)")]
     RefundExpired { bet_id: u256 },
-    #[selector = sol("commitServerSeed(uint256)")]
-    CommitServerSeed { commitment: u256 },
     #[selector = sol("fund()")]
     Fund,
     #[selector = sol("getBet(uint256)")]
@@ -131,25 +148,28 @@ pub msg FairDiceMsg {
     HouseCap -> Wei,
     #[selector = sol("totalBets()")]
     TotalBets -> u256,
+    #[selector = sol("getEntropy()")]
+    GetEntropy -> Address,
 }
 
 #[cfg(target = "evm")]
 pub contract FairDice uses (ctx: Ctx, log: mut Log, call: mut Call) {
     house: Address,
     house_cap: Wei,
-    mut server_commitment: u256,
+    entropy: Address,
     mut bet_count: u256,
     mut bets: StorageMap<u256, Bet>,
+    mut seq_to_bet: StorageMap<u64, u256>,
 
-    init(cap: Wei, initial_server_commitment: u256)
-    uses (ctx, mut house, mut house_cap, mut server_commitment, mut bet_count)
+    init(cap: Wei, entropy_addr: Address)
+    uses (ctx, mut house, mut house_cap, mut entropy, mut bet_count)
     {
-        if initial_server_commitment == 0 {
-            revert_error(InvalidCommitment {})
+        if entropy_addr == Address::new(0) {
+            revert_error(InvalidEntropy {})
         }
         house = ctx.caller()
         house_cap = cap
-        server_commitment = initial_server_commitment
+        entropy = entropy_addr
         bet_count = 0
     }
 
@@ -157,54 +177,66 @@ pub contract FairDice uses (ctx: Ctx, log: mut Log, call: mut Call) {
         #[payable]
         Fund {}
 
-        CommitServerSeed { commitment } uses (ctx, house, mut server_commitment) {
-            if ctx.caller() != house {
-                revert_error(Unauthorized {})
-            }
-            if commitment == 0 {
-                revert_error(InvalidCommitment {})
-            }
-            server_commitment = commitment
-        }
-
         #[payable]
         PlaceBet { target, client_commitment } -> u256
-        uses (ctx, mut log, house_cap, server_commitment, mut bet_count, mut bets)
+        uses (ctx, mut log, mut call, house_cap, entropy, mut bet_count, mut bets, mut seq_to_bet)
         {
-            let wager = ctx.value()
-            // Invariant I4: wager > 0 and target in range (1..=95)
-            if wager == Wei::zero() {
+            // Fetch current Pyth Entropy V2 fee and deduct it from msg.value.
+            let fee: u128 = call
+                .call(
+                    addr: entropy,
+                    gas: 100000,
+                    value: Wei::zero(),
+                    message: EntropyV2Msg::GetFeeV2 {},
+                )
+            let fee_wei = wei(fee as u256)
+
+            // Invariant I4: wager (msg.value - fee) > 0 and target in range (1..=95)
+            if ctx.value() <= fee_wei {
                 revert_error(ZeroWager {})
             }
+            let wager = ctx.value() - fee_wei
             if !is_valid_target(target) {
                 revert_error(TargetOutOfRange { target })
             }
             if wager > house_cap {
                 revert_error(ExceedsHouseCap { wager, cap: house_cap })
             }
-            // Invariant I5: both commitments must be non-zero at bet time
-            if client_commitment == 0 || server_commitment == 0 {
+            // Invariant I5: client commitment must be non-zero at bet time
+            if client_commitment == 0 {
                 revert_error(InvalidCommitment {})
             }
-            // Invariant I3 pre-check: bankroll must cover max payout
+
+            // Invariant I3 pre-check: bankroll after paying Entropy fee must cover max payout
             let max_pay = wei(max_payout(wager: wager.as_wei(), target))
-            let available = ctx.balance(ctx.address())
+            let available = ctx.balance(ctx.address()) - fee_wei
             if max_pay > available {
                 revert_error(InsufficientBankroll { max_payout: max_pay, available })
             }
 
+            // Request randomness from Pyth Entropy V2; neither party can withhold the callback.
+            let seq: u64 = call
+                .call(
+                    addr: entropy,
+                    gas: 500000,
+                    value: fee_wei,
+                    message: EntropyV2Msg::RequestV2 {},
+                )
+
             let bet_id = bet_count + 1
             bet_count = bet_id
+            seq_to_bet[seq] = bet_id
             bets[bet_id] = Bet {
                 player: ctx.caller(),
                 wager,
                 target,
                 client_commitment,
-                server_commitment,
+                sequence_number: seq,
                 block_number: ctx.block_number(),
                 settled: false,
                 outcome: 0,
                 payout: Wei::zero(),
+                entropy_value: 0,
             }
             log.emit(
                 BetPlaced {
@@ -213,19 +245,22 @@ pub contract FairDice uses (ctx: Ctx, log: mut Log, call: mut Call) {
                     wager,
                     target,
                     commitment: client_commitment,
+                    sequence_number: seq,
                 },
             )
             bet_id
         }
 
-        // Permissionless reveal/settlement path: once both preimages are known,
-        // anyone (player, house, or third-party relayer) can settle the bet.
-        // Because both `client_commitment` and `server_commitment` were locked
-        // at bet time (I5), neither party can grind or alter the outcome.
-        Reveal { bet_id, server_seed, client_seed }
-        uses (ctx, mut log, mut call, bet_count, mut bets)
+        // Pyth Entropy V2 callback (`_entropyCallback(uint64,address,bytes32)`).
+        // Only the configured Entropy contract may invoke this handler.
+        EntropyCallback { sequence_number, provider: _, random_number }
+        uses (ctx, mut log, mut call, entropy, mut bets, seq_to_bet)
         {
-            if bet_id == 0 || bet_id > bet_count {
+            if ctx.caller() != entropy {
+                revert_error(Unauthorized {})
+            }
+            let bet_id = seq_to_bet[sequence_number]
+            if bet_id == 0 {
                 revert_error(BetNotFound { bet_id })
             }
             var bet = bets[bet_id]
@@ -233,16 +268,14 @@ pub contract FairDice uses (ctx: Ctx, log: mut Log, call: mut Call) {
             if bet.settled {
                 revert_error(AlreadySettled { bet_id })
             }
-            // Invariant I5: verify both commit-reveal preimages.
-            if commit_seed(client_seed) != bet.client_commitment {
-                revert_error(SeedMismatch { bet_id })
-            }
-            if commit_seed(server_seed) != bet.server_commitment {
-                revert_error(SeedMismatch { bet_id })
-            }
 
             // Invariant I2: deterministic outcome and payout from shared `src/outcome.fe`.
-            let outcome = roll(server_seed, client_seed, bet_id)
+            let entropy_val = random_number.val
+            let outcome = roll(
+                server_seed: entropy_val,
+                client_seed: bet.client_commitment,
+                bet_id,
+            )
             let payout = wei(
                 compute_payout(wager: bet.wager.as_wei(), target: bet.target, outcome),
             )
@@ -257,6 +290,7 @@ pub contract FairDice uses (ctx: Ctx, log: mut Log, call: mut Call) {
             bet.settled = true
             bet.outcome = outcome
             bet.payout = payout
+            bet.entropy_value = entropy_val
             bets[bet_id] = bet
 
             if payout > Wei::zero() {
@@ -267,13 +301,20 @@ pub contract FairDice uses (ctx: Ctx, log: mut Log, call: mut Call) {
             }
 
             log.emit(
-                BetRevealed { bet_id, server_seed, client_seed, outcome, payout },
+                BetSettled {
+                    bet_id,
+                    sequence_number,
+                    entropy_value: entropy_val,
+                    client_commitment: bet.client_commitment,
+                    outcome,
+                    payout,
+                },
             )
         }
 
-        // Permissionless anti-stranding path: if a bet is not revealed within
-        // `REFUND_DELAY_BLOCKS` blocks, anyone may trigger a full wager refund
-        // back to `bet.player` so funds can never be stranded by a silent house.
+        // Permissionless provider-failure escape hatch: if Pyth Entropy fails to
+        // deliver a callback within `REFUND_DELAY_BLOCKS` blocks, anyone may
+        // refund `bet.wager` back to `bet.player`.
         RefundExpired { bet_id } uses (ctx, mut log, mut call, bet_count, mut bets) {
             if bet_id == 0 || bet_id > bet_count {
                 revert_error(BetNotFound { bet_id })
@@ -318,6 +359,10 @@ pub contract FairDice uses (ctx: Ctx, log: mut Log, call: mut Call) {
 
         TotalBets -> u256 uses (bet_count) {
             bet_count
+        }
+
+        GetEntropy -> Address uses (entropy) {
+            entropy
         }
     }
 }
