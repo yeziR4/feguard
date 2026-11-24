@@ -126,20 +126,22 @@ async function fetchBetFromChain(rpcUrl, contract, betId, fromBlock = null) {
     throw new Error(`Bet #${betId} is not settled yet on-chain.`);
   }
 
-  // Task B (Pyth Entropy V2) stores `entropy_value` directly in word 9 and computes
-  // `roll(entropy_value, client_commitment, bet_id)`.
+  // Task B / Crash (Pyth Entropy V2) stores `entropy_value` in word 9, and
+  // optionally `mode` (0=Dice, 1=Crash) in word 10 and `crash_target` (x100) in word 11.
   if (wordCount >= 10) {
     const entropyValue = hexWord(rawBet, 9);
     if (entropyValue === 0n) {
       throw new Error(`Bet #${betId} has zero entropy_value (likely refunded via refundExpired).`);
     }
+    const modeNum = wordCount >= 12 ? hexWord(rawBet, 10) : 0n;
+    const crashTarget = wordCount >= 12 ? hexWord(rawBet, 11) : 0n;
     return {
-      mode: 'entropy',
+      mode: modeNum === 1n ? 'crash' : 'entropy',
       betId: BigInt(betId),
       sequenceNumber: word4,
       serverSeed: entropyValue,
       clientSeed: clientCommitment,
-      target,
+      target: modeNum === 1n ? crashTarget : target,
       wager,
       claimedOutcome,
       claimedPayout,
@@ -251,22 +253,33 @@ async function main() {
   const wLimbs = splitU128(bet.wager);
   const pLimbs = splitU128(bet.claimedPayout);
 
+  const isCrash = bet.mode === 'crash';
   const packed = BigInt.asUintN(
     64,
-    wasm.fg_verify_bet(
-      ...sLimbs,
-      ...cLimbs,
-      bet.betId,
-      bet.target,
-      ...wLimbs,
-      bet.claimedOutcome,
-      ...pLimbs
-    )
+    isCrash
+      ? wasm.fg_verify_crash_bet(
+          ...sLimbs,
+          ...cLimbs,
+          bet.betId,
+          bet.target,
+          ...wLimbs,
+          bet.claimedOutcome,
+          ...pLimbs
+        )
+      : wasm.fg_verify_bet(
+          ...sLimbs,
+          ...cLimbs,
+          bet.betId,
+          bet.target,
+          ...wLimbs,
+          bet.claimedOutcome,
+          ...pLimbs
+        )
   );
 
   const outcomeMatches = (packed & 1n) === 1n;
   const payoutMatches = (packed & 2n) === 2n;
-  const recomputedOutcome = (packed >> 8n) & 0xffn;
+  const recomputedOutcome = isCrash ? (packed >> 8n) & 0xffffn : (packed >> 8n) & 0xffn;
 
   let commitOk = true;
   if (bet.serverCommitment !== undefined) {
@@ -279,14 +292,27 @@ async function main() {
   const verdict = allMatch ? 'MATCH' : 'MISMATCH';
 
   console.log(`Verdict:             ${verdict}${opts.tamper ? ' (TAMPER MODE: serverSeed ^= 1)' : ''}`);
+  console.log(`Game mode:           ${isCrash ? 'CRASH' : 'DICE'}`);
   console.log(`WASM verifier:       ${wasmPath}`);
   console.log(`Bet ID:              ${bet.betId}`);
   console.log(`Server seed (used):  0x${serverSeedToCheck.toString(16)}`);
   console.log(`Client seed:         0x${bet.clientSeed.toString(16)}`);
-  console.log(`Target:              < ${bet.target}`);
+  console.log(
+    isCrash
+      ? `Target multiplier:   ${(Number(bet.target) / 100).toFixed(2)}x (${bet.target})`
+      : `Target:              < ${bet.target}`
+  );
   console.log(`Wager (wei):         ${bet.wager}`);
-  console.log(`Claimed outcome:     ${bet.claimedOutcome}`);
-  console.log(`Recomputed outcome:  ${recomputedOutcome} (${outcomeMatches ? 'OK' : 'DIFFERS'})`);
+  console.log(
+    isCrash
+      ? `Claimed crash point: ${(Number(bet.claimedOutcome) / 100).toFixed(2)}x (${bet.claimedOutcome})`
+      : `Claimed outcome:     ${bet.claimedOutcome}`
+  );
+  console.log(
+    isCrash
+      ? `Recomputed crash:    ${(Number(recomputedOutcome) / 100).toFixed(2)}x (${recomputedOutcome}) (${outcomeMatches ? 'OK' : 'DIFFERS'})`
+      : `Recomputed outcome:  ${recomputedOutcome} (${outcomeMatches ? 'OK' : 'DIFFERS'})`
+  );
   console.log(`Claimed payout:      ${bet.claimedPayout} wei (${payoutMatches ? 'OK' : 'DIFFERS'})`);
   if (bet.serverCommitment !== undefined) {
     console.log(`Commitments valid:   ${commitOk ? 'YES' : 'NO'}`);

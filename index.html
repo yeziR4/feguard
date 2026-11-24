@@ -174,6 +174,27 @@
       flex-direction: column;
       gap: 1rem;
     }
+    .mode-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 3px;
+      gap: 3px;
+    }
+    .mode-switch button {
+      background: transparent;
+      color: var(--muted);
+      border: none;
+      padding: 6px 8px;
+      font-size: 12.5px;
+      border-radius: 5px;
+    }
+    .mode-switch button.active {
+      background: var(--surface-2);
+      color: var(--text);
+    }
     @media (max-width: 820px) {
       .ticket { border-right: none; border-bottom: 1px solid var(--border); }
     }
@@ -599,6 +620,11 @@
     <section class="game-shell">
       <!-- Bet Ticket -->
       <div class="ticket">
+        <div class="mode-switch" role="tablist" aria-label="Game Mode">
+          <button type="button" id="modeDiceBtn" class="active">Dice</button>
+          <button type="button" id="modeCrashBtn">Crash</button>
+        </div>
+
         <div class="field">
           <label><span>Wager (ETH)</span><span class="mono" id="capHint">Max 0.001</span></label>
           <div class="input-row">
@@ -609,10 +635,20 @@
           </div>
         </div>
 
-        <div class="field">
+        <div class="field" id="diceTargetField">
           <label><span>Roll Under</span><span class="mono">1 – 95</span></label>
           <div class="input-row">
             <input id="targetInput" type="number" min="1" max="95" value="49" />
+          </div>
+        </div>
+
+        <div class="field" id="crashTargetField" style="display:none;">
+          <label><span>Target Multiplier</span><span class="mono">1.05x – 98.00x</span></label>
+          <div class="input-row">
+            <input id="crashInput" type="number" step="0.05" min="1.05" max="98" value="2.00" />
+            <button type="button" data-cm="1.05">1.05x</button>
+            <button type="button" data-cm="2.00">2x</button>
+            <button type="button" data-cm="5.00">5x</button>
           </div>
         </div>
 
@@ -706,6 +742,7 @@
           <thead>
             <tr>
               <th>Bet</th>
+              <th>Mode</th>
               <th>Player</th>
               <th>Wager</th>
               <th>Target</th>
@@ -715,7 +752,7 @@
             </tr>
           </thead>
           <tbody id="betsBody">
-            <tr><td colspan="7" style="text-align:center; color:var(--dim); padding:1.5rem;">Loading live Base Sepolia bets…</td></tr>
+            <tr><td colspan="8" style="text-align:center; color:var(--dim); padding:1.5rem;">Loading live Base Sepolia bets…</td></tr>
           </tbody>
         </table>
       </div>
@@ -725,23 +762,24 @@
   <footer>
     <span>The verifier runs the same Fe source (<code>src/outcome.fe</code>) that settled the bet on-chain. <a href="about.html" style="text-decoration:underline;">How it works →</a></span>
     <span class="mono">
-      <a href="https://sepolia.basescan.org/address/0xd48ed9b0ad9660dd1c21964aab5468081968c774" target="_blank" rel="noopener">0xd48ed9…68c774</a>
+      <a href="https://sepolia.basescan.org/address/0x1c711fb3ab157c43ba02474886126d66c8cb5481" target="_blank" rel="noopener">0x1c711f…cb5481</a>
       · Reference implementation (unaudited)
     </span>
   </footer>
 
   <script>
     const RPC_URL = 'https://sepolia.base.org';
-    const CONTRACT = '0xd48ed9b0ad9660dd1c21964aab5468081968c774';
+    const CONTRACT = '0x1c711fb3ab157c43ba02474886126d66c8cb5481';
     const PYTH_PROXY = '0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c';
     const BASE_SEPOLIA_CHAIN_ID = '0x14a34';
 
-    const SEL_GET_BET    = '0x061e494f';
-    const SEL_TOTAL_BETS = '0xbefa1e2f';
-    const SEL_BANKROLL   = '0x0c657eb0';
-    const SEL_HOUSE_CAP  = '0x56f54594';
-    const SEL_PLACE_BET  = '0xdcb3b30e';
-    const SEL_GET_FEE_V2 = '0x8204b67a';
+    const SEL_GET_BET        = '0x061e494f';
+    const SEL_TOTAL_BETS     = '0xbefa1e2f';
+    const SEL_BANKROLL       = '0x0c657eb0';
+    const SEL_HOUSE_CAP      = '0x56f54594';
+    const SEL_PLACE_BET      = '0xdcb3b30e';
+    const SEL_PLACE_CRASH    = '0x2766d204';
+    const SEL_GET_FEE_V2     = '0x8204b67a';
 
     const MASK64 = 0xffffffffffffffffn;
     const splitU256 = (x) => {
@@ -773,9 +811,11 @@
     let feeWei = 15000000000001n;
     let account = null;
     let simNonce = 100n;
+    let gameMode = 'dice';
 
     const slider = document.getElementById('targetSlider');
     const targetInput = document.getElementById('targetInput');
+    const crashInput = document.getElementById('crashInput');
     const wagerInput = document.getElementById('wagerInput');
     const seedInput = document.getElementById('seedInput');
     const track = document.getElementById('track');
@@ -787,7 +827,42 @@
     const tamperLabel = document.getElementById('tamperLabel');
     const betsBody = document.getElementById('betsBody');
 
+    function getCrashMultX100() {
+      const m = Math.round((Number(crashInput.value) || 2) * 100);
+      return Math.max(105, Math.min(9800, m));
+    }
+
+    function setMode(mode) {
+      gameMode = mode;
+      document.getElementById('modeDiceBtn').classList.toggle('active', mode === 'dice');
+      document.getElementById('modeCrashBtn').classList.toggle('active', mode === 'crash');
+      document.getElementById('diceTargetField').style.display = mode === 'dice' ? '' : 'none';
+      document.getElementById('crashTargetField').style.display = mode === 'crash' ? '' : 'none';
+      syncTarget(slider.value);
+    }
+    document.getElementById('modeDiceBtn').addEventListener('click', () => setMode('dice'));
+    document.getElementById('modeCrashBtn').addEventListener('click', () => setMode('crash'));
+    document.querySelectorAll('[data-cm]').forEach((b) => {
+      b.addEventListener('click', () => { crashInput.value = b.dataset.cm; syncTarget(slider.value); });
+    });
+    crashInput.addEventListener('input', () => syncTarget(slider.value));
+
     function syncTarget(val) {
+      if (gameMode === 'crash') {
+        const m100 = getCrashMultX100();
+        const chance = Math.min(93, Math.floor(9800 / m100));
+        track.style.setProperty('--pct', `${chance}%`);
+        document.getElementById('metricChance').textContent = `~${chance}%`;
+        document.getElementById('metricMult').textContent = `${(m100 / 100).toFixed(2)}x`;
+        rollSub.textContent = `Cash out at ${(m100 / 100).toFixed(2)}x before crash`;
+        try {
+          const w = parseEth(wagerInput.value);
+          document.getElementById('metricPayout').textContent = fmtEth((w * BigInt(m100)) / 100n);
+        } catch {
+          document.getElementById('metricPayout').textContent = '—';
+        }
+        return;
+      }
       const t = Math.max(1, Math.min(95, Number(val) || 49));
       slider.value = t;
       targetInput.value = t;
@@ -908,17 +983,35 @@
     document.getElementById('playWasmBtn').addEventListener('click', async () => {
       try {
         const w = await loadWasm();
-        const target = Number(slider.value);
         const wager = parseEth(wagerInput.value);
         const seed = BigInt(seedInput.value.trim());
         const b = new Uint8Array(32);
         crypto.getRandomValues(b);
         const ent = BigInt('0x' + Array.from(b, (x) => x.toString(16).padStart(2, '0')).join(''));
         simNonce += 1n;
-        const out = BigInt.asUintN(64, w.fg_roll(...splitU256(ent), ...splitU256(seed), simNonce));
-        const pay = out < BigInt(target) ? (wager * 98n) / BigInt(target) : 0n;
-        animateRoll(Number(out), target, pay);
-        playStatus.textContent = `Simulated locally via Fe fg_roll() · nonce #${simNonce} · outcome ${out}`;
+        const u = BigInt.asUintN(64, w.fg_roll(...splitU256(ent), ...splitU256(seed), simNonce));
+        if (gameMode === 'crash') {
+          const m100 = BigInt(getCrashMultX100());
+          const cp = BigInt.asUintN(64, w.fg_crash_point(...splitU256(ent), ...splitU256(seed), simNonce));
+          const win = m100 <= cp;
+          const pay = win ? (wager * m100) / 100n : 0n;
+          animateRoll(Number(u), 99, pay);
+          setTimeout(() => {
+            rollDisplay.textContent = `${(Number(cp) / 100).toFixed(2)}x`;
+            rollDisplay.className = `roll-num ${win ? 'win' : 'loss'}`;
+            dieScene.classList.remove('win', 'loss');
+            dieScene.classList.add(win ? 'win' : 'loss');
+            rollSub.textContent = win
+              ? `Cashed out ${(Number(m100) / 100).toFixed(2)}x · crashed at ${(Number(cp) / 100).toFixed(2)}x (+${fmtEth(pay)})`
+              : `Crashed at ${(Number(cp) / 100).toFixed(2)}x (target ${(Number(m100) / 100).toFixed(2)}x)`;
+          }, 700);
+          playStatus.textContent = `Simulated Crash via Fe fg_crash_point() · nonce #${simNonce} · crash ${(Number(cp) / 100).toFixed(2)}x`;
+        } else {
+          const target = Number(slider.value);
+          const pay = u < BigInt(target) ? (wager * 98n) / BigInt(target) : 0n;
+          animateRoll(Number(u), target, pay);
+          playStatus.textContent = `Simulated Dice via Fe fg_roll() · nonce #${simNonce} · outcome ${u}`;
+        }
       } catch (e) {
         playStatus.textContent = `Error: ${e.message}`;
       }
@@ -952,8 +1045,10 @@
           return;
         }
         const commit = BigInt(seedInput.value.trim());
-        const data = SEL_PLACE_BET + padHex32(target) + padHex32(commit);
-        playStatus.textContent = `Sending ${fmtEth(wager)} + ${fmtEth(feeWei)} Pyth fee…`;
+        const data = gameMode === 'crash'
+          ? SEL_PLACE_CRASH + padHex32(getCrashMultX100()) + padHex32(commit)
+          : SEL_PLACE_BET + padHex32(Number(slider.value)) + padHex32(commit);
+        playStatus.textContent = `Sending ${gameMode.toUpperCase()} ${fmtEth(wager)} + ${fmtEth(feeWei)} Pyth fee…`;
         const hash = await window.ethereum.request({
           method: 'eth_sendTransaction',
           params: [{ from: acc, to: CONTRACT, value: '0x' + (wager + feeWei).toString(16), data }],
@@ -973,26 +1068,37 @@
       }
       const tampered = tamperToggle.checked;
       const seed = tampered ? (bet.entropy ^ 1n) : bet.entropy;
-      const packed = BigInt.asUintN(64, wasm.fg_verify_bet(
-        ...splitU256(seed), ...splitU256(bet.commit), bet.id, bet.target,
-        ...splitU128(bet.wager), bet.outcome, ...splitU128(bet.payout)
-      ));
+      const isCrash = bet.mode === 1n;
+      const packed = BigInt.asUintN(64, isCrash
+        ? wasm.fg_verify_crash_bet(
+            ...splitU256(seed), ...splitU256(bet.commit), bet.id, bet.crashTarget,
+            ...splitU128(bet.wager), bet.outcome, ...splitU128(bet.payout)
+          )
+        : wasm.fg_verify_bet(
+            ...splitU256(seed), ...splitU256(bet.commit), bet.id, bet.target,
+            ...splitU128(bet.wager), bet.outcome, ...splitU128(bet.payout)
+          ));
       const ok = (packed & 1n) === 1n && (packed & 2n) === 2n;
-      const got = (packed >> 8n) & 0xffn;
-      cell.innerHTML = `<span class="tag ${ok ? 'match' : 'mismatch'}">${ok ? 'MATCH' : 'MISMATCH'}</span><span class="sub-proof">wasm=${got}${tampered ? ' (tampered)' : ''}</span>`;
+      const got = isCrash ? (packed >> 8n) & 0xffffn : (packed >> 8n) & 0xffn;
+      const gotStr = isCrash ? `${(Number(got) / 100).toFixed(2)}x` : String(got);
+      cell.innerHTML = `<span class="tag ${ok ? 'match' : 'mismatch'}">${ok ? 'MATCH' : 'MISMATCH'}</span><span class="sub-proof">wasm=${gotStr}${tampered ? ' (tampered)' : ''}</span>`;
     }
 
     function renderBets() {
       betsBody.innerHTML = '';
       for (const bet of bets) {
         const win = bet.settled && bet.payout > 0n;
+        const isCrash = bet.mode === 1n;
+        const targetStr = isCrash ? `${(Number(bet.crashTarget) / 100).toFixed(2)}x` : `&lt; ${bet.target}`;
+        const outStr = isCrash ? `${(Number(bet.outcome) / 100).toFixed(2)}x` : String(bet.outcome).padStart(2, '0');
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td class="mono">#${bet.id}</td>
+          <td class="mono"><span class="tag loss">${isCrash ? 'CRASH' : 'DICE'}</span></td>
           <td class="mono"><a href="https://sepolia.basescan.org/address/${bet.player}" target="_blank" rel="noopener">${shortAddr(bet.player)}</a></td>
           <td class="mono">${fmtEth(bet.wager)}</td>
-          <td class="mono">&lt; ${bet.target}</td>
-          <td class="mono">${bet.settled ? `<span class="tag ${win ? 'win' : 'loss'}">${String(bet.outcome).padStart(2, '0')}</span>` : '<span class="tag pending">PENDING</span>'}</td>
+          <td class="mono">${targetStr}</td>
+          <td class="mono">${bet.settled ? `<span class="tag ${win ? 'win' : 'loss'}">${outStr}</span>` : '<span class="tag pending">PENDING</span>'}</td>
           <td class="mono" style="color:${win ? 'var(--green-hi)' : 'var(--muted)'};">${bet.settled ? fmtEth(bet.payout) : '—'}</td>
           <td><button class="btn-quiet verify-btn" style="margin-right:8px;">Verify</button><span class="verify-out"></span></td>
         `;
@@ -1023,6 +1129,7 @@
         const rows = [];
         for (let i = total; i > total - count; i -= 1n) {
           const raw = await rpc('eth_call', [{ to: CONTRACT, data: SEL_GET_BET + padHex32(i) }, 'latest']);
+          const words = Math.floor((raw.startsWith('0x') ? raw.slice(2) : raw).length / 64);
           rows.push({
             id: i,
             player: '0x' + hexWord(raw, 0).toString(16).padStart(40, '0'),
@@ -1033,6 +1140,8 @@
             outcome: hexWord(raw, 7),
             payout: hexWord(raw, 8),
             entropy: hexWord(raw, 9),
+            mode: words >= 12 ? hexWord(raw, 10) : 0n,
+            crashTarget: words >= 12 ? hexWord(raw, 11) : 0n,
           });
         }
         bets = rows;

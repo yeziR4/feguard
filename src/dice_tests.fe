@@ -7,8 +7,15 @@ use ingot::outcome::{
     MIN_TARGET,
     MAX_TARGET,
     DICE_SIDES,
+    MODE_CRASH,
+    MIN_CRASH_MULT_X100,
+    MAX_CRASH_MULT_X100,
     commit_seed,
+    compute_crash_payout,
     compute_payout,
+    crash_max_payout,
+    crash_point,
+    is_valid_crash_target,
     is_valid_target,
     max_payout,
     roll,
@@ -22,6 +29,8 @@ use ingot::dice::{Bet, EntropyV2Msg, FairDice, FairDiceMsg}
 pub msg TestPlayerMsg {
     #[selector = sol("bet(address,uint8,uint256)")]
     Bet { dice: Address, target: u8, client_commitment: u256 } -> u256,
+    #[selector = sol("crashBet(address,uint256,uint256)")]
+    CrashBet { dice: Address, target_mult_x100: u256, client_commitment: u256 } -> u256,
 }
 
 #[cfg(target = "evm")]
@@ -38,6 +47,18 @@ pub contract TestPlayer uses (ctx: Ctx, call: mut Call) {
                 gas: 1500000,
                 value: ctx.value(),
                 message: FairDiceMsg::PlaceBet { target, client_commitment },
+            )
+        }
+
+        #[payable]
+        CrashBet { dice, target_mult_x100, client_commitment } -> u256
+        uses (ctx, mut call)
+        {
+            call.call(
+                addr: dice,
+                gas: 1500000,
+                value: ctx.value(),
+                message: FairDiceMsg::PlaceCrashBet { target_mult_x100, client_commitment },
             )
         }
     }
@@ -428,4 +449,121 @@ fn contract_rejects_early_refund() uses (evm: mut Evm) {
         value: Wei::zero(),
         message: FairDiceMsg::RefundExpired { bet_id: 1 },
     )
+}
+
+#[test]
+fn crash_curve_boundaries_and_tamper_sensitivity() {
+    assert!(!is_valid_crash_target(104))
+    assert!(is_valid_crash_target(MIN_CRASH_MULT_X100))
+    assert!(is_valid_crash_target(MAX_CRASH_MULT_X100))
+    assert!(!is_valid_crash_target(9801))
+    assert!(crash_max_payout(wager: 1000, mult_x100: 104) == 0)
+
+    // Curve boundaries: curve(u) = 9800 / (u + 1)
+    assert!(crash_point(0) == 9800)
+    assert!(crash_point(48) == 200)
+    assert!(crash_point(99) == 98)
+
+    // Exact boundary: target 200 (2.00x) wins at u=48 (200 <= 200), loses at u=49 (200 > 196)
+    assert!(
+        compute_crash_payout(wager: 1000, mult_x100: 200, u: 48) == 2000,
+    )
+    assert!(
+        compute_crash_payout(wager: 1000, mult_x100: 200, u: 49) == 0,
+    )
+
+    // Determinism & tamper sensitivity via shared roll()
+    let u_honest = roll(
+        server_seed: 0x1111222233334444,
+        client_seed: 0x5555666677778888,
+        bet_id: 1,
+    )
+    let u_tampered = roll(
+        server_seed: 0x1111222233334445,
+        client_seed: 0x5555666677778888,
+        bet_id: 1,
+    )
+    assert!(crash_point(u_honest) == 376)
+    assert!(crash_point(u_honest) != crash_point(u_tampered))
+}
+
+#[test(balance = 1000000)]
+#[cfg(target = "evm")]
+fn contract_crash_mode_callback_pays_winner() uses (evm: mut Evm) {
+    let entropy_val: u256 = 0x1111222233334444
+    let client_commit: u256 = 0x5555666677778888
+    let fee: u128 = 100
+
+    let entropy = evm.create2<MockEntropy>(value: Wei::zero(), args: (fee,), salt: 20)
+    let dice = evm.create2<FairDice>(value: Wei::zero(), args: (wei(10000), entropy), salt: 21)
+    let player = evm.create2<TestPlayer>(value: Wei::zero(), args: (), salt: 22)
+
+    evm.call(
+        addr: dice,
+        gas: 2000000,
+        value: wei(50000),
+        message: FairDiceMsg::Fund {},
+    )
+
+    // Place Crash bet with target 2.00x (200); u=25 -> crash_point(25) = 376 (3.76x) -> WIN
+    let bet_id: u256 = evm
+        .call(
+            addr: player,
+            gas: 2000000,
+            value: wei(1000 + (fee as u256)),
+            message: TestPlayerMsg::CrashBet {
+                dice,
+                target_mult_x100: 200,
+                client_commitment: client_commit,
+            },
+        )
+    assert!(bet_id == 1)
+
+    evm.call(
+        addr: entropy,
+        gas: 2000000,
+        value: Wei::zero(),
+        message: MockEntropyAdminMsg::Deliver {
+            consumer: dice,
+            seq: 1,
+            random_number: Bytes32 { val: entropy_val },
+        },
+    )
+
+    let bet: Bet = evm
+        .call(
+            addr: dice,
+            gas: 1000000,
+            value: Wei::zero(),
+            message: FairDiceMsg::GetBet { bet_id: 1 },
+        )
+    assert!(bet.settled)
+    assert!(bet.mode == MODE_CRASH)
+    assert!(bet.crash_target == 200)
+    assert!(bet.outcome == 376)
+    assert!(bet.payout == wei(2000))
+    assert!(evm.balance(player) == wei(2000))
+}
+
+#[test(should_revert, balance = 1000000)]
+#[cfg(target = "evm")]
+fn contract_crash_rejects_out_of_range_target() uses (evm: mut Evm) {
+    let entropy = evm.create2<MockEntropy>(value: Wei::zero(), args: (100 as u128,), salt: 30)
+    let dice = evm.create2<FairDice>(value: Wei::zero(), args: (wei(10000), entropy), salt: 31)
+    evm.call(
+        addr: dice,
+        gas: 2000000,
+        value: wei(50000),
+        message: FairDiceMsg::Fund {},
+    )
+    let _: u256 = evm
+        .call(
+            addr: dice,
+            gas: 2000000,
+            value: wei(1100),
+            message: FairDiceMsg::PlaceCrashBet {
+                target_mult_x100: 104,
+                client_commitment: 0x5555,
+            },
+        )
 }

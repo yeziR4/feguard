@@ -18,7 +18,18 @@
 use std::abi::Bytes32
 #[cfg(target = "evm")]
 use std::evm::{Call, Log, StorageMap, revert_error, wei}
-use ingot::outcome::{compute_payout, is_valid_target, max_payout, roll}
+use ingot::outcome::{
+    MODE_DICE,
+    MODE_CRASH,
+    compute_crash_payout,
+    compute_payout,
+    crash_max_payout,
+    crash_point,
+    is_valid_crash_target,
+    is_valid_target,
+    max_payout,
+    roll,
+}
 
 pub const REFUND_DELAY_BLOCKS: u256 = 256
 
@@ -34,6 +45,8 @@ pub struct Bet {
     pub outcome: u256,
     pub payout: Wei,
     pub entropy_value: u256,
+    pub mode: u8,
+    pub crash_target: u256,
 }
 
 impl Copy for Bet {}
@@ -46,6 +59,10 @@ pub struct ZeroWager {}
 #[cfg(target = "evm")]
 #[error]
 pub struct TargetOutOfRange { pub target: u8 }
+
+#[cfg(target = "evm")]
+#[error]
+pub struct CrashTargetOutOfRange { pub target_mult_x100: u256 }
 
 #[cfg(target = "evm")]
 #[error]
@@ -133,6 +150,8 @@ pub msg EntropyV2Msg {
 pub msg FairDiceMsg {
     #[selector = sol("placeBet(uint8,uint256)")]
     PlaceBet { target: u8, client_commitment: u256 } -> u256,
+    #[selector = sol("placeCrashBet(uint256,uint256)")]
+    PlaceCrashBet { target_mult_x100: u256, client_commitment: u256 } -> u256,
     // Verified on-chain selector 0x52a5f1f8 in Pyth Entropy V2 implementation bytecode.
     #[selector = sol("_entropyCallback(uint64,address,bytes32)")]
     EntropyCallback { sequence_number: u64, provider: Address, random_number: Bytes32 },
@@ -237,6 +256,8 @@ pub contract FairDice uses (ctx: Ctx, log: mut Log, call: mut Call) {
                 outcome: 0,
                 payout: Wei::zero(),
                 entropy_value: 0,
+                mode: MODE_DICE,
+                crash_target: 0,
             }
             log.emit(
                 BetPlaced {
@@ -244,6 +265,81 @@ pub contract FairDice uses (ctx: Ctx, log: mut Log, call: mut Call) {
                     player: ctx.caller(),
                     wager,
                     target,
+                    commitment: client_commitment,
+                    sequence_number: seq,
+                },
+            )
+            bet_id
+        }
+
+        // Second game mode (Crash) on the same contract, Pyth Entropy V2 flow,
+        // and settlement invariants. `target_mult_x100` is scaled by 100 (e.g. 150 = 1.50x).
+        #[payable]
+        PlaceCrashBet { target_mult_x100, client_commitment } -> u256
+        uses (ctx, mut log, mut call, house_cap, entropy, mut bet_count, mut bets, mut seq_to_bet)
+        {
+            let fee: u128 = call
+                .call(
+                    addr: entropy,
+                    gas: 100000,
+                    value: Wei::zero(),
+                    message: EntropyV2Msg::GetFeeV2 {},
+                )
+            let fee_wei = wei(fee as u256)
+
+            if ctx.value() <= fee_wei {
+                revert_error(ZeroWager {})
+            }
+            let wager = ctx.value() - fee_wei
+            if !is_valid_crash_target(target_mult_x100) {
+                revert_error(CrashTargetOutOfRange { target_mult_x100 })
+            }
+            if wager > house_cap {
+                revert_error(ExceedsHouseCap { wager, cap: house_cap })
+            }
+            if client_commitment == 0 {
+                revert_error(InvalidCommitment {})
+            }
+
+            let max_pay = wei(
+                crash_max_payout(wager: wager.as_wei(), mult_x100: target_mult_x100),
+            )
+            let available = ctx.balance(ctx.address()) - fee_wei
+            if max_pay > available {
+                revert_error(InsufficientBankroll { max_payout: max_pay, available })
+            }
+
+            let seq: u64 = call
+                .call(
+                    addr: entropy,
+                    gas: 500000,
+                    value: fee_wei,
+                    message: EntropyV2Msg::RequestV2 {},
+                )
+
+            let bet_id = bet_count + 1
+            bet_count = bet_id
+            seq_to_bet[seq] = bet_id
+            bets[bet_id] = Bet {
+                player: ctx.caller(),
+                wager,
+                target: 0,
+                client_commitment,
+                sequence_number: seq,
+                block_number: ctx.block_number(),
+                settled: false,
+                outcome: 0,
+                payout: Wei::zero(),
+                entropy_value: 0,
+                mode: MODE_CRASH,
+                crash_target: target_mult_x100,
+            }
+            log.emit(
+                BetPlaced {
+                    bet_id,
+                    player: ctx.caller(),
+                    wager,
+                    target: 0,
                     commitment: client_commitment,
                     sequence_number: seq,
                 },
@@ -271,14 +367,27 @@ pub contract FairDice uses (ctx: Ctx, log: mut Log, call: mut Call) {
 
             // Invariant I2: deterministic outcome and payout from shared `src/outcome.fe`.
             let entropy_val = random_number.val
-            let outcome = roll(
+            let u = roll(
                 server_seed: entropy_val,
                 client_seed: bet.client_commitment,
                 bet_id,
             )
-            let payout = wei(
-                compute_payout(wager: bet.wager.as_wei(), target: bet.target, outcome),
-            )
+            let (outcome, payout) = if bet.mode == MODE_CRASH {
+                (
+                    crash_point(u),
+                    wei(
+                        compute_crash_payout(
+                            wager: bet.wager.as_wei(),
+                            mult_x100: bet.crash_target,
+                            u,
+                        ),
+                    ),
+                )
+            } else {
+                (u, wei(
+                        compute_payout(wager: bet.wager.as_wei(), target: bet.target, outcome: u),
+                    ))
+            }
 
             // Invariant I3: never pay more than the contract balance at settle time.
             let available = ctx.balance(ctx.address())

@@ -42,11 +42,22 @@ Pyth Entropy V2 randomness callback.
 
 | | |
 |---|---|
-| Entropy V2 deployment | `0xd48ed9b0ad9660dd1c21964aab5468081968c774` |
+| Multi-mode Entropy V2 deployment (Dice + Crash) | `0x1c711fb3ab157c43ba02474886126d66c8cb5481` |
+| Entropy V2 deployment (Dice v1) | `0xd48ed9b0ad9660dd1c21964aab5468081968c774` |
 | commit–reveal deployment | `0xed5d38e135d7e63ebc6f7dc6ef8d9e2f21ce326b` |
 | Pyth Entropy V2 proxy | `0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c` |
 
 **Live evidence, verified to the wei:**
+
+- **Second game mode (Crash) on the same contract and shared `src/outcome.fe`.**
+  `crash_point(u) = 9800 / (u + 1)` extends `src/outcome.fe` additively and reuses
+  the exact same Pyth Entropy V2 callback and settlement invariants. Bet #1 on
+  `0x1c711fb3…` (`placeCrashBet(105, commit)`, `0x16e63261…`, block 63057452) was
+  fulfilled by the Pyth keeper 5 blocks later in `0x322716e9…` (block 63057457):
+  decoded `BetSettled` crash point `3.50x (350) >= 1.05x → WIN`, payout
+  `105000000000000 wei`, exact player balance delta `1740943415005496 → 1845943415005496`
+  (`+105000000000000 wei`). `verify.mjs` via WASM `fg_verify_crash_bet` prints
+  `MATCH` (`3.50x`), and `--tamper` prints `MISMATCH` (`2.04x`).
 
 - **Winning payout inside the entropy callback.** Bet #2 placed in `0x469cc0fa…`
   (block 63027591); the Pyth keeper delivered `_entropyCallback` in `0x67cf64e9…`

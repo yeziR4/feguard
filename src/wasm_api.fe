@@ -2,7 +2,7 @@
 // state replay remain in Fe. JavaScript only marshals inputs and presents data.
 use ingot::fuzz::{Trace, Machine, generate, replay, search, reduce, one_minimal}
 use ingot::guard_machine::guard
-use ingot::outcome::{roll, commit_seed, compute_payout}
+use ingot::outcome::{roll, commit_seed, compute_payout, crash_point, compute_crash_payout}
 
 fn steps(_ value: u64) -> usize {
     if value > 64 {
@@ -235,4 +235,69 @@ pub fn fg_verify_bet(
     }
     let out_byte: u64 = actual_outcome.downcast().unwrap()
     outcome_ok | payout_ok | (out_byte << 8)
+}
+
+/// Recompute the Crash multiplier (x100, e.g. 200 = 2.00x) from the shared `roll()`.
+#[unsafe(export)]
+#[cfg(target = "wasm")]
+pub fn fg_crash_point(
+    _ s3: u64,
+    _ s2: u64,
+    _ s1: u64,
+    _ s0: u64,
+    _ c3: u64,
+    _ c2: u64,
+    _ c1: u64,
+    _ c0: u64,
+    _ bet_id: u64,
+) -> u64 {
+    let server_seed = u256_from_limbs(s3, s2, s1, s0)
+    let client_seed = u256_from_limbs(c3, c2, c1, c0)
+    let u = roll(server_seed, client_seed, bet_id: bet_id as u256)
+    crash_point(u).downcast().unwrap()
+}
+
+/// Verify both the Crash multiplier (x100) and payout for a settled Crash bet.
+/// Returns a packed u64:
+///   bit 0 (1): crash_point matches claimed_crash_x100
+///   bit 1 (2): payout matches claimed_payout
+///   bits 8..23: recomputed crash_point (x100, 98..9800)
+#[unsafe(export)]
+#[cfg(target = "wasm")]
+pub fn fg_verify_crash_bet(
+    _ s3: u64,
+    _ s2: u64,
+    _ s1: u64,
+    _ s0: u64,
+    _ c3: u64,
+    _ c2: u64,
+    _ c1: u64,
+    _ c0: u64,
+    _ bet_id: u64,
+    _ target_mult_x100: u64,
+    _ wager_hi: u64,
+    _ wager_lo: u64,
+    _ claimed_crash_x100: u64,
+    _ claimed_payout_hi: u64,
+    _ claimed_payout_lo: u64,
+) -> u64 {
+    let server_seed = u256_from_limbs(s3, s2, s1, s0)
+    let client_seed = u256_from_limbs(c3, c2, c1, c0)
+    let wager = u256_from_u128(wager_hi, wager_lo)
+    let claimed_payout = u256_from_u128(claimed_payout_hi, claimed_payout_lo)
+    let u = roll(server_seed, client_seed, bet_id: bet_id as u256)
+    let actual_crash = crash_point(u)
+    let actual_payout = compute_crash_payout(wager, mult_x100: target_mult_x100 as u256, u)
+    let crash_ok: u64 = if actual_crash == (claimed_crash_x100 as u256) {
+        1
+    } else {
+        0
+    }
+    let payout_ok: u64 = if actual_payout == claimed_payout {
+        2
+    } else {
+        0
+    }
+    let crash_bits: u64 = actual_crash.downcast().unwrap()
+    crash_ok | payout_ok | (crash_bits << 8)
 }

@@ -145,4 +145,29 @@ Exercises the anti-stranding refund path on previously abandoned Bet #2 (placed 
   - Bet #3 `placeBet(49, c3Commit)` tx: `0xaa826ab2988c4875c1ced81a96522dba9108d395b4bfb05bf8c4de44bcba9bc7` (block `63028072`, `10000000000000` wei)
   - Immediate `cast call 0xed5d38e135d7e63ebc6f7dc6ef8d9e2f21ce326b "refundExpired(uint256)" 3 --rpc-url https://sepolia.base.org` reverted with `0x7e61955c0000000000000000000000000000000000000000000000000000000000000003` (`NotExpired(3)`).
 
+---
+
+## Multi-Mode Extension — Live CRASH Mode (`0x1c711fb3ab157c43ba02474886126d66c8cb5481`)
+
+Adds a second game mode (**Crash**: `crash_point(u) = 9800 / (u + 1)` scaled by 100, derived from the exact same shared `roll()` in `src/outcome.fe`) to `FairDice` via an additive `placeCrashBet(uint256 target_mult_x100, uint256 client_commitment)` handler (`0x2766d204`), reusing the same Pyth Entropy V2 proxy, `_entropyCallback`, and settlement invariants (I1–I5).
+
+| Field | Value |
+| --- | --- |
+| Contract (`FairDice` Dice + Crash, Entropy V2) | `0x1c711fb3ab157c43ba02474886126d66c8cb5481` |
+| Deploy tx | `0xc765ea1ec70deb4fbbb240606ff5c4af750c66b2ed7d4c6b1eada335d3efa98e` |
+| `fund()` tx (`0.002 ETH`) | `0x6c26a415212992d572599fa23538282754d3096be397ed9e0e084905b7e09134` |
+| Bet #1 `placeCrashBet(105, clientCommit)` tx | `0x16e63261eb4573966f0262ea95fbba2b88f7da20aa6cdfe5d87e213a7b597c95` (block `63057452`, `value = 115000000000001` wei = `100000000000000` wager + `15000000000001` Pyth fee; `clientCommit = 0xe72480fa34ac488aacb81b4741a6d65dca13aa550e645abc96643f10acf45a34`) |
+| Pyth keeper `_entropyCallback` tx | `0x322716e99bae0f8d6581b01a85f256410d5f50adcfba2d7eb6d91b9010eb2699` (block `63057457`, 5 blocks later) |
+| Decoded `BetSettled` (Bet #1, Crash) | `bet_id = 1`, `sequence_number = 113934` (`0x1bd0e`), `entropy_value = 0x354e6d74d04008b15d08f3b86831d4d6e7c650436863100303b7cc6d81cd84ac`, `outcome = 350` (`3.50x >= 1.05x` -> **WIN**), `payout = 105000000000000` wei (`0x5f7f37b39000`) |
+| Player balance delta (block `63057456` -> `63057457`) | `1740943415005496 -> 1845943415005496` = **`+105000000000000` wei == `payout`** |
+
+```cmd
+node verify.mjs --rpc https://sepolia.base.org --contract 0x1c711fb3ab157c43ba02474886126d66c8cb5481 --bet-id 1
+:: Verdict: MATCH | Game mode: CRASH | Target multiplier: 1.05x (105) | Claimed crash point: 3.50x (350) | Recomputed crash: 3.50x (350) (OK) | Claimed payout: 105000000000000 wei (OK) (exit 0)
+
+node verify.mjs --rpc https://sepolia.base.org --contract 0x1c711fb3ab157c43ba02474886126d66c8cb5481 --bet-id 1 --tamper
+:: Verdict: MISMATCH | Game mode: CRASH | Recomputed crash: 2.04x (204) (DIFFERS) (exit 1)
+```
+
+
 
