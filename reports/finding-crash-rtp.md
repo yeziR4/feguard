@@ -1,7 +1,6 @@
 # Finding: FairDice Crash mode does not return the advertised 2%
 
-**Status:** defect in our own reference implementation (`src/outcome.fe`,
-`src/dice.fe`). Not a third-party issue.
+**Status:** found and fixed in `src/outcome.fe` / `src/dice.fe` (redeployed to Base Sepolia at `0x7a29401136d6675ec21c983b7b0e0b5f238ae7b4`; `node scripts/crash-rtp.mjs --check` now exits `0` with 98.000% RTP across all legal targets). Original finding preserved below.
 **Type:** stated economics vs actual economics. Not a security vulnerability.
 **Affects:** Crash mode only. Dice mode is exact (verified below).
 

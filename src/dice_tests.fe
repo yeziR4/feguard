@@ -8,11 +8,13 @@ use ingot::outcome::{
     MAX_TARGET,
     DICE_SIDES,
     MODE_CRASH,
+    CRASH_DRAWS,
     MIN_CRASH_MULT_X100,
     MAX_CRASH_MULT_X100,
     commit_seed,
     compute_crash_payout,
     compute_payout,
+    crash_draw,
     crash_max_payout,
     crash_point,
     is_valid_crash_target,
@@ -459,40 +461,77 @@ fn crash_curve_boundaries_and_tamper_sensitivity() {
     assert!(!is_valid_crash_target(9801))
     assert!(crash_max_payout(wager: 1000, mult_x100: 104) == 0)
 
-    // Curve boundaries: curve(u) = 9800 / (u + 1)
-    assert!(crash_point(0) == 9800)
-    assert!(crash_point(48) == 200)
-    assert!(crash_point(99) == 98)
+    // Inverse-CDF curve boundaries over CRASH_DRAWS = 1_000_000:
+    // crash_point(u) = min(9800, 98 * 1_000_000 / (1_000_000 - u))
+    assert!(crash_point(0) == 98)
+    assert!(crash_point(510000) == 200)
+    assert!(crash_point(980400) == 5000)
+    assert!(crash_point(990000) == 9800)
+    assert!(crash_point(999999) == 9800)
+    assert!(crash_point(CRASH_DRAWS) == 0)
 
-    // Exact boundary: target 200 (2.00x) wins at u=48 (200 <= 200), loses at u=49 (200 > 196)
+    // 2.00x boundary: wins at u=510_000 (49.000% win prob), loses at u=509_999
     assert!(
-        compute_crash_payout(wager: 1000, mult_x100: 200, u: 48) == 2000,
+        compute_crash_payout(wager: 1000, mult_x100: 200, u: 510000) == 2000,
     )
     assert!(
-        compute_crash_payout(wager: 1000, mult_x100: 200, u: 49) == 0,
+        compute_crash_payout(wager: 1000, mult_x100: 200, u: 509999) == 0,
     )
 
-    // Determinism & tamper sensitivity via shared roll()
-    let u_honest = roll(
+    // 50.00x boundary (formerly the 50% edge worst case):
+    // wins iff u >= 980_400 (19_600 / 1_000_000 = 1.960% -> exact 98.000% RTP)
+    assert!(
+        compute_crash_payout(wager: 1000, mult_x100: 5000, u: 980400) == 50000,
+    )
+    assert!(
+        compute_crash_payout(wager: 1000, mult_x100: 5000, u: 980399) == 0,
+    )
+
+    // Determinism & tamper sensitivity via shared crash_draw()
+    let u_honest = crash_draw(
         server_seed: 0x1111222233334444,
         client_seed: 0x5555666677778888,
         bet_id: 1,
     )
-    let u_tampered = roll(
+    let u_same = crash_draw(
+        server_seed: 0x1111222233334444,
+        client_seed: 0x5555666677778888,
+        bet_id: 1,
+    )
+    let u_tampered = crash_draw(
         server_seed: 0x1111222233334445,
         client_seed: 0x5555666677778888,
         bet_id: 1,
     )
-    assert!(crash_point(u_honest) == 376)
-    assert!(crash_point(u_honest) != crash_point(u_tampered))
+    assert!(u_honest == u_same)
+    assert!(u_honest < CRASH_DRAWS)
+    assert!(u_honest != u_tampered)
 }
 
 #[test(balance = 1000000)]
 #[cfg(target = "evm")]
 fn contract_crash_mode_callback_pays_winner() uses (evm: mut Evm) {
-    let entropy_val: u256 = 0x1111222233334444
     let client_commit: u256 = 0x5555666677778888
     let fee: u128 = 100
+    // Find a deterministic entropy_val where crash_point(u) >= 200 so we exercise positive payout
+    var entropy_val: u256 = 0x1111222233334444
+    var expected_cp = crash_point(
+        crash_draw(
+            server_seed: entropy_val,
+            client_seed: client_commit,
+            bet_id: 1,
+        ),
+    )
+    while expected_cp < 200 {
+        entropy_val = entropy_val + 1
+        expected_cp = crash_point(
+            crash_draw(
+                server_seed: entropy_val,
+                client_seed: client_commit,
+                bet_id: 1,
+            ),
+        )
+    }
 
     let entropy = evm.create2<MockEntropy>(value: Wei::zero(), args: (fee,), salt: 20)
     let dice = evm.create2<FairDice>(value: Wei::zero(), args: (wei(10000), entropy), salt: 21)
@@ -505,7 +544,6 @@ fn contract_crash_mode_callback_pays_winner() uses (evm: mut Evm) {
         message: FairDiceMsg::Fund {},
     )
 
-    // Place Crash bet with target 2.00x (200); u=25 -> crash_point(25) = 376 (3.76x) -> WIN
     let bet_id: u256 = evm
         .call(
             addr: player,
@@ -540,7 +578,7 @@ fn contract_crash_mode_callback_pays_winner() uses (evm: mut Evm) {
     assert!(bet.settled)
     assert!(bet.mode == MODE_CRASH)
     assert!(bet.crash_target == 200)
-    assert!(bet.outcome == 376)
+    assert!(bet.outcome == expected_cp)
     assert!(bet.payout == wei(2000))
     assert!(evm.balance(player) == wei(2000))
 }

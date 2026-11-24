@@ -2,7 +2,14 @@
 // state replay remain in Fe. JavaScript only marshals inputs and presents data.
 use ingot::fuzz::{Trace, Machine, generate, replay, search, reduce, one_minimal}
 use ingot::guard_machine::guard
-use ingot::outcome::{roll, commit_seed, compute_payout, crash_point, compute_crash_payout}
+use ingot::outcome::{
+    roll,
+    commit_seed,
+    compute_payout,
+    crash_draw,
+    crash_point,
+    compute_crash_payout,
+}
 
 fn steps(_ value: u64) -> usize {
     if value > 64 {
@@ -237,7 +244,7 @@ pub fn fg_verify_bet(
     outcome_ok | payout_ok | (out_byte << 8)
 }
 
-/// Recompute the Crash multiplier (x100, e.g. 200 = 2.00x) from the shared `roll()`.
+/// Recompute the Crash multiplier (x100, e.g. 200 = 2.00x) from shared `crash_draw()`.
 #[unsafe(export)]
 #[cfg(target = "wasm")]
 pub fn fg_crash_point(
@@ -253,7 +260,7 @@ pub fn fg_crash_point(
 ) -> u64 {
     let server_seed = u256_from_limbs(s3, s2, s1, s0)
     let client_seed = u256_from_limbs(c3, c2, c1, c0)
-    let u = roll(server_seed, client_seed, bet_id: bet_id as u256)
+    let u = crash_draw(server_seed, client_seed, bet_id: bet_id as u256)
     crash_point(u).downcast().unwrap()
 }
 
@@ -285,7 +292,7 @@ pub fn fg_verify_crash_bet(
     let client_seed = u256_from_limbs(c3, c2, c1, c0)
     let wager = u256_from_u128(wager_hi, wager_lo)
     let claimed_payout = u256_from_u128(claimed_payout_hi, claimed_payout_lo)
-    let u = roll(server_seed, client_seed, bet_id: bet_id as u256)
+    let u = crash_draw(server_seed, client_seed, bet_id: bet_id as u256)
     let actual_crash = crash_point(u)
     let actual_payout = compute_crash_payout(wager, mult_x100: target_mult_x100 as u256, u)
     let crash_ok: u64 = if actual_crash == (claimed_crash_x100 as u256) {

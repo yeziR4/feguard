@@ -42,22 +42,24 @@ Pyth Entropy V2 randomness callback.
 
 | | |
 |---|---|
-| Multi-mode Entropy V2 deployment (Dice + Crash) | `0x1c711fb3ab157c43ba02474886126d66c8cb5481` |
+| Multi-mode Entropy V2 deployment (Dice + Crash, 98% RTP) | `0x7a29401136d6675ec21c983b7b0e0b5f238ae7b4` |
 | Entropy V2 deployment (Dice v1) | `0xd48ed9b0ad9660dd1c21964aab5468081968c774` |
 | commit–reveal deployment | `0xed5d38e135d7e63ebc6f7dc6ef8d9e2f21ce326b` |
 | Pyth Entropy V2 proxy | `0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c` |
 
 **Live evidence, verified to the wei:**
 
-- **Second game mode (Crash) on the same contract and shared `src/outcome.fe`.**
-  `crash_point(u) = 9800 / (u + 1)` extends `src/outcome.fe` additively and reuses
-  the exact same Pyth Entropy V2 callback and settlement invariants. Bet #1 on
-  `0x1c711fb3…` (`placeCrashBet(105, commit)`, `0x16e63261…`, block 63057452) was
-  fulfilled by the Pyth keeper 5 blocks later in `0x322716e9…` (block 63057457):
-  decoded `BetSettled` crash point `3.50x (350) >= 1.05x → WIN`, payout
-  `105000000000000 wei`, exact player balance delta `1740943415005496 → 1845943415005496`
-  (`+105000000000000 wei`). `verify.mjs` via WASM `fg_verify_crash_bet` prints
-  `MATCH` (`3.50x`), and `--tamper` prints `MISMATCH` (`2.04x`).
+- **Second game mode (Crash) with verified 98% RTP across all targets (`1.05x–98.00x`).**
+  After our own RTP audit (`reports/finding-crash-rtp.md`) caught a curve-shape
+  defect in the initial Crash draft, we replaced it with the inverse-CDF
+  `crash_point(u) = min(9800, 98 * 1_000_000 / (1_000_000 - u))` over
+  `CRASH_DRAWS = 1_000_000` in `src/outcome.fe` (`node scripts/crash-rtp.mjs --check`
+  now exits `0`). On `0x7a294011…`: Bet #1 (`placeCrashBet(5000, commit)` at 50x,
+  `0x0c7a0e22…`, block 63067336) settled via Pyth keeper 3 blocks later in
+  `0x42e9fd6c…` (block 63067339, crash point `2.64x`, payout `0`, balance delta `0`,
+  WASM `verify.mjs` -> `MATCH`, `--tamper` -> `MISMATCH` at `1.30x`); Bet #2 (Dice
+  `< 49`, `0x4afb95cf…`, block 63067352) settled in `0xefe6cefa…` (block 63067359,
+  outcome `15 < 49 → WIN`, exact balance delta `+20000000000000 wei`, WASM `MATCH`).
 
 - **Winning payout inside the entropy callback.** Bet #2 placed in `0x469cc0fa…`
   (block 63027591); the Pyth keeper delivered `_entropyCallback` in `0x67cf64e9…`

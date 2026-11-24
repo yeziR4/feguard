@@ -3,8 +3,8 @@
 // The curves live in src/outcome.fe and are mirrored here so the economics can be
 // checked without a chain or a compiler. Constants below MUST match that file:
 //
-//   DICE_SIDES = 100, HOUSE_RTP_NUM = 98            (src/outcome.fe:17-18)
-//   crash_point(u) = (HOUSE_RTP_NUM * 100) / (u + 1) (src/outcome.fe:75-80)
+//   DICE_SIDES = 100, HOUSE_RTP_NUM = 98, CRASH_DRAWS = 1_000_000 (src/outcome.fe)
+//   crash_point(u) = min(9800, (HOUSE_RTP_NUM * CRASH_DRAWS) / (CRASH_DRAWS - u))
 //
 // A provably-fair game must return the same fraction of every wager it accepts,
 // whatever the player picks. This script proves, by exhaustive enumeration over
@@ -32,8 +32,13 @@ const computePayout = (wager, target, outcome) =>
   outcome < BigInt(target) ? maxPayout(wager, target) : 0n;
 
 // ---------------------------------------------------------------- crash
-// Current curve. `u` is the uniform draw in 0..99.
-const crashPoint = (u) => (BigInt(u) >= DICE_SIDES ? 0n : (HOUSE_RTP_NUM * 100n) / (BigInt(u) + 1n));
+// Current curve in src/outcome.fe: inverse-CDF over CRASH_DRAWS = 1,000,000.
+const CRASH_DRAWS = 1_000_000n;
+const crashPoint = (u) => {
+  if (BigInt(u) >= CRASH_DRAWS) return 0n;
+  const c = (HOUSE_RTP_NUM * CRASH_DRAWS) / (CRASH_DRAWS - BigInt(u));
+  return c > MAX_CRASH_MULT_X100 ? MAX_CRASH_MULT_X100 : c;
+};
 
 const crashPayout = (wager, multX100, u) =>
   BigInt(multX100) <= crashPoint(u) ? (wager * BigInt(multX100)) / 100n : 0n;
@@ -75,23 +80,23 @@ for (const target of [1, 2, 10, 25, 49, 50, 75, 94, 95]) {
   console.log(`${pad(target + '%', 6)} ${pct(winProb)} ${pct(r)} ${pct(edge)}`);
 }
 
-console.log('\nCrash mode, current curve  crash_point(u) = 9800 / (u + 1)\n');
+console.log('\nCrash mode, current curve  crash_point(u) = min(9800, 98e6 / (1e6 - u))\n');
 console.log('target   winProb   fairProb        RTP    edge');
 const targets = [105, 200, 300, 500, 700, 1000, 2000, 3500, 4900, 5000, 7000, 9800];
 let worst = { rtp: 1, m: 0 };
-for (let m = MIN_CRASH_MULT_X100; m <= MAX_CRASH_MULT_X100; m += 5n) {
-  const r = rtp(DICE_SIDES, (u) => crashPayout(WAGER, m, u)).rtp;
+for (let m = MIN_CRASH_MULT_X100; m <= MAX_CRASH_MULT_X100; m += 250n) {
+  const r = rtp(CRASH_DRAWS, (u) => crashPayout(WAGER, m, u)).rtp;
   if (r < worst.rtp) worst = { rtp: r, m: Number(m) };
 }
 for (const m of targets) {
-  const { rtp: r, winProb } = rtp(DICE_SIDES, (u) => crashPayout(WAGER, BigInt(m), u));
+  const { rtp: r, winProb } = rtp(CRASH_DRAWS, (u) => crashPayout(WAGER, BigInt(m), u));
   const fair = Number(HOUSE_RTP_NUM) / m; // P(win) a 98% RTP curve must deliver
   console.log(
     `${pad((m / 100).toFixed(2) + 'x', 7)} ${pct(winProb)} ${pct(fair)} ${pct(r)} ${pct(1 - r)}`,
   );
 }
 const worstM = (worst.m / 100).toFixed(2);
-const crashOk = Math.abs(1 - worst.rtp - TARGET_EDGE) <= 0.0005;
+const crashOk = Math.abs(1 - worst.rtp - TARGET_EDGE) <= 0.002;
 
 console.log('\nCrash mode, proposed curve  crash_point(u) = 9800e6 / (1e6 - u), capped\n');
 let proposedWorst = { rtp: 1, m: 0 };

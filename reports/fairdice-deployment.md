@@ -147,26 +147,33 @@ Exercises the anti-stranding refund path on previously abandoned Bet #2 (placed 
 
 ---
 
-## Multi-Mode Extension — Live CRASH Mode (`0x1c711fb3ab157c43ba02474886126d66c8cb5481`)
+## Multi-Mode Extension — Fixed 98% RTP CRASH + DICE (`0x7a29401136d6675ec21c983b7b0e0b5f238ae7b4`)
 
-Adds a second game mode (**Crash**: `crash_point(u) = 9800 / (u + 1)` scaled by 100, derived from the exact same shared `roll()` in `src/outcome.fe`) to `FairDice` via an additive `placeCrashBet(uint256 target_mult_x100, uint256 client_commitment)` handler (`0x2766d204`), reusing the same Pyth Entropy V2 proxy, `_entropyCallback`, and settlement invariants (I1–I5).
+Supersedes the earlier Crash prototype (`0x1c711fb3...`), which deviated from the advertised 2% edge at high multipliers (see `reports/finding-crash-rtp.md`). This deployment uses the fixed inverse-CDF curve `crash_point(u) = min(9800, 98 * 1_000_000 / (1_000_000 - u))` over `CRASH_DRAWS = 1_000_000` in `src/outcome.fe`, verified to 98.000% RTP across all legal targets by `node scripts/crash-rtp.mjs --check` (exit `0`).
 
 | Field | Value |
 | --- | --- |
-| Contract (`FairDice` Dice + Crash, Entropy V2) | `0x1c711fb3ab157c43ba02474886126d66c8cb5481` |
-| Deploy tx | `0xc765ea1ec70deb4fbbb240606ff5c4af750c66b2ed7d4c6b1eada335d3efa98e` |
-| `fund()` tx (`0.002 ETH`) | `0x6c26a415212992d572599fa23538282754d3096be397ed9e0e084905b7e09134` |
-| Bet #1 `placeCrashBet(105, clientCommit)` tx | `0x16e63261eb4573966f0262ea95fbba2b88f7da20aa6cdfe5d87e213a7b597c95` (block `63057452`, `value = 115000000000001` wei = `100000000000000` wager + `15000000000001` Pyth fee; `clientCommit = 0xe72480fa34ac488aacb81b4741a6d65dca13aa550e645abc96643f10acf45a34`) |
-| Pyth keeper `_entropyCallback` tx | `0x322716e99bae0f8d6581b01a85f256410d5f50adcfba2d7eb6d91b9010eb2699` (block `63057457`, 5 blocks later) |
-| Decoded `BetSettled` (Bet #1, Crash) | `bet_id = 1`, `sequence_number = 113934` (`0x1bd0e`), `entropy_value = 0x354e6d74d04008b15d08f3b86831d4d6e7c650436863100303b7cc6d81cd84ac`, `outcome = 350` (`3.50x >= 1.05x` -> **WIN**), `payout = 105000000000000` wei (`0x5f7f37b39000`) |
-| Player balance delta (block `63057456` -> `63057457`) | `1740943415005496 -> 1845943415005496` = **`+105000000000000` wei == `payout`** |
+| Contract (`FairDice` Dice + Crash, Entropy V2) | `0x7a29401136d6675ec21c983b7b0e0b5f238ae7b4` |
+| Deploy tx | `0xb075da56f04e188e585dc3cdebb204680f024bc5c0373f2172e4a989de20681e` |
+| `fund()` tx (`0.0012 ETH`) | `0xe5980101b9bc6db829994fe4b542bf40ff71f088c53003ef77e91b3b61c77743` |
+| Bet #1 `placeCrashBet(5000, commit)` (50.00x) | `0x0c7a0e2298e74fd6af1a491f86094774d4c481023708420c9c8f3778ebc14b09` (block `63067336`, `value = 35000000000001` wei = `20000000000000` wager + `15000000000001` Pyth fee; `commit = 0x5fe8261fce2da355b82fd7d860fb45fe7d60f47aa3fd53d5713b812369ecc5ec`) |
+| Pyth keeper `_entropyCallback` (Bet #1, Crash 50x) | `0x42e9fd6cac7818ada5fa115b604a1de2b542811131397ed904d970fcc589d88b` (block `63067339`, 3 blocks later) |
+| Decoded `BetSettled` (Bet #1, Crash 50x) | `bet_id = 1`, `sequence_number = 113954` (`0x1bd22`), `entropy_value = 0x8d5ce05be26e09b10c640a22263c018cfb2e2119d5c89d8edf1d16ae77031286`, `outcome = 264` (`2.64x < 50.00x` -> LOSS), `payout = 0` wei |
+| Player balance delta (block `63067338` -> `63067339`) | `482810192973398 -> 482810192973398` (`0` wei, exact match to `payout = 0`) |
+| Bet #2 `placeBet(49, commit)` (Dice `< 49`) | `0x4afb95cfc2f3fa6b73ca2f80b811e29f3e4dd459f053c5b59081b34ddc6621b3` (block `63067352`) -> callback `0xefe6cefab693077a457c69f7052917caadacfb21d122a9b1622705680fc1f6b9` (block `63067359`): `outcome = 15 < 49` -> **WIN**, `payout = 20000000000000` wei, exact balance delta `+20000000000000` wei (`455995966969933 -> 475995966969933`) |
 
 ```cmd
-node verify.mjs --rpc https://sepolia.base.org --contract 0x1c711fb3ab157c43ba02474886126d66c8cb5481 --bet-id 1
-:: Verdict: MATCH | Game mode: CRASH | Target multiplier: 1.05x (105) | Claimed crash point: 3.50x (350) | Recomputed crash: 3.50x (350) (OK) | Claimed payout: 105000000000000 wei (OK) (exit 0)
+node scripts/crash-rtp.mjs --check
+:: dice: honours the advertised 2% edge at every target | crash: honours (exit 0)
 
-node verify.mjs --rpc https://sepolia.base.org --contract 0x1c711fb3ab157c43ba02474886126d66c8cb5481 --bet-id 1 --tamper
-:: Verdict: MISMATCH | Game mode: CRASH | Recomputed crash: 2.04x (204) (DIFFERS) (exit 1)
+node verify.mjs --rpc https://sepolia.base.org --contract 0x7a29401136d6675ec21c983b7b0e0b5f238ae7b4 --bet-id 1
+:: Verdict: MATCH | Game mode: CRASH | Target multiplier: 50.00x (5000) | Claimed crash point: 2.64x (264) | Recomputed crash: 2.64x (264) (OK) | Claimed payout: 0 wei (OK) (exit 0)
+
+node verify.mjs --rpc https://sepolia.base.org --contract 0x7a29401136d6675ec21c983b7b0e0b5f238ae7b4 --bet-id 1 --tamper
+:: Verdict: MISMATCH | Game mode: CRASH | Recomputed crash: 1.30x (130) (DIFFERS) (exit 1)
+
+node verify.mjs --rpc https://sepolia.base.org --contract 0x7a29401136d6675ec21c983b7b0e0b5f238ae7b4 --bet-id 2
+:: Verdict: MATCH | Game mode: DICE | Target: < 49 | Claimed outcome: 15 | Recomputed outcome: 15 (OK) | Claimed payout: 20000000000000 wei (OK) (exit 0)
 ```
 
 

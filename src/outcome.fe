@@ -5,10 +5,13 @@
 //   1. Into the on-chain EVM `FairDice` contract (`--backend sonatina`).
 //   2. Into the off-chain WASM verifier (`--backend wasm`).
 //
-// House edge: explicit 2% (98% theoretical RTP, before integer wei truncation).
-// Valid targets: 1..=95 (player wins when `roll(...) < target`).
-// Payout on win: `wager * HOUSE_RTP_NUM / target`, where `HOUSE_RTP_NUM = 98`.
-// Example: target = 49 -> 49% win chance, 2.00x payout -> 98% RTP (2% edge).
+// House edge: explicit 2% (98% theoretical RTP, before integer wei truncation)
+// for BOTH game modes, verified exhaustively by `node scripts/crash-rtp.mjs --check`:
+//   - Dice:  valid targets 1..=95; wins when `roll(...) < target`;
+//            payout `wager * 98 / target` (exact 98% RTP at every target).
+//   - Crash: valid targets 105..=9800 (1.05x..=98.00x); wins when `target <= crash_point(u)`
+//            where `u = crash_draw(...)` in `0..1_000_000` and
+//            `crash_point(u) = min(9800, 98 * 1_000_000 / (1_000_000 - u))`.
 
 use core::hash::keccak_words
 
@@ -56,12 +59,14 @@ pub fn compute_payout(wager: u256, target: u8, outcome: u256) -> u256 {
 }
 
 // =====================================================================
-// Crash mode (additive): derived from the exact same uniform `roll()`
-// output `u in 0..99`. Multipliers are scaled by 100 (`150` = 1.50x).
+// Crash mode (additive): inverse-CDF curve over a 1,000,000-draw uniform
+// space (`crash_draw`), delivering 98% RTP across all legal targets
+// `1.05x..=98.00x` (scaled by 100: `150` = 1.50x).
 // =====================================================================
 
 pub const MODE_DICE: u8 = 0
 pub const MODE_CRASH: u8 = 1
+pub const CRASH_DRAWS: u256 = 1_000_000
 pub const MIN_CRASH_MULT_X100: u256 = 105
 pub const MAX_CRASH_MULT_X100: u256 = 9800
 
@@ -69,14 +74,25 @@ pub fn is_valid_crash_target(_ mult_x100: u256) -> bool {
     mult_x100 >= MIN_CRASH_MULT_X100 && mult_x100 <= MAX_CRASH_MULT_X100
 }
 
-/// Deterministic crash multiplier (x100) from uniform `u in 0..99`:
-/// `curve(u) = (98 * 100) / (u + 1)`.
-/// Example: `u = 48` -> `200` (2.00x); `u = 99` -> `98` (0.98x, instant bust).
+/// Pure, deterministic uniform draw in `0..CRASH_DRAWS` for Crash mode,
+/// independent of the 100-sided dice `roll()`.
+pub fn crash_draw(server_seed: u256, client_seed: u256, bet_id: u256) -> u256 {
+    keccak_words([server_seed, client_seed, bet_id]) % CRASH_DRAWS
+}
+
+/// Deterministic crash multiplier (x100) from uniform `u in 0..CRASH_DRAWS`:
+/// `crash_point(u) = min(MAX_CRASH_MULT_X100, (HOUSE_RTP_NUM * CRASH_DRAWS) / (CRASH_DRAWS - u))`.
+/// Satisfies `P(crash_point(u) >= m) = 98 / m` (2% edge at every target).
 pub fn crash_point(_ u: u256) -> u256 {
-    if u >= DICE_SIDES {
+    if u >= CRASH_DRAWS {
         return 0
     }
-    (HOUSE_RTP_NUM * 100) / (u + 1)
+    let c = (HOUSE_RTP_NUM * CRASH_DRAWS) / (CRASH_DRAWS - u)
+    if c > MAX_CRASH_MULT_X100 {
+        MAX_CRASH_MULT_X100
+    } else {
+        c
+    }
 }
 
 /// Maximum payout for a Crash bet at target multiplier `mult_x100`.

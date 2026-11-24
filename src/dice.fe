@@ -23,6 +23,7 @@ use ingot::outcome::{
     MODE_CRASH,
     compute_crash_payout,
     compute_payout,
+    crash_draw,
     crash_max_payout,
     crash_point,
     is_valid_crash_target,
@@ -178,6 +179,7 @@ pub contract FairDice uses (ctx: Ctx, log: mut Log, call: mut Call) {
     entropy: Address,
     mut bet_count: u256,
     mut bets: StorageMap<u256, Bet>,
+    // Retained after settlement; callback replays are blocked by `bet.settled` (I1).
     mut seq_to_bet: StorageMap<u64, u256>,
 
     init(cap: Wei, entropy_addr: Address)
@@ -367,12 +369,12 @@ pub contract FairDice uses (ctx: Ctx, log: mut Log, call: mut Call) {
 
             // Invariant I2: deterministic outcome and payout from shared `src/outcome.fe`.
             let entropy_val = random_number.val
-            let u = roll(
-                server_seed: entropy_val,
-                client_seed: bet.client_commitment,
-                bet_id,
-            )
             let (outcome, payout) = if bet.mode == MODE_CRASH {
+                let u = crash_draw(
+                    server_seed: entropy_val,
+                    client_seed: bet.client_commitment,
+                    bet_id,
+                )
                 (
                     crash_point(u),
                     wei(
@@ -384,6 +386,11 @@ pub contract FairDice uses (ctx: Ctx, log: mut Log, call: mut Call) {
                     ),
                 )
             } else {
+                let u = roll(
+                    server_seed: entropy_val,
+                    client_seed: bet.client_commitment,
+                    bet_id,
+                )
                 (u, wei(
                         compute_payout(wager: bet.wager.as_wei(), target: bet.target, outcome: u),
                     ))
