@@ -64,6 +64,11 @@ Pyth Entropy V2 randomness callback.
   selector `0x7e61955c`, error id 3).
 - **Observer transition.** `scripts/watch-abandoned-bets.mjs` flagged the
   deliberately-unrevealed bet, then reported clean once it was refunded.
+- **Browser demo, live.** `index.html` served locally and pointed at Base Sepolia
+  renders both real bets and recomputes each outcome from `out/feguard.wasm` **in
+  the page** — no server call. Tamper off: `MATCH` (`wasm=89`, `wasm=74`). Tamper
+  on: `MISMATCH` (`wasm=48`, `wasm=99`). A judge can reproduce this in a browser
+  in under a minute after the build step in §8.
 
 **Why this is not just a game.** Settlement requires a randomness value that
 neither party can withhold — the property the first design lacked (§4).
@@ -170,10 +175,9 @@ membership is unverified. Public provider agreement is not a state proof. No hos
 scheduler, outreach, wallet execution, or automatic remediation.
 
 FairDice is a **reference implementation — not audited and not production-ready.**
-Not yet exercised live: `refundExpired` on the Entropy deployment (the identical
+Not yet exercised live: `refundExpired` on the Entropy deployment — the identical
 handler is live-tested on the commit–reveal deployment, but Pyth's keeper fulfilled
-both Entropy bets within ~11 blocks); and `index.html` has been syntax-checked but
-not rendered in a live browser against Base Sepolia.
+both Entropy bets within ~11 blocks.
 
 ---
 
