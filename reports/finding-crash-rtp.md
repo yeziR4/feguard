@@ -96,13 +96,15 @@ pub fn crash_point(u: u256) -> u256 {
 }
 ```
 
-`crash-rtp.mjs` evaluates this proposed curve over the same target set and reports
-**98.000% RTP at every target** (see the "proposed curve" section of its output).
-Dice mode is untouched and remains exact.
+This is the curve that was shipped. `crash-rtp.mjs` checks the deployed curve by
+exhaustive enumeration: **every legal target returns 98.000% RTP**, and the worst
+case over the whole range 1.05x–98.00x is **97.991% at 96.80x** — a 2.009% edge,
+the residue of integer flooring at the top of the range and conservative for the
+house. Dice mode is untouched and returns 98.000% at all 95 legal targets.
 
 The change is additive to `src/outcome.fe`; `roll`/`commit_seed`/`max_payout` keep
-their current meaning, and the verifier picks up the new curve automatically
-because it is compiled from the same source.
+their meaning, and the verifier picks up the new curve automatically because it is
+compiled from the same source.
 
 ## Severity and disclosure
 
@@ -111,6 +113,8 @@ because it is compiled from the same source.
 - **Material to the fairness claim.** A player selecting 50x pays a 50% edge while
   being told the edge is 2%.
 
-Until the fix is deployed, the README and UI must not state a flat 2% edge for
-Crash mode. The honest wording is: *dice returns 98% at every target; crash's
-return depends on the chosen multiplier — see the measured table.*
+The fix is deployed, so the README and UI may state the 2% edge — with the measured
+worst case (97.991% at 96.80x) available for anyone who asks. `scripts/crash-rtp.mjs
+--check` is the standing gate: it exits 0 while both curves honour the advertised
+edge and non-zero the moment one does not, so this cannot silently regress. The
+numbers earlier in this document remain the record of what was wrong.
