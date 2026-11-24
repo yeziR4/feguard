@@ -92,3 +92,57 @@ node scripts/watch-abandoned-bets.mjs --contract 0xd48ed9b0ad9660dd1c21964aab546
 :: Output: settled 1, pending (in time) 0 (exit 0)
 ```
 
+---
+
+## Live evidence — Closing the remaining untested paths
+
+### 1. Live WINNING payout inside `_entropyCallback` (`0xd48ed9b0ad9660dd1c21964aab5468081968c774`)
+
+Exercises the `payout > 0` `call.send_value(...)` branch inside `_entropyCallback` on Base Sepolia:
+
+- **Bet #2 `placeBet(95, clientCommit)` tx:** `0x469cc0fa884bc3743527b404d72c2dcb8dc7bbdecc9f739476195f2b060d4296` (block `63027591`, `value = 115000000000001` wei = `100000000000000` wager + `15000000000001` Entropy V2 fee; `clientSeed = 0x...cafe000000000002`, `clientCommit = 0x5833d3efef98dbf3b2d7f042391407718a2b9dc1a47375ded677d612736e604a`)
+- **Pyth keeper `_entropyCallback` tx:** `0x67cf64e9758ff50875d897e6cf7f6def998647dba3838ee68da05e26a894ecdb` (block `63027602`, 11 blocks later)
+- **Decoded `BetSettled` event:**
+  - `bet_id` (`topic1`): `2`
+  - `sequence_number` (`topic2`): `113880` (`0x1bcd8`)
+  - `entropy_value`: `0xb08685992eae1986f717269a4987657b0ebd48df396685e1eebfba7d8be4fde5`
+  - `client_commitment`: `0x5833d3efef98dbf3b2d7f042391407718a2b9dc1a47375ded677d612736e604a`
+  - `outcome`: `89` (`0x59`, `< 95` -> WIN)
+  - `payout`: `103157894736842` wei (`0x5dd251abebca` = `floor(100000000000000 * 98 / 95)`)
+- **On-chain player balance proof (across callback block):**
+  - Block `63027601` (before callback): `3675635570470357` wei
+  - Block `63027602` (after callback):  `3778793465207199` wei
+  - Exact delta: **`+103157894736842` wei == `payout`**
+- **Reproducible verification commands:**
+  ```cmd
+  node verify.mjs --rpc https://sepolia.base.org --contract 0xd48ed9b0ad9660dd1c21964aab5468081968c774 --bet-id 2
+  :: Verdict: MATCH | Claimed outcome: 89 | Recomputed outcome: 89 (OK) | Claimed payout: 103157894736842 wei (OK) (exit 0)
+
+  node verify.mjs --rpc https://sepolia.base.org --contract 0xd48ed9b0ad9660dd1c21964aab5468081968c774 --bet-id 2 --tamper
+  :: Verdict: MISMATCH | Recomputed outcome: 48 (DIFFERS) (exit 1)
+  ```
+
+### 2. Live POSITIVE `refundExpired` + NEGATIVE `NotExpired` revert (`0xed5d38e135d7e63ebc6f7dc6ef8d9e2f21ce326b`)
+
+Exercises the anti-stranding refund path on previously abandoned Bet #2 (placed at block `63018221`, refunded at block `63028018`, age `9797 >= 256` blocks):
+
+- **`refundExpired(2)` tx:** `0xf09e098957422672858701649c1c3ace133d69a00473222b325ec62026e66240` (block `63028018`, `status = 0x1`)
+- **Decoded `BetRefunded` event:**
+  - `topic0`: `0xf22517a5eae9f54be712c3150eca5ba925d233687b223c2ebf89272f12ee0865`
+  - `bet_id` (`topic1`): `2`
+  - `player` (`topic2`): `0x52ed5e00bb32786d5c498e390b12dbd0172d0d15`
+  - `wager`: `100000000000000` wei (`0x5af3107a4000`)
+- **State & balance proof:**
+  - Contract `bankroll()` decreased by exact `-100000000000000` wei (`4823076923076924 -> 4723076923076924`)
+  - Player balance increased by `+99445917999246` wei net of `554082000754` wei gas (`3778793465207199 -> 3878239383206445`)
+  - `getBet(2).settled == true`, `payout == 100000000000000`
+- **Observer confirmation after refund:**
+  ```cmd
+  node scripts/watch-abandoned-bets.mjs --contract 0xed5d38e135d7e63ebc6f7dc6ef8d9e2f21ce326b --rpc https://sepolia.base.org
+  :: settled 2, pending (in time) 0, empty slots 0 -> No abandoned bets (exit 0)
+  ```
+- **Negative pre-expiry guard confirmed live on fresh Bet #3:**
+  - Bet #3 `placeBet(49, c3Commit)` tx: `0xaa826ab2988c4875c1ced81a96522dba9108d395b4bfb05bf8c4de44bcba9bc7` (block `63028072`, `10000000000000` wei)
+  - Immediate `cast call 0xed5d38e135d7e63ebc6f7dc6ef8d9e2f21ce326b "refundExpired(uint256)" 3 --rpc-url https://sepolia.base.org` reverted with `0x7e61955c0000000000000000000000000000000000000000000000000000000000000003` (`NotExpired(3)`).
+
+
