@@ -61,10 +61,18 @@
       gap: 2rem;
     }
     .wordmark {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
       font-weight: 700;
       font-size: 15px;
       letter-spacing: -0.02em;
       color: var(--text);
+    }
+    .wordmark svg {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
     }
     .tabs {
       display: flex;
@@ -243,8 +251,16 @@
     }
 
     .readout {
-      text-align: center;
-      padding: 1.25rem 0 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2.25rem;
+      padding: 1.1rem 0 0.5rem;
+      flex-wrap: wrap;
+    }
+    .readout-text {
+      text-align: left;
+      min-width: 190px;
     }
     .roll-num {
       font-family: var(--mono);
@@ -253,6 +269,7 @@
       line-height: 1;
       letter-spacing: -0.04em;
       color: var(--text);
+      transition: color 0.18s ease;
     }
     .roll-num.win { color: var(--green-hi); }
     .roll-num.loss { color: var(--red-hi); }
@@ -262,6 +279,106 @@
       color: var(--muted);
       font-family: var(--mono);
     }
+
+    /* Real 3D Tumbling Die */
+    .die-scene {
+      width: 84px;
+      height: 84px;
+      perspective: 520px;
+      position: relative;
+      display: grid;
+      place-items: center;
+    }
+    .die-shadow {
+      position: absolute;
+      bottom: -14px;
+      width: 64px;
+      height: 14px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.72) 0%, transparent 72%);
+      transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.55s ease, background 0.25s ease;
+    }
+    .die-scene.rolling .die-shadow {
+      transform: scale(0.58);
+      opacity: 0.45;
+    }
+    .die-scene.win .die-shadow {
+      background: radial-gradient(ellipse at center, rgba(34, 197, 94, 0.42) 0%, transparent 72%);
+    }
+    .die-scene.loss .die-shadow {
+      background: radial-gradient(ellipse at center, rgba(239, 68, 68, 0.36) 0%, transparent 72%);
+    }
+    .die-lift {
+      width: 64px;
+      height: 64px;
+      transform-style: preserve-3d;
+      transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .die-scene.rolling .die-lift {
+      animation: dieArc 0.78s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    @keyframes dieArc {
+      0%   { transform: translateY(0) scale(1); }
+      35%  { transform: translateY(-28px) scale(1.08); }
+      72%  { transform: translateY(3px) scale(0.97); }
+      86%  { transform: translateY(-5px) scale(1.02); }
+      100% { transform: translateY(0) scale(1); }
+    }
+    .die-cube {
+      width: 64px;
+      height: 64px;
+      position: relative;
+      transform-style: preserve-3d;
+      transform: rotateX(-24deg) rotateY(32deg);
+      transition: transform 0.78s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .die-face {
+      position: absolute;
+      width: 64px;
+      height: 64px;
+      border-radius: 11px;
+      background: linear-gradient(145deg, #242a38 0%, #151923 55%, #10131b 100%);
+      border: 1px solid #384154;
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.14), inset 0 -3px 8px rgba(0, 0, 0, 0.55);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      padding: 10px;
+      gap: 4px;
+      backface-visibility: hidden;
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+    .die-scene.win .die-face {
+      border-color: rgba(34, 197, 94, 0.65);
+      box-shadow: inset 0 1px 2px rgba(34, 197, 94, 0.22), inset 0 -3px 8px rgba(0, 0, 0, 0.55);
+    }
+    .die-scene.loss .die-face {
+      border-color: rgba(239, 68, 68, 0.55);
+      box-shadow: inset 0 1px 2px rgba(239, 68, 68, 0.18), inset 0 -3px 8px rgba(0, 0, 0, 0.55);
+    }
+    .pip {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #ffffff 0%, #cfd8e8 65%, #8f9bb3 100%);
+      box-shadow: inset 0 -1px 2px rgba(0, 0, 0, 0.45), 0 0 6px rgba(255, 255, 255, 0.18);
+      align-self: center;
+      justify-self: center;
+    }
+    .die-scene.win .pip {
+      background: radial-gradient(circle at 35% 35%, #d1fae5 0%, #34d399 65%, #059669 100%);
+      box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+    }
+    .die-face.f1 { transform: rotateY(0deg) translateZ(32px); }
+    .die-face.f2 { transform: rotateY(90deg) translateZ(32px); }
+    .die-face.f3 { transform: rotateX(90deg) translateZ(32px); }
+    .die-face.f4 { transform: rotateX(-90deg) translateZ(32px); }
+    .die-face.f5 { transform: rotateY(-90deg) translateZ(32px); }
+    .die-face.f6 { transform: rotateY(180deg) translateZ(32px); }
+    /* Pip grid placements */
+    .p-tl { grid-area: 1 / 1; } .p-tc { grid-area: 1 / 2; } .p-tr { grid-area: 1 / 3; }
+    .p-ml { grid-area: 2 / 1; } .p-mc { grid-area: 2 / 2; } .p-mr { grid-area: 2 / 3; }
+    .p-bl { grid-area: 3 / 1; } .p-bc { grid-area: 3 / 2; } .p-br { grid-area: 3 / 3; }
 
     /* Clean slider track */
     .slider-area {
@@ -451,7 +568,21 @@
   <header>
     <div class="nav">
       <div class="nav-left">
-        <a href="index.html" class="wordmark">FairDice</a>
+        <a href="index.html" class="wordmark">
+          <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M14 2.5L24.2 8.2V19.8L14 25.5L3.8 19.8V8.2L14 2.5Z" fill="#161b26" stroke="#364156" stroke-width="1.4"/>
+            <path d="M14 2.5L24.2 8.2L14 13.9L3.8 8.2L14 2.5Z" fill="#202838"/>
+            <path d="M14 13.9V25.5L24.2 19.8V8.2L14 13.9Z" fill="#121722"/>
+            <path d="M14 2.5L24.2 8.2L14 13.9L3.8 8.2L14 2.5Z" stroke="#22c55e" stroke-opacity="0.55" stroke-width="1"/>
+            <circle cx="14" cy="8.2" r="1.75" fill="#22c55e"/>
+            <circle cx="8.8" cy="14.6" r="1.4" fill="#e2e8f0"/>
+            <circle cx="8.8" cy="18.8" r="1.4" fill="#e2e8f0"/>
+            <circle cx="19.2" cy="13.8" r="1.35" fill="#cbd5e1"/>
+            <circle cx="17.2" cy="17.2" r="1.35" fill="#cbd5e1"/>
+            <circle cx="21.1" cy="17.2" r="1.35" fill="#cbd5e1"/>
+          </svg>
+          <span>FairDice</span>
+        </a>
         <nav class="tabs">
           <a href="index.html" class="active">Play</a>
           <a href="about.html">How It Works</a>
@@ -511,8 +642,23 @@
         </div>
 
         <div class="readout">
-          <div class="roll-num" id="rollDisplay">--</div>
-          <div class="roll-sub" id="rollSub">Roll under 49 to win</div>
+          <div class="die-scene" id="dieScene" aria-hidden="true">
+            <div class="die-shadow"></div>
+            <div class="die-lift">
+              <div class="die-cube" id="dieCube">
+                <div class="die-face f1"><span class="pip p-mc"></span></div>
+                <div class="die-face f2"><span class="pip p-tl"></span><span class="pip p-br"></span></div>
+                <div class="die-face f3"><span class="pip p-tl"></span><span class="pip p-mc"></span><span class="pip p-br"></span></div>
+                <div class="die-face f4"><span class="pip p-tl"></span><span class="pip p-tr"></span><span class="pip p-bl"></span><span class="pip p-br"></span></div>
+                <div class="die-face f5"><span class="pip p-tl"></span><span class="pip p-tr"></span><span class="pip p-mc"></span><span class="pip p-bl"></span><span class="pip p-br"></span></div>
+                <div class="die-face f6"><span class="pip p-tl"></span><span class="pip p-tr"></span><span class="pip p-ml"></span><span class="pip p-mr"></span><span class="pip p-bl"></span><span class="pip p-br"></span></div>
+              </div>
+            </div>
+          </div>
+          <div class="readout-text">
+            <div class="roll-num" id="rollDisplay">--</div>
+            <div class="roll-sub" id="rollSub">Roll under 49 to win</div>
+          </div>
         </div>
 
         <div class="slider-area">
@@ -711,23 +857,52 @@
       return j.result;
     }
 
+    const dieScene = document.getElementById('dieScene');
+    const dieCube = document.getElementById('dieCube');
+    let rotX = -24;
+    let rotY = 32;
+    // Target cube orientations for faces 1..6 (with subtle isometric tilt so depth stays visible)
+    const FACE_ROTATIONS = [
+      [0, 0],     // face 1
+      [0, -90],   // face 2
+      [-90, 0],   // face 3
+      [90, 0],    // face 4
+      [0, 90],    // face 5
+      [0, 180],   // face 6
+    ];
+
     function animateRoll(outcome, target, payout) {
+      const faceIdx = outcome % 6;
+      const [baseX, baseY] = FACE_ROTATIONS[faceIdx];
+      // Add full 360-degree spins so every roll tumbles cleanly in 3D space
+      const spinsX = 360 * (2 + Math.floor(Math.random() * 2));
+      const spinsY = 360 * (2 + Math.floor(Math.random() * 2));
+      rotX = Math.floor(rotX / 360) * 360 + spinsX + baseX - 14;
+      rotY = Math.floor(rotY / 360) * 360 + spinsY + baseY + 18;
+
+      dieScene.classList.remove('win', 'loss', 'rolling');
+      void dieScene.offsetWidth; // restart arc keyframe
+      dieScene.classList.add('rolling');
+      dieCube.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+
       let n = 0;
       rollDisplay.className = 'roll-num';
       const id = setInterval(() => {
         n++;
         rollDisplay.textContent = String(Math.floor(Math.random() * 100)).padStart(2, '0');
-        if (n >= 9) {
+        if (n >= 16) {
           clearInterval(id);
           const win = outcome < target;
           rollDisplay.textContent = String(outcome).padStart(2, '0');
           rollDisplay.className = `roll-num ${win ? 'win' : 'loss'}`;
+          dieScene.classList.remove('rolling');
+          dieScene.classList.add(win ? 'win' : 'loss');
           needle.textContent = String(outcome).padStart(2, '0');
           needle.style.setProperty('--needle', `${Math.max(2, Math.min(98, outcome))}%`);
           needle.classList.add('show');
           rollSub.textContent = win ? `Won ${fmtEth(payout)} (rolled ${outcome} < ${target})` : `Lost (rolled ${outcome} >= ${target})`;
         }
-      }, 28);
+      }, 42);
     }
 
     document.getElementById('playWasmBtn').addEventListener('click', async () => {

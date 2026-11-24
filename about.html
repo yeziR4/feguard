@@ -43,7 +43,16 @@
       justify-content: space-between;
     }
     .nav-left { display: flex; align-items: center; gap: 2rem; }
-    .wordmark { font-weight: 700; font-size: 15px; letter-spacing: -0.02em; color: var(--text); }
+    .wordmark {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+    .wordmark svg { width: 24px; height: 24px; flex-shrink: 0; }
     .tabs { display: flex; gap: 1.25rem; }
     .tabs a {
       font-size: 13.5px;
@@ -143,7 +152,21 @@
   <header>
     <div class="nav">
       <div class="nav-left">
-        <a href="index.html" class="wordmark">FairDice</a>
+        <a href="index.html" class="wordmark">
+          <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M14 2.5L24.2 8.2V19.8L14 25.5L3.8 19.8V8.2L14 2.5Z" fill="#161b26" stroke="#364156" stroke-width="1.4"/>
+            <path d="M14 2.5L24.2 8.2L14 13.9L3.8 8.2L14 2.5Z" fill="#202838"/>
+            <path d="M14 13.9V25.5L24.2 19.8V8.2L14 13.9Z" fill="#121722"/>
+            <path d="M14 2.5L24.2 8.2L14 13.9L3.8 8.2L14 2.5Z" stroke="#22c55e" stroke-opacity="0.55" stroke-width="1"/>
+            <circle cx="14" cy="8.2" r="1.75" fill="#22c55e"/>
+            <circle cx="8.8" cy="14.6" r="1.4" fill="#e2e8f0"/>
+            <circle cx="8.8" cy="18.8" r="1.4" fill="#e2e8f0"/>
+            <circle cx="19.2" cy="13.8" r="1.35" fill="#cbd5e1"/>
+            <circle cx="17.2" cy="17.2" r="1.35" fill="#cbd5e1"/>
+            <circle cx="21.1" cy="17.2" r="1.35" fill="#cbd5e1"/>
+          </svg>
+          <span>FairDice</span>
+        </a>
         <nav class="tabs">
           <a href="index.html">Play</a>
           <a href="about.html" class="active">How It Works</a>
