@@ -12,6 +12,10 @@ live testnet, and a discovery/triage tool plus observer for contracts you did no
 
 **CI:** https://github.com/yeziR4/feguard/actions/workflows/ci.yml
 
+**Live demo:** https://yezir4.github.io/feguard/ — the FairDice UI, reading Base
+Sepolia directly and recomputing each settled bet from the Fe-compiled WASM in your
+own browser. No install, no wallet, no server of ours in the path.
+
 **Manifest:** `fe.toml` (ingot `feguard`, v0.4.0). **License:** MIT (OSI-approved).
 
 Run `git rev-parse HEAD` in the final reviewed checkout for the complete judged
