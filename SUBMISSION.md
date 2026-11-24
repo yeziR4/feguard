@@ -187,15 +187,32 @@ checked-in test suite; nothing rests on an AI assertion alone. The live observat
 in §2, §3 and §5 were each independently re-executed by us before being written down.
 A fuller account is in the README.
 
-**Pre-existing work / starting point.**
-`<FILL: the starting commit SHA, and one sentence on what already existed at that point.>`
+**Pre-existing work / starting point.** Nothing is declared as pre-existing. The
+history reachable from the judged commit begins at `edbe7e0` (23 Nov 2026); the
+repository contains 13 commits and every one is dated 23–24 Nov 2026, so the entire
+tree falls inside the build window (3–24 Nov 2026). If any material predates the
+first commit, the entrant should add one line here before submitting.
 
-**Build-window work (3–24 Nov 2026) — the parts judged here:**
-`<FILL: e.g. the deployment-role resolver; 300-address cohort resolution; ABI and
-bytecode-selector classification; the Etherscan-ABI path; the frontend address
-extractor; HAR capture; src/outcome.fe; src/dice.fe; src/dice_tests.fe; the WASM
-verifier and verify.mjs; index.html; the withholding finding; the abandoned-bet
-observer; both live Base Sepolia deployments.>`
+**Build-window work (3–24 Nov 2026) — what the commits contain, oldest first:**
+
+| commit | date | contribution |
+|---|---|---|
+| `edbe7e0` | 23 Nov | resumable research workflow, evidence-backed case memory |
+| `e873f28` | 23 Nov | deployment-role resolver; two demonstrated `Referral.sol` defects |
+| `98b7cda` | 23 Nov | 300-address cohort role resolution; initialization corroboration |
+| `5e04580` | 23 Nov | casino/prediction-market classification without a verified source |
+| `b476bf6` | 23 Nov | Etherscan-ABI classification path |
+| `a5c62b4` | 23 Nov | deployment discovery pipeline |
+| `b0e9637` | 23 Nov | frontend address extractor |
+| `c1b3e72` | 23 Nov | casino heuristic for `wager`-style games |
+| `617e887` | 24 Nov | `src/outcome.fe`, `src/dice.fe`, `src/dice_tests.fe`, WASM verifier, `verify.mjs`, `index.html`; the withholding finding; the abandoned-bet observer |
+| `a87aaf1` | 24 Nov | live Base Sepolia deployment; `eth_getLogs` 200-block paging fix |
+| `ba8b8d7` | 24 Nov | Pyth Entropy V2 swap; live keeper callback verification |
+| `bf277e4` | 24 Nov | live winning-payout evidence; live positive and negative `refundExpired` |
+| `dd0707a` | 24 Nov | this handoff document |
+
+The `Referral.sol` contracts analysed in §5 are third-party code, not our work; they
+are the subjects, not the contribution.
 
 **Reused code.** OpenZeppelin-derived patterns appear only inside the third-party
 `Referral.sol` we analysed, never in our own source. Our Fe and JavaScript are
@@ -231,7 +248,8 @@ at `/demo/`; the explicit-policy case study at `/inspection/`.
 
 ## 9. Before submitting
 
-- [ ] Fill both `<FILL>` declarations in §7 and delete the placeholders.
+- [x] §7 declarations completed (no pre-existing work declared; full commit table included).
+- [ ] Read §7 and confirm the AI and provenance declarations are accurate before submitting.
 - [ ] `git rev-parse HEAD` from the final reviewed checkout → record the exact SHA.
 - [ ] Confirm the working tree is clean and everything is pushed.
 - [ ] Confirm `DEPLOYER_KEY` is cleared from the local environment and appears nowhere
